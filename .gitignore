@@ -6,3 +6,7 @@ node_modules/
 .DS_Store
 Thumbs.db
 *.log
+
+# Cấu hình local & rác giải nén — không đưa lên repo
+.claude/
+_extracted/
