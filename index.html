@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>KKINVEST · Tổng quan — Bảng điện thị trường</title>
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+<style>
+  :root{--bg:#080b13;--card:#0e1525;--card2:#141d31;--line:#1c2740;--txt:#e8edf7;--muted:#7e8db0;
+    --accent:#e2b33b;--accent2:#4f8cff;--up:#26c281;--dn:#f0556b;--ceil:#c17ce0;--floor:#2ec7d6;--ref:#e2b33b;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1200px 700px at 50% -260px,#0c1730,#080b13);color:var(--txt);
+    font-family:"Segoe UI",system-ui,Roboto,Arial,sans-serif;line-height:1.3;padding:0 0 50px}
+  .wrap{max-width:1560px;margin:0 auto;padding:0 16px}
+  header{padding:14px 0 8px;border-bottom:1px solid var(--line);margin-bottom:14px}
+  .tag{display:inline-block;background:var(--accent);color:#1a1405;font-weight:700;font-size:11px;letter-spacing:1px;padding:4px 10px;border-radius:20px;text-transform:uppercase}
+  .navsheets{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+  .ns{text-decoration:none;font-size:13px;font-weight:700;padding:7px 14px;border-radius:9px;border:1px solid var(--line);color:var(--muted);background:var(--card)}
+  .ns.active{background:var(--accent);color:#1a1405;border-color:var(--accent)}.ns:hover{border-color:var(--accent2)}
+  .up{color:var(--up)}.dn{color:var(--dn)}.ceil{color:var(--ceil)}.floor{color:var(--floor)}.ref{color:var(--ref)}
+  .blk{margin-bottom:16px}
+  .blkhead{display:flex;align-items:center;gap:10px;margin:0 0 9px}
+  .blklabel{color:var(--accent);font-weight:800;font-size:12px;letter-spacing:1.6px;text-transform:uppercase;white-space:nowrap}
+  .blkhead .src{margin-left:auto;color:var(--muted);font-size:11px;letter-spacing:1px}
+  .upd{margin-left:auto;color:var(--muted);font-size:11.5px}
+  .ebtn{background:var(--card2);color:var(--txt);border:1px solid var(--line);font-size:11px;font-weight:600;padding:5px 12px;border-radius:8px;cursor:pointer}
+  .ebtn:hover{border-color:var(--accent2)}
+  /* WATCHLIST */
+  .wgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+  @media(max-width:1240px){.wgrid{grid-template-columns:repeat(4,1fr)}}
+  @media(max-width:980px){.wgrid{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:680px){.wgrid{grid-template-columns:repeat(2,1fr)}}
+  .wcard{display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:8px 11px;cursor:pointer;position:relative;transition:.12s}
+  .wcard:hover{border-color:#33425f;background:var(--card2)}
+  .logo{width:26px;height:26px;border-radius:50%;flex-shrink:0;object-fit:cover;background:#1a2238}
+  .logo.fb{display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#cdd6ea;letter-spacing:.5px}
+  .wc-tk{font-weight:800;font-size:13.5px;width:42px;flex-shrink:0}
+  .wc-right{display:flex;align-items:baseline;gap:7px;margin-left:auto;font-size:13px;font-weight:600;white-space:nowrap}
+  .wc-px{font-weight:800}
+  .wc-ch{font-size:11.5px}.wc-pct{font-size:11.5px}
+  .rm{position:absolute;top:-7px;right:-7px;width:18px;height:18px;border-radius:50%;background:var(--dn);color:#fff;border:none;font-size:12px;line-height:1;cursor:pointer;display:none;align-items:center;justify-content:center}
+  body.edit .rm{display:flex}
+  .addbox{display:none;gap:6px;margin-top:8px}
+  body.edit .addbox{display:flex}
+  .addbox input{background:#0c142b;border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:7px 11px;font-size:13px;text-transform:uppercase;width:160px;font-family:inherit}
+  .addbox button{background:var(--accent2);color:#04122b;border:none;border-radius:8px;padding:7px 14px;font-weight:700;cursor:pointer}
+  /* PHÁI SINH */
+  .dgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  @media(max-width:760px){.dgrid{grid-template-columns:1fr}}
+  .dcard{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:11px 15px}
+  .dcard .f{width:22px;height:22px;border-radius:5px;background:#2a3554;color:#cdd6ea;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px}
+  .dcard .dn-nm{font-weight:800;font-size:14px}
+  .dcard .dn-sub{color:var(--muted);font-size:11px}
+  .dcard .dn-val{margin-left:auto;text-align:right}
+  .dcard .dn-val .v{font-weight:800;font-size:16px}
+  .dcard .dn-val .c{font-size:11.5px}
+  /* INDEX CHARTS */
+  .idxgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media(max-width:1100px){.idxgrid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.idxgrid{grid-template-columns:1fr}}
+  .idxcard2{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 15px;display:flex;flex-direction:column;gap:1px;min-height:170px;position:relative}
+  .idxcard2 .ic-nm{font-weight:800;font-size:15px}
+  .idxcard2 .ic-sub{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px}
+  .idxcard2 .ic-val{font-size:23px;font-weight:800;letter-spacing:.3px}
+  .idxcard2 .ic-ch{font-size:12.5px;font-weight:600}
+  .idxcard2 .ic-spark{margin-top:auto;height:72px;width:100%}
+  /* GLOBAL MARKETS */
+  .gmrow{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+  .gmcat{color:var(--muted);font-weight:700;font-size:11px;letter-spacing:1.4px;width:120px;flex-shrink:0;text-transform:uppercase}
+  .gmpills{display:flex;gap:8px;flex-wrap:wrap}
+  .gmpill{display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:6px 12px;font-size:12.5px}
+  .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+  .dot.up{background:var(--up)}.dot.dn{background:var(--dn)}.dot.ref{background:var(--ref)}
+  .gmpill .nm{color:#cdd6ea;font-weight:600}.gmpill .vl{font-weight:700}
+  /* FV */
+  .tablebox{background:var(--card);border:1px solid var(--line);border-radius:11px;overflow:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:8px 11px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+  th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+  thead th{background:#0f1626;color:var(--muted);font-size:11px;text-transform:uppercase}
+  tbody tr{cursor:pointer}tbody tr:hover{background:#16203c}
+  .mini{font-size:11.5px;color:var(--muted)}
+  .reco{font-weight:700;padding:3px 9px;border-radius:7px;font-size:12px}
+  .r-buy{background:rgba(38,194,129,.18);color:#6fe3ab}.r-hold{background:rgba(226,179,59,.16);color:#f0c26b}.r-sell{background:rgba(240,85,107,.18);color:#f59595}
+  .note{color:var(--muted);font-size:12px;margin-top:10px}
+  .rfbtn{background:var(--card2);color:var(--txt);border:1px solid var(--line);font-size:12px;font-weight:600;padding:5px 12px;border-radius:8px;cursor:pointer}
+  .rfbtn:hover{border-color:var(--accent2)}
+  .rfbtn.on{background:var(--accent);color:#1a1405;border-color:var(--accent)}
+  .newsfilter{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 9px}
+  .newswrap{max-height:440px;overflow-y:auto;padding:0}
+  .newsitem{display:flex;gap:10px;align-items:flex-start;padding:9px 13px;border-bottom:1px solid var(--line);cursor:pointer;text-decoration:none;color:var(--txt)}
+  .newsitem:hover{background:#18203c}
+  .newsitem .ntime{color:var(--muted);font-size:11.5px;white-space:nowrap;min-width:40px;padding-top:1px}
+  .newsitem .nsrc{font-size:10px;font-weight:800;padding:2px 7px;border-radius:5px;color:#fff;white-space:nowrap}
+  .newsitem .ntitle{font-size:13px;line-height:1.42;font-weight:600}
+  .newsgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:900px){.newsgrid{grid-template-columns:1fr}}
+  .newscolhead{font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--muted);text-transform:uppercase;margin:0 0 6px;padding-left:2px;display:flex;gap:6px;align-items:center}
+  .newscolhead.imp{color:var(--accent)}
+  .newsitem .ntags{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
+  .newsitem .ntag{font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:4px;background:rgba(226,179,59,.16);color:#f0c26b}
+  .newsitem.bigimp{background:rgba(226,179,59,.05)}
+  @keyframes flUp{0%{box-shadow:inset 0 0 0 2px rgba(38,194,129,.9);background:rgba(38,194,129,.20)}100%{box-shadow:none;background:transparent}}
+  @keyframes flDn{0%{box-shadow:inset 0 0 0 2px rgba(240,85,107,.9);background:rgba(240,85,107,.20)}100%{box-shadow:none;background:transparent}}
+  .wcard.fup{animation:flUp .85s ease-out}
+  .wcard.fdn{animation:flDn .85s ease-out}
+  /* MARQUEE — nhiều dòng chỉ số chạy ngang (mỗi nhóm 1 dòng, xen kẽ chiều) */
+  .gmmarq{flex:1;min-width:0;overflow:hidden;position:relative;-webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
+  .gmtrack{display:inline-flex;gap:8px;animation:gmScroll 48s linear infinite;will-change:transform}
+  .gmtrack.rev{animation-name:gmScrollR}
+  .gmmarq:hover .gmtrack{animation-play-state:paused}
+  .gmtrack .gmpill{flex:0 0 auto}
+  @keyframes gmScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  @keyframes gmScrollR{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+  .rtbar{margin:0 0 10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .rtbar #rtStatus{font-size:11.5px}
+  #rtForm{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  #rtForm input{background:#0c142b;border:1px solid var(--line);border-radius:7px;color:var(--txt);padding:6px 9px;font-size:12px;font-family:inherit}
+  #rtForm input:focus{border-color:var(--accent2);outline:none}
+  #rtForm button{background:var(--card2);color:var(--txt);border:1px solid var(--line);font-size:12px;font-weight:600;padding:6px 12px;border-radius:7px;cursor:pointer}
+  #rtForm button#rtConnect{background:var(--up);color:#04140c;border-color:var(--up)}
+  .rton{color:var(--up)!important;font-weight:700}
+  .src{color:var(--muted);font-size:11.5px;margin-left:auto}
+  .loginGate{position:fixed;inset:0;background:#080b13;z-index:1000;display:flex;align-items:center;justify-content:center}
+  .loginGate.hidden{display:none}
+  .loginBox{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:30px;width:min(350px,92vw);display:flex;flex-direction:column;gap:11px}
+  .loginBox input{background:#0c142b;border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:11px;font-size:14px}
+  .loginBox button{background:var(--accent);color:#1a1405;border:none;border-radius:9px;padding:11px;font-weight:700;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="loginGate" id="loginGate"><form class="loginBox" id="loginForm">
+  <div style="font-size:19px;font-weight:800;text-align:center">🔐 Trung tâm Định giá</div>
+  <input id="luser" placeholder="Tên đăng nhập" autofocus><input id="lpass" type="password" placeholder="Mật khẩu">
+  <button type="submit">Đăng nhập</button><div style="color:var(--dn);font-size:12px;text-align:center;min-height:14px" id="lerr"></div>
+</form></div>
+<script>(function(){const A={user:"admin",pass:"kdh2026"},K="vt_auth",g=document.getElementById('loginGate');
+  if(localStorage.getItem(K)==="1")g.classList.add('hidden');
+  document.getElementById('loginForm').addEventListener('submit',function(e){e.preventDefault();
+    if(document.getElementById('luser').value.trim()===A.user&&document.getElementById('lpass').value===A.pass){localStorage.setItem(K,"1");g.classList.add('hidden');}
+    else document.getElementById('lerr').textContent="Sai tài khoản hoặc mật khẩu";});})();</script>
+
+<header><div class="wrap">
+  <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:9px"><span style="font-size:19px;font-weight:900;letter-spacing:3px;color:var(--accent)">KKINVEST</span><span style="font-size:11px;font-weight:600;letter-spacing:.5px;color:var(--muted)">· phân tích &amp; định giá chứng khoán</span></div>
+  <div class="navsheets">
+    <a class="ns active" href="index.html">⭐ Tổng quan</a>
+    <a class="ns" href="phan-tich-co-ban.html">🧮 Phân tích cơ bản</a>
+    <a class="ns" href="phan-tich-ky-thuat.html">📊 Phân tích kỹ thuật</a>
+    <a class="ns" href="diem-mua.html">🎯 Điểm mua</a>
+    <a class="ns" href="danh-muc.html">💼 Danh mục KH</a>
+  </div>
+  <span class="tag">Bảng điện thị trường · Live</span>
+</div></header>
+
+<div class="wrap">
+  <!-- WATCHLIST -->
+  <div class="blk">
+    <div class="blkhead">
+      <span class="blklabel">Watchlist</span>
+      <span class="upd" id="wUpd"></span>
+      <button class="ebtn" id="rtBtn">🔴 Realtime DNSE</button>
+      <button class="ebtn" id="editBtn">⚙ Thêm / Xóa mã</button>
+    </div>
+    <div class="rtbar">
+      <span class="mini" id="rtStatus">○ Chưa kết nối realtime — đang dùng dchart (~1 phút/lần). Bấm 🔴 để nối tick DNSE.</span>
+      <form id="rtForm" style="display:none">
+        <input id="rtUser" placeholder="TK DNSE (SĐT / email / 064Cxxxxxx)" autocomplete="username">
+        <input id="rtPass" type="password" placeholder="Mật khẩu DNSE" autocomplete="current-password">
+        <button type="submit" id="rtConnect">Kết nối</button>
+        <button type="button" id="rtDisc" style="display:none">Ngắt</button>
+      </form>
+    </div>
+    <div class="wgrid" id="wGrid"></div>
+    <div class="addbox"><input id="addInp" placeholder="Nhập mã… (vd VRE)" maxlength="6"><button id="addBtn">＋ Thêm</button>
+      <span class="mini" style="align-self:center">Bấm ⚙ để bật/tắt chế độ sửa · dấu ✕ để xóa mã</span></div>
+  </div>
+
+  <!-- PHÁI SINH -->
+  <div class="blk">
+    <div class="blkhead"><span class="blklabel">Phái sinh</span><span class="upd" id="dUpd"></span></div>
+    <div class="dgrid" id="dGrid"></div>
+  </div>
+
+  <!-- CHỈ SỐ (chart tự vẽ SVG) -->
+  <div class="blk">
+    <div class="blkhead"><span class="blklabel">Chỉ số · trong phiên</span></div>
+    <div class="idxgrid" id="idxGrid"></div>
+  </div>
+
+  <!-- BẢNG TIN TÀI CHÍNH (RSS realtime) -->
+  <div class="blk">
+    <div class="blkhead"><span class="blklabel">📰 Bảng tin tài chính · realtime</span>
+      <span class="src" id="newsUpd"></span>
+      <button class="rfbtn" id="newsRefresh" style="margin-left:8px">↻ Làm mới</button></div>
+    <div class="newsfilter" id="newsFilter"></div>
+    <div class="newsgrid">
+      <div>
+        <div class="newscolhead">📰 Tất cả tin</div>
+        <div class="tablebox newswrap" id="newsList"></div>
+      </div>
+      <div>
+        <div class="newscolhead imp">⭐ Tin đáng chú ý <span class="mini" id="impCnt"></span></div>
+        <div class="tablebox newswrap" id="newsImp"></div>
+      </div>
+    </div>
+    <div class="note">Nguồn RSS: CafeF · Vietstock · TNCK (tinnhanhchungkhoan: CK + Tài chính) · VnEconomy — tự làm mới 90s, khử trùng lặp. Cột phải tự lọc theo độ quan trọng (vĩ mô · lãi suất/Fed · KQKD · thương vụ · cảnh báo · biến động · hàng hoá · mã cổ phiếu) + ưu tiên tin nóng &lt;3h. Bấm tin mở bài gốc.</div>
+  </div>
+
+  <!-- GLOBAL MARKETS -->
+  <div class="blk">
+    <div class="blkhead"><span class="blklabel">Global Markets</span><span class="src" id="gUpd">Source · Yahoo Finance</span></div>
+    <div id="gmBody"></div>
+  </div>
+
+  <!-- ĐỊNH GIÁ VN100 (ẩn — giữ code, chưa hiển thị) -->
+  <div class="blk" id="fvBlk" style="display:none">
+    <div class="blkhead"><span class="blklabel">Định giá VN100 · theo FV của tôi</span>
+      <span class="src" id="fvUpd"></span>
+      <button class="rfbtn" id="fvRefresh" style="margin-left:8px">↻ Lấy giá VN100</button></div>
+    <div class="fvfilter" id="fvFilter" style="display:flex;gap:6px;flex-wrap:wrap;margin:0 0 9px"></div>
+    <div class="tablebox"><table><thead><tr><th>Mã</th><th>Ngành</th><th>Giá</th><th>FV của tôi</th><th>Upside</th><th>KN</th></tr></thead><tbody id="fvBody"></tbody></table></div>
+    <div class="note"><b>FV của tôi</b> = tổng hợp theo skill định giá: đồng thuận CTCK (T4–T6/2026) + mô hình thận trọng + chu kỳ thị trường, áp đúng phương pháp ngành (RNAV cho BĐS · DCF-comps cho SX/DN · P/B-ROE cho NH/CK). Giá VN: VNDirect dchart (live). ⚠ Nhiều mã FV là ƯỚC TÍNH, chỉnh dần. Bấm mã → mở Phân tích cơ bản. Không phải khuyến nghị đầu tư.</div>
+  </div>
+</div>
+
+<script>
+const $i=id=>document.getElementById(id);
+const fmt=n=>isFinite(n)?Math.round(n).toLocaleString('vi-VN'):'—';
+const f2=n=>isFinite(n)?n.toLocaleString('vi-VN',{minimumFractionDigits:2,maximumFractionDigits:2}):'—';
+const fpx=n=>isFinite(n)?(+n).toLocaleString('en-US',{maximumFractionDigits:2}):'—';   // giá: bỏ 0 thừa, dấu . thập phân
+const fnum=n=>isFinite(n)?(+n).toLocaleString('en-US',{maximumFractionDigits:2}):'—';
+const VALUED={};['KDH','DXG','NVL','NLG','VHM','VIC','PDR','HDC','IDC','HPG','HSG','NKG','GVR','DGC','DCM','DPM','SSI','VND','VCI','HCM','VIX','SHS','MBS','FTS'].forEach(c=>VALUED[c]=1);
+
+// ===== fetch có timeout + nhiều proxy =====
+async function tryFetch(u,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);
+  try{const r=await fetch(u,{cache:'no-store',signal:c.signal});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json();}finally{clearTimeout(t);}}
+const PROXIES=[x=>x,
+  x=>'https://corsproxy.io/?url='+encodeURIComponent(x),
+  x=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(x),
+  x=>'https://api.allorigins.win/raw?url='+encodeURIComponent(x)];
+async function getJSONp(u){let last;for(const p of PROXIES){try{return await tryFetch(p(u),9000);}catch(e){last=e;}}throw last||new Error('fail');}
+
+// ===== VNDirect dchart (giá VN, đã ở nghìn đồng) =====
+async function dchartLast2(symbol){
+  const to=Math.floor(Date.now()/1000),from=to-40*86400;
+  const url=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${symbol}&from=${from}&to=${to}`;
+  const j=await getJSONp(url);
+  if(j&&j.s==='ok'&&j.c&&j.c.length){const n=j.c.length;
+    return {close:j.c[n-1],prev:j.c[n-2]!=null?j.c[n-2]:j.c[n-1],vol:(j.v&&j.v[n-1])||0};}
+  return null;
+}
+
+// ===== WATCHLIST =====
+const DEFAULT_WL=['VIC','VHM','VCB','BID','CTG','TCB','MBB','ACB','VPB','STB','HPG','HSG','GAS','MSN','MWG','FPT','VNM','SSI','VND','VCI','SHS','KDH','NVL','PDR','DXG','KBC','GEX','BSR','OCB','HAG'];
+function getWL(){try{const a=JSON.parse(localStorage.getItem('bd_watchlist'));if(Array.isArray(a)&&a.length)return a;}catch(e){}return DEFAULT_WL.slice();}
+function setWL(a){localStorage.setItem('bd_watchlist',JSON.stringify(a));}
+function logoURL(tk){return `https://cdn.simplize.vn/simplizevn/logo/${tk}.jpeg`;}
+function pxClass(pct){if(pct>=6.7)return 'ceil';if(pct<=-6.7)return 'floor';return pct>0?'up':(pct<0?'dn':'ref');}
+let wlData={}, prevPx={};
+function renderWL(){
+  const wl=getWL();
+  $i('wGrid').innerHTML=wl.map(tk=>{
+    const d=wlData[tk];
+    let px='—',ch='',pct='',cl='ref';
+    if(d){cl=pxClass(d.pctChange);px=fpx(d.close);
+      ch=(d.change>=0?'+':'')+fpx(d.change);pct=(d.pctChange>=0?'+':'')+d.pctChange.toFixed(2)+'%';}
+    const fb=`<div class="logo fb" style="display:none">${tk.slice(0,3)}</div>`;
+    return `<div class="wcard" data-tk="${tk}">
+      <button class="rm" data-rm="${tk}">✕</button>
+      <img class="logo" src="${logoURL(tk)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">${fb}
+      <div class="wc-tk">${tk}</div>
+      <div class="wc-right ${cl}"><span class="wc-px">${px}</span><span class="wc-ch">${ch}</span><span class="wc-pct">${pct}</span></div>
+    </div>`;}).join('');
+  // nháy xanh/đỏ khi giá đổi so với lần trước (cảm giác bảng điện sống)
+  wl.forEach(tk=>{const d=wlData[tk];if(!d)return;const pv=prevPx[tk];
+    if(pv!=null && d.close!==pv){const c=$i('wGrid').querySelector('.wcard[data-tk="'+tk+'"]');if(c)c.classList.add(d.close>pv?'fup':'fdn');}
+    prevPx[tk]=d.close;});
+}
+async function refreshWL(){
+  if(window._rtOn)return;            // realtime DNSE đang chạy → bỏ polling dchart
+  if(window._wlBusy)return;window._wlBusy=true;
+  try{
+    const wl=getWL();$i('wUpd').textContent='⏳ cập nhật…';
+    const CONC=4;                                   // nhịp nhẹ → tránh VNDirect chặn burst
+    for(let i=0;i<wl.length;i+=CONC){
+      const part=wl.slice(i,i+CONC);
+      const res=await Promise.all(part.map(c=>dchartLast2(c).then(d=>[c,d]).catch(()=>[c,null])));
+      res.forEach(([c,d])=>{if(d){const close=d.close,prev=d.prev;     // chỉ ghi đè khi lấy được → mã lỗi giữ giá cũ
+        wlData[c]={close,change:close-prev,pctChange:prev?(close-prev)/prev*100:0};}});
+      renderWL();
+    }
+    const got=getWL().filter(c=>wlData[c]).length, total=getWL().length;
+    $i('wUpd').textContent=got?('● '+new Date().toLocaleTimeString('vi-VN')+(got<total?` (${got}/${total})`:'')):'⚠ chưa lấy được giá (mở qua localhost)';
+  }catch(e){
+    $i('wUpd').textContent='⚠ lỗi cập nhật — thử lại…';
+  }finally{
+    window._wlBusy=false;                            // luôn nhả khóa, không bao giờ đứng hình
+  }
+}
+// click + edit
+$i('wGrid').addEventListener('click',e=>{
+  const rm=e.target.closest('[data-rm]');
+  if(rm){const wl=getWL().filter(x=>x!==rm.dataset.rm);setWL(wl);renderWL();return;}
+  if(document.body.classList.contains('edit'))return;
+  const card=e.target.closest('.wcard');if(!card)return;
+  const tk=card.dataset.tk;if(VALUED[tk])location.href='phan-tich-co-ban.html#'+tk;
+});
+$i('editBtn').addEventListener('click',()=>document.body.classList.toggle('edit'));
+function addTk(){const v=($i('addInp').value||'').trim().toUpperCase();if(!v)return;
+  const wl=getWL();if(!wl.includes(v)){wl.push(v);setWL(wl);renderWL();if(window._rtOn)dnseSubscribe(v);else refreshWL();}$i('addInp').value='';}
+$i('addBtn').addEventListener('click',addTk);
+$i('addInp').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addTk();}});
+
+// ===== PHÁI SINH =====
+const DERIV=[['VN30F1M','VN30 · 1 tháng'],['VN30F2M','VN30 · 2 tháng'],['VN30F1Q','VN30 · quý gần']];
+async function refreshDeriv(){
+  $i('dUpd').textContent='⏳';
+  const res=await Promise.all(DERIV.map(([c,s])=>dchartLast2(c).then(d=>[c,s,d]).catch(()=>[c,s,null])));
+  $i('dGrid').innerHTML=res.map(([c,s,d])=>{
+    let v='—',ch='',cl='ref';
+    if(d){const close=d.close,prev=d.prev,diff=close-prev,pct=prev?diff/prev*100:0;
+      cl=diff>0?'up':(diff<0?'dn':'ref');v=fpx(close);
+      ch=(diff>=0?'+':'')+fpx(diff)+' ('+(pct>=0?'+':'')+pct.toFixed(2)+'%)';}
+    return `<div class="dcard"><div class="f">F</div><div><div class="dn-nm">${c}</div><div class="dn-sub">${s}</div></div>
+      <div class="dn-val"><div class="v ${cl}">${v}</div><div class="c ${cl}">${ch}</div></div></div>`;}).join('');
+  $i('dUpd').textContent='● '+new Date().toLocaleTimeString('vi-VN');
+}
+
+// ===== GLOBAL MARKETS (Yahoo) =====
+const GLOBAL=[
+  {grp:'Asia',items:[['^N225','Nikkei 225'],['^HSI','Hang Seng'],['^KS11','KOSPI'],['000001.SS','SSE Composite']]},
+  {grp:'Europe',items:[['^FTSE','FTSE 100'],['^FCHI','CAC 40'],['^GDAXI','DAX'],['^N100','Euronext 100'],['^STOXX50E','EURO STOXX 50']]},
+  {grp:'Crypto',items:[['BTC-USD','Bitcoin'],['ETH-USD','Ethereum'],['BNB-USD','BNB']]},
+  {grp:'Rates',items:[['^TNX','US 10-Yr Bond'],['^FVX','US 5-Yr Bond']]},
+  {grp:'Commodities',items:[['CL=F','Crude Oil'],['GC=F','Gold'],['BZ=F','Brent Crude']]}
+];
+async function yahoo(sym){
+  const u=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?range=1d&interval=15m`;
+  const j=await getJSONp(u);const r=j&&j.chart&&j.chart.result&&j.chart.result[0];
+  if(r&&r.meta){const p=r.meta.regularMarketPrice,pc=r.meta.chartPreviousClose||r.meta.previousClose;
+    return {price:p,pct:pc?(p-pc)/pc*100:0};}
+  return null;
+}
+let gmData={};
+function renderGM(){
+  $i('gmBody').innerHTML=GLOBAL.map((g,gi)=>{
+    const pills=g.items.map(([sym,nm])=>{
+      const d=gmData[sym];
+      if(!d)return `<div class="gmpill"><span class="dot ref"></span><span class="nm">${nm}</span><span class="vl mini">—</span></div>`;
+      const cl=d.pct>0?'up':(d.pct<0?'dn':'ref');
+      const arr=d.pct>0?'▲':(d.pct<0?'▼':'▬');
+      return `<div class="gmpill"><span class="dot ${cl}"></span><span class="nm">${nm}</span><span class="vl">${fnum(d.price)}</span><span class="${cl}">${arr} ${(d.pct>=0?'+':'')+d.pct.toFixed(2)}%</span></div>`;
+    }).join('');
+    const dir=gi%2?'rev':'', dur=40+gi*5;   // xen kẽ chiều + tốc độ khác nhau cho sinh động
+    return `<div class="gmrow"><span class="gmcat">${g.grp}</span><div class="gmmarq"><div class="gmtrack ${dir}" style="animation-duration:${dur}s">${pills}${pills}</div></div></div>`;
+  }).join('');
+}
+async function refreshGM(){
+  $i('gUpd').textContent='Source · Yahoo Finance · ⏳';
+  const all=[];GLOBAL.forEach(g=>g.items.forEach(it=>all.push(it[0])));
+  const CONC=6;
+  for(let i=0;i<all.length;i+=CONC){
+    const part=all.slice(i,i+CONC);
+    const res=await Promise.all(part.map(s=>yahoo(s).then(d=>[s,d]).catch(()=>[s,null])));
+    res.forEach(([s,d])=>{if(d)gmData[s]=d;});
+    renderGM();
+  }
+  $i('gUpd').textContent='Source · Yahoo Finance · '+new Date().toLocaleTimeString('vi-VN');
+}
+
+// ===== CHỈ SỐ — chart tự vẽ (SVG), không phụ thuộc TradingView =====
+function sparkSVG(arr,color,w,h){
+  arr=(arr||[]).filter(x=>isFinite(x));
+  if(arr.length<2)return '';
+  const min=Math.min(...arr),max=Math.max(...arr),rng=(max-min)||1,n=arr.length;
+  const X=i=>(i/(n-1))*w, Y=v=>h-2-((v-min)/rng)*(h-4);
+  const line=arr.map((v,i)=>X(i).toFixed(1)+','+Y(v).toFixed(1)).join(' ');
+  const id='sg'+Math.random().toString(36).slice(2,7);
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%;height:100%">
+    <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".28"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
+    <polygon points="0,${h} ${line} ${w},${h}" fill="url(#${id})"/>
+    <polyline points="${line}" fill="none" stroke="${color}" stroke-width="1.6"/></svg>`;
+}
+async function yahooFull(sym){
+  const u=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?range=1d&interval=5m`;
+  const j=await getJSONp(u);const r=j&&j.chart&&j.chart.result&&j.chart.result[0];
+  if(r&&r.meta){const price=r.meta.regularMarketPrice,prev=r.meta.chartPreviousClose||r.meta.previousClose;
+    let series=[];try{series=r.indicators.quote[0].close.filter(x=>x!=null);}catch(e){}
+    if(series.length<2)series=[prev,price];
+    return {price,prev,series};}
+  return null;
+}
+async function vnindexData(){
+  const to=Math.floor(Date.now()/1000),from=to-150*86400;
+  const j=await getJSONp(`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=VNINDEX&from=${from}&to=${to}`);
+  if(j&&j.s==='ok'&&j.c&&j.c.length){const c=j.c,n=c.length;
+    return {price:c[n-1],prev:c[n-2]!=null?c[n-2]:c[n-1],series:c.slice(-45)};}
+  return null;
+}
+function idxCard(nm,sub,d){
+  if(!d)return `<div class="idxcard2"><div class="ic-nm">${nm}</div><div class="ic-sub">${sub}</div><div class="ic-val">—</div><div class="ic-ch mini">không tải được</div></div>`;
+  const ch=d.price-d.prev,pct=d.prev?ch/d.prev*100:0,cl=ch>0?'up':(ch<0?'dn':'ref'),color=ch>0?'#26c281':(ch<0?'#f0556b':'#e2b33b');
+  return `<div class="idxcard2"><div class="ic-nm">${nm}</div><div class="ic-sub">${sub}</div>
+    <div class="ic-val ${cl}">${fnum(d.price)}</div>
+    <div class="ic-ch ${cl}">${(ch>=0?'+':'')+fnum(ch)} (${(pct>=0?'+':'')+pct.toFixed(2)}%)</div>
+    <div class="ic-spark">${sparkSVG(d.series,color,280,72)}</div></div>`;
+}
+let _ix=false;
+async function refreshIndices(){
+  if(_ix)return;_ix=true;
+  try{
+    const [vni,dji,cl,ym]=await Promise.all([
+      vnindexData().catch(()=>null),yahooFull('^DJI').catch(()=>null),
+      yahooFull('CL=F').catch(()=>null),yahooFull('YM=F').catch(()=>null)]);
+    $i('idxGrid').innerHTML=idxCard('VNINDEX','VN-Index',vni)+idxCard('DJI','Dow Jones Industrial',dji)
+      +idxCard('CL1!','WTI Crude Oil',cl)+idxCard('YM1!','E-mini Dow Futures',ym);
+  }finally{_ix=false;}
+}
+
+// ===== ĐỊNH GIÁ VN100 (FV của tôi) — [mã, ngành, FV(đồng)] =====
+const VN100=[
+  // Ngân hàng
+  ['VCB','NH',70000],['BID','NH',47000],['CTG','NH',40000],['TCB','NH',44000],['MBB','NH',29000],['ACB','NH',31000],['VPB','NH',33000],['STB','NH',42000],['HDB','NH',31000],['LPB','NH',45000],['VIB','NH',22000],['SHB','NH',16000],['TPB','NH',19000],['SSB','NH',19000],['EIB','NH',18000],['OCB','NH',13000],['MSB','NH',16000],['NAB','NH',18000],
+  // Chứng khoán / Tài chính
+  ['SSI','CK',34000],['VND','CK',19000],['VCI','CK',26000],['HCM','CK',28000],['VIX','CK',18000],['SHS','CK',20000],['MBS','CK',21000],['FTS','CK',24000],['BSI','CK',38000],['CTS','CK',30000],['VDS','CK',16000],['BVH','CK',60000],['PVI','CK',80000],['BMI','CK',18000],['EVF','CK',16000],
+  // Bất động sản / XD / KCN
+  ['VHM','BĐS',110000],['VIC','BĐS',0],['VRE','BĐS',32000],['KDH','BĐS',30500],['NLG','BĐS',38000],['DXG','BĐS',17000],['PDR','BĐS',18500],['NVL','BĐS',15000],['DIG','BĐS',22000],['KBC','BĐS',32000],['IDC','BĐS',46500],['HDC','BĐS',19000],['HDG','BĐS',32000],['DXS','BĐS',9000],['SJS','BĐS',75000],['SZC','BĐS',30000],['BCM','BĐS',70000],['SIP','BĐS',65000],['TCH','BĐS',18000],['CII','BĐS',18000],['VCG','BĐS',24000],['HHV','BĐS',14000],['CTD','BĐS',90000],['VPI','BĐS',60000],['KOS','BĐS',40000],['NTL','BĐS',30000],['CEO','BĐS',16000],['VGC','BĐS',50000],['DPG','BĐS',50000],
+  // Sản xuất / Tiêu dùng / Năng lượng / DN
+  ['HPG','SX',31500],['HSG','SX',13500],['NKG','SX',14500],['GVR','SX',39000],['DGC','SX',52000],['DCM','SX',35000],['DPM','SX',28000],['MWG','SX',98000],['FPT','SX',100000],['MSN','SX',80000],['VNM','SX',74000],['SAB','SX',55000],['GAS','SX',86000],['PLX','SX',42000],['POW','SX',16000],['REE','SX',70000],['PNJ','SX',100000],['FRT','SX',200000],['DGW','SX',50000],['VJC','SX',110000],['HVN','SX',30000],['GMD','SX',85000],['VSC','SX',22000],['PVT','SX',28000],['PVD','SX',35000],['PVS','SX',42000],['BSR','SX',28000],['DBC','SX',24000],['ANV','SX',30000],['VHC','SX',75000],['SBT','SX',18000],['KDC','SX',60000],['PAN','SX',28000],['DRC','SX',14000],['BMP','SX',165000],['CTR','SX',105000],['CMG','SX',38000],['NT2','SX',24000],['PPC','SX',12000],['PC1','SX',32000],['GEX','SX',28000],['HT1','SX',16000],['BWE','SX',50000],['IMP','SX',52000],['PTB','SX',65000],['TLG','SX',55000],['AAA','SX',12000],['HAG','SX',16000],['SCS','SX',80000],['CSV','SX',32000],['DHC','SX',45000],['DHG','SX',110000],['ACV','SX',60000]
+];
+const SECNAME={NH:'Ngân hàng',CK:'CK / Tài chính','BĐS':'Bất động sản',SX:'Sản xuất / DN'};
+const fvPx={};            // mã -> giá (nghìn) lấy live
+let fvFilter='ALL';
+function fvPrice(tk){const v=(fvPx[tk]!=null)?fvPx[tk]:(wlData[tk]?wlData[tk].close:null);return v!=null?v*1000:null;} // → đồng
+function renderFV(){
+  let rows=VN100.map(([t,s,fv])=>{const p=fvPrice(t);const up=(p&&fv>0)?(fv-p)/p*100:null;return {t,s,fv,p,up};});
+  if(fvFilter!=='ALL')rows=rows.filter(r=>r.s===fvFilter);
+  rows.sort((a,b)=>(a.up==null)-(b.up==null)||(b.up||0)-(a.up||0));
+  $i('fvBody').innerHTML=rows.map(r=>{
+    let kn='<span class="mini">—</span>',cl='',upTxt='—';
+    if(r.up!=null){const rc=r.up>=15?['MUA','r-buy']:(r.up>=-10?['GIỮ','r-hold']:['BÁN','r-sell']);
+      kn=`<span class="reco ${rc[1]}">${rc[0]}</span>`;cl=r.up>0?'up':(r.up<0?'dn':'');upTxt=(r.up>=0?'+':'')+r.up.toFixed(0)+'%';}
+    return `<tr onclick="location.href='phan-tich-co-ban.html#${r.t}'"><td style="font-weight:800">${r.t}</td><td class="mini">${SECNAME[r.s]||r.s}</td><td>${r.p!=null?fmt(r.p):'<span class=mini>…</span>'}</td><td>${r.fv>0?fmt(r.fv):'<span class=mini>—</span>'}</td><td class="${cl}">${upTxt}</td><td>${kn}</td></tr>`;}).join('');
+  const got=VN100.filter(([t])=>fvPrice(t)!=null).length;
+  $i('fvUpd').textContent=got+'/'+VN100.length+' mã có giá';
+}
+async function loadFVPrices(){
+  $i('fvUpd').textContent='⏳ đang lấy giá VN100…';
+  const list=VN100.map(r=>r[0]).filter(t=>fvPx[t]==null && !wlData[t]);   // bỏ mã đã có ở watchlist
+  const CONC=5;
+  for(let i=0;i<list.length;i+=CONC){
+    const part=list.slice(i,i+CONC);
+    const res=await Promise.all(part.map(t=>dchartLast2(t).then(d=>[t,d]).catch(()=>[t,null])));
+    res.forEach(([t,d])=>{if(d)fvPx[t]=d.close;});
+    renderFV();
+  }
+  renderFV();
+}
+function buildFVFilter(){
+  const fs=[['ALL','Tất cả'],['NH','Ngân hàng'],['CK','CK/TC'],['BĐS','BĐS'],['SX','SX/DN']];
+  $i('fvFilter').innerHTML=fs.map(([k,l])=>`<button class="rfbtn${k===fvFilter?' on':''}" data-f="${k}">${l}</button>`).join('');
+  $i('fvFilter').querySelectorAll('button').forEach(b=>b.onclick=()=>{fvFilter=b.dataset.f;buildFVFilter();renderFV();});
+}
+buildFVFilter();renderFV();
+$i('fvRefresh').onclick=loadFVPrices;
+
+// ===== BẢNG TIN TÀI CHÍNH (RSS realtime) =====
+async function tryFetchText(u,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);
+  try{const r=await fetch(u,{cache:'no-store',signal:c.signal});if(!r.ok)throw new Error('HTTP '+r.status);return await r.text();}finally{clearTimeout(t);}}
+async function getTextP(u){let last;for(const p of PROXIES){try{const t=await tryFetchText(p(u),9000);if(t&&t.length>80)return t;}catch(e){last=e;}}throw last||new Error('fail');}
+const NEWS_SRC=[
+  {k:'cafef',    name:'CafeF',    color:'#e0282e',url:'https://cafef.vn/thi-truong-chung-khoan.rss'},
+  {k:'vietstock',name:'Vietstock',color:'#1f6fb2',url:'https://vietstock.vn/145/chung-khoan.rss'},
+  {k:'tnck',     name:'TNCK',     color:'#2e9e5b',url:['https://www.tinnhanhchungkhoan.vn/rss/chung-khoan-307.rss','https://www.tinnhanhchungkhoan.vn/rss/tai-chinh-309.rss']},
+  {k:'vneco',    name:'VnEconomy',color:'#7c5cf6',url:'https://vneconomy.vn/chung-khoan.rss'}
+];
+let newsItems=[], newsFilter='ALL', _newsBusy=false;
+const escH=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function parseRSS(xml,src){
+  try{
+    const doc=new DOMParser().parseFromString(xml,'text/xml');
+    return [...doc.querySelectorAll('item')].slice(0,25).map(it=>{
+      const g=t=>{const e=it.querySelector(t);return e?e.textContent.trim():'';};
+      const pd=g('pubDate'); const tm=pd?Date.parse(pd):NaN;
+      return {title:g('title'),link:g('link'),src,t:isFinite(tm)?tm:0};
+    }).filter(x=>x.title&&x.link);
+  }catch(e){return [];}
+}
+function renderNews(){
+  let rows=newsItems;
+  if(newsFilter!=='ALL')rows=rows.filter(r=>r.src.k===newsFilter);
+  rows=rows.slice(0,70);
+  $i('newsList').innerHTML=rows.map(r=>{
+    const tm=r.t?new Date(r.t).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):'—';
+    return `<a class="newsitem" href="${r.link}" target="_blank" rel="noopener"><span class="ntime">${tm}</span><span class="nsrc" style="background:${r.src.color}">${r.src.name}</span><span class="ntitle">${escH(r.title)}</span></a>`;
+  }).join('')||'<div class="note" style="padding:12px">Chưa có tin.</div>';
+}
+// --- Bộ lọc "AI" theo điểm quan trọng: từ khóa thị trường + mã cổ phiếu VN100 ---
+const NEWS_CODES=new RegExp('\\b('+VN100.map(r=>r[0]).join('|')+')\\b');
+const IMP_KW=[
+  [/lãi suất|\bfed\b|fomc|nhnn|ngân hàng nhà nước|lạm phát|\bcpi\b|\bgdp\b|tỷ giá|\busd\b|opec|thuế quan|tariff|trump|trái phiếu|room tín dụng|gói kích thích|chính sách tiền tệ|bơm tiền|hút ròng/i,3,'Vĩ mô'],
+  [/vn-?index|\bvn30\b|nâng hạng|\bftse\b|\bmsci\b|khối ngoại|tự doanh|dòng tiền|thanh khoản|bán ròng|mua ròng|đỉnh lịch sử|phái sinh|đáo hạn/i,2,'TTCK'],
+  [/lợi nhuận|doanh thu|cổ tức|kết quả kinh doanh|lãi ròng|thua lỗ|báo lãi|báo lỗ|lãi kỷ lục|kỷ lục|\besop\b|tăng vốn/i,2,'KQKD'],
+  [/thâu tóm|mua lại|phát hành|chào bán|sáp nhập|thoái vốn|\bm&a\b|chuyển nhượng|cổ đông lớn|chào mua công khai|đăng ký mua|đăng ký bán/i,2,'Thương vụ'],
+  [/cảnh báo|vi phạm|hủy niêm yết|đình chỉ|điều tra|khởi tố|thao túng|xử phạt|giải chấp|kiểm soát|bán giải chấp|lừa đảo|bắt giữ|truy tố/i,3,'Cảnh báo'],
+  [/giảm sàn|tăng trần|kịch trần|kịch sàn|lao dốc|bứt phá|bốc hơi|tăng mạnh|giảm mạnh|tím trần|nằm sàn|trắng bên mua/i,2,'Biến động'],
+  [/giá vàng|\bvàng\b|dầu thô|brent|\bwti\b|bitcoin|\bbtc\b|crypto|giá dầu/i,1,'Hàng hoá']
+];
+function importance(it){
+  const title=it.title||''; let score=0; const tags=[];
+  IMP_KW.forEach(([re,p,tag])=>{if(re.test(title)){score+=p;tags.push(tag);}});
+  if(NEWS_CODES.test(title)){score+=2;tags.push('Cổ phiếu');}
+  if(it.t){const ageH=(Date.now()-it.t)/3600000; if(ageH<=3)score+=1; else if(ageH>48)score-=1;}  // ưu tiên tin nóng, hạ tin cũ
+  return {score,tags};
+}
+function renderImp(){
+  const rows=newsItems.map(r=>({r,imp:importance(r)})).filter(x=>x.imp.score>=3)
+    .sort((a,b)=>(b.imp.score-a.imp.score)||(b.r.t-a.r.t)).slice(0,50);
+  if($i('impCnt'))$i('impCnt').textContent='('+rows.length+')';
+  $i('newsImp').innerHTML=rows.map(({r,imp})=>{
+    const tm=r.t?new Date(r.t).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):'—';
+    const tags=imp.tags.slice(0,3).map(t=>`<span class="ntag">${t}</span>`).join('');
+    return `<a class="newsitem${imp.score>=5?' bigimp':''}" href="${r.link}" target="_blank" rel="noopener"><span class="ntime">${tm}</span><span class="nsrc" style="background:${r.src.color}">${r.src.name}</span><div><span class="ntitle">${escH(r.title)}</span><div class="ntags">${tags}</div></div></a>`;
+  }).join('')||'<div class="note" style="padding:12px">Chưa có tin đáng chú ý.</div>';
+}
+async function fetchNews(){
+  if(_newsBusy)return;_newsBusy=true;
+  $i('newsUpd').textContent='⏳ đang tải tin…';
+  try{
+    const all=[];
+    await Promise.all(NEWS_SRC.map(async s=>{
+      const urls=Array.isArray(s.url)?s.url:[s.url];
+      for(const u of urls){try{const xml=await getTextP(u);all.push(...parseRSS(xml,s));}catch(e){}}
+    }));
+    // khử trùng lặp theo tiêu đề (nhiều feed có thể trùng bài)
+    const seen={},uniq=[];
+    for(const it of all){const k=(it.title||'').toLowerCase().replace(/\s+/g,' ').trim();if(k&&!seen[k]){seen[k]=1;uniq.push(it);}}
+    if(uniq.length){newsItems=uniq.sort((a,b)=>b.t-a.t);renderNews();renderImp();$i('newsUpd').textContent='● '+new Date().toLocaleTimeString('vi-VN')+' · '+uniq.length+' tin';}
+    else $i('newsUpd').textContent='⚠ chưa tải được tin (CORS/proxy) — bấm ↻';
+  }finally{_newsBusy=false;}
+}
+function buildNewsFilter(){
+  const fs=[['ALL','Tất cả']].concat(NEWS_SRC.map(s=>[s.k,s.name]));
+  $i('newsFilter').innerHTML=fs.map(([k,l])=>`<button class="rfbtn${k===newsFilter?' on':''}" data-n="${k}">${l}</button>`).join('');
+  $i('newsFilter').querySelectorAll('button').forEach(b=>b.onclick=()=>{newsFilter=b.dataset.n;buildNewsFilter();renderNews();});
+}
+buildNewsFilter();
+$i('newsRefresh').onclick=fetchNews;
+
+// ===== REALTIME DNSE (MQTT over WSS) — tick từng giây thật =====
+const DNSE={token:null,investor:null,client:null,ref:{}};
+function rtStat(txt,on){const e=$i('rtStatus');if(e){e.textContent=txt;e.className='mini'+(on?' rton':'');}}
+async function dnseLogin(user,pass){
+  const r=await fetch('https://api.dnse.com.vn/user-service/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user,password:pass})});
+  if(!r.ok)throw new Error('đăng nhập lỗi ('+r.status+')');
+  const j=await r.json(); if(!j.token)throw new Error('không nhận được token'); return j.token;
+}
+async function dnseMe(token){
+  const r=await fetch('https://api.dnse.com.vn/user-service/api/me',{headers:{Authorization:'Bearer '+token}});
+  if(!r.ok)throw new Error('lấy investorId lỗi'); const j=await r.json();
+  console.log('[DNSE] me =',j);
+  return j.investorId||j.investorid||j.id||j.custodyCode||j.custodyId||'investor';
+}
+function dnseSubscribe(sym){
+  const c=DNSE.client; if(!c)return;
+  c.subscribe('plaintext/quotes/krx/mdds/tick/v1/roundlot/symbol/'+sym);
+  c.subscribe('plaintext/quotes/krx/mdds/stockinfo/v1/roundlot/symbol/'+sym);
+}
+let _rtLog=0;
+function dnseOnMsg(topic,payload){
+  let d; try{d=JSON.parse(payload.toString());}catch(e){return;}
+  if(_rtLog<4){console.log('[DNSE]',topic,d);_rtLog++;}
+  const sym=d.symbol||topic.split('/').pop(); if(!sym)return;
+  const nk=v=>(v>3000?v/1000:v);   // chuẩn hóa về nghìn đồng
+  if(topic.indexOf('/stockinfo/')>=0){
+    const ref=(d.basicPrice!=null)?d.basicPrice:(d.referencePrice!=null?d.referencePrice:null);
+    if(ref!=null)DNSE.ref[sym]=nk(ref);
+    return;
+  }
+  const mp=d.matchPrice; if(mp==null)return;
+  const close=nk(mp);
+  DNSE.ticks=(DNSE.ticks||0)+1; DNSE.lastTick=sym+' '+close.toFixed(2);   // đếm tick để hiện lên màn
+  const ref=(DNSE.ref[sym]!=null)?DNSE.ref[sym]:(wlData[sym]?(wlData[sym].close-wlData[sym].change):close);
+  if(wlData[sym]&&wlData[sym].close===close)return;
+  wlData[sym]={close,change:close-ref,pctChange:ref?(close-ref)/ref*100:0};
+  if(getWL().includes(sym))renderWL();
+}
+async function dnseConnect(user,pass){
+  if(typeof mqtt==='undefined'){rtStat('⚠ chưa tải được thư viện MQTT (mạng chặn unpkg)');return;}
+  rtStat('⏳ đang đăng nhập DNSE…');
+  try{
+    const token=await dnseLogin(user,pass); DNSE.token=token;
+    const inv=await dnseMe(token); DNSE.investor=inv;
+    rtStat('⏳ đang kết nối datafeed…');
+    const cid='dnse-price-json-mqtt-ws-sub-'+inv+'-'+Math.random().toString(16).slice(2,8);
+    const client=mqtt.connect('wss://datafeed-lts-krx.dnse.com.vn/wss',{clientId:cid,username:inv,password:token,protocolVersion:5,clean:true,keepalive:60,reconnectPeriod:5000,connectTimeout:15000});
+    DNSE.client=client;
+    client.on('connect',()=>{window._rtOn=true;DNSE.ticks=0;
+      const wl=getWL(); wl.forEach(dnseSubscribe);
+      rtStat('● Realtime DNSE · đã subscribe '+wl.length+' mã · chờ tick…',true);
+      $i('rtDisc').style.display='';$i('rtConnect').style.display='none';
+      try{localStorage.setItem('dnse_u',user);}catch(e){}   // chỉ lưu username, KHÔNG lưu mật khẩu
+      clearInterval(DNSE.statT); DNSE.statT=setInterval(()=>{ if(!window._rtOn)return;
+        const n=DNSE.ticks||0;
+        rtStat(n>0 ? ('● Realtime DNSE · '+n+' tick · '+(DNSE.lastTick||'')) : ('● đã kết nối '+inv+' · 0 tick — có thể NGOÀI GIỜ giao dịch (9h–15h) hoặc topic lệch (mở F12)'), true);
+      },3000);
+    });
+    client.on('message',dnseOnMsg);
+    client.on('error',e=>rtStat('⚠ lỗi datafeed: '+((e&&e.message)||e)));
+    client.on('close',()=>{if(window._rtOn){window._rtOn=false;rtStat('○ mất kết nối — thử lại / dùng dchart');}});
+  }catch(e){
+    window._rtOn=false;
+    rtStat('⚠ '+(e.message||e)+' — sai TK/mật khẩu hoặc DNSE chặn CORS (mở F12 Console xem chi tiết)');
+  }
+}
+function dnseDisconnect(){
+  window._rtOn=false; clearInterval(DNSE.statT); try{DNSE.client&&DNSE.client.end(true);}catch(e){} DNSE.client=null;
+  $i('rtDisc').style.display='none';$i('rtConnect').style.display='';
+  rtStat('○ Đã ngắt realtime — quay lại dchart (~1 phút/lần)'); refreshWL();
+}
+$i('rtBtn').onclick=()=>{const f=$i('rtForm');f.style.display=(f.style.display==='none')?'flex':'none';
+  const su=localStorage.getItem('dnse_u');if(su&&$i('rtUser')&&!$i('rtUser').value)$i('rtUser').value=su;};
+$i('rtForm').addEventListener('submit',e=>{e.preventDefault();dnseConnect($i('rtUser').value.trim(),$i('rtPass').value);});
+$i('rtDisc').onclick=dnseDisconnect;
+
+// ===== khởi động =====
+renderWL();renderGM();
+refreshWL();refreshDeriv();refreshIndices();refreshGM();
+setInterval(()=>{refreshWL();refreshDeriv();},8000);   // giá VN ~8s (nhịp an toàn, không bị chặn)
+setInterval(refreshIndices,30000);                      // chỉ số 30s
+setInterval(refreshGM,60000);                            // global 60s
+fetchNews(); setInterval(fetchNews,90000);               // bảng tin RSS 90s
+// setTimeout(loadFVPrices,3500);   // ĐÃ TẮT — bảng VN100 đang ẩn (bỏ comment để bật lại)
+</script>
+</body>
+</html>

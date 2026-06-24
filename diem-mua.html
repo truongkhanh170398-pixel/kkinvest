@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>KKINVEST · Điểm mua — Quét CANSLIM</title>
+<style>
+  :root{--bg:#080b13;--card:#0e1525;--card2:#141d31;--line:#1c2740;--txt:#e8edf7;--muted:#7e8db0;--accent:#e2b33b;--accent2:#4f8cff;--up:#26c281;--dn:#f0556b;--warn:#e2b33b;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1200px 700px at 50% -260px,#0c1730,#080b13);color:var(--txt);font-family:"Segoe UI",system-ui,Roboto,Arial,sans-serif;line-height:1.4;padding:0 0 40px}
+  .wrap{max-width:1340px;margin:0 auto;padding:0 16px}
+  .navsheets{display:flex;gap:8px;padding:11px 0 0;flex-wrap:wrap}
+  .ns{text-decoration:none;font-size:13px;font-weight:700;padding:7px 14px;border-radius:9px;border:1px solid var(--line);color:var(--muted);background:var(--card)}
+  .ns.active{background:var(--accent);color:#04140c;border-color:var(--accent)}.ns:hover{border-color:var(--accent2)}
+  header{padding:16px 0 12px;border-bottom:1px solid var(--line);margin-bottom:14px}
+  .tag{display:inline-block;background:var(--accent);color:#04140c;font-weight:700;font-size:11px;letter-spacing:1px;padding:4px 10px;border-radius:20px;text-transform:uppercase}
+  h1{font-size:23px;margin:9px 0 3px}.sub{color:var(--muted);font-size:13px}
+  .ctrl{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+  .seg{display:flex;gap:0;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .seg button{background:var(--card);color:var(--muted);border:none;border-right:1px solid var(--line);font-size:12.5px;font-weight:700;padding:7px 13px;cursor:pointer}
+  .seg button:last-child{border-right:none}.seg button.on{background:var(--accent);color:#04140c}
+  .seg.sell button.on{background:var(--dn);color:#fff}
+  .rfbtn{background:var(--card2);color:var(--txt);border:1px solid var(--line);font-size:12.5px;font-weight:700;padding:7px 14px;border-radius:9px;cursor:pointer}
+  .rfbtn:hover{border-color:var(--accent2)}
+  .stat{color:var(--muted);font-size:12.5px;margin-left:auto}
+  select{background:var(--card);border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:7px 10px;font-size:12.5px;font-family:inherit}
+  .tablebox{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:auto;margin-top:14px}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}
+  th,td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+  th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+  thead th{background:#0e1525;color:var(--muted);font-size:11px;text-transform:uppercase;cursor:pointer;position:sticky;top:0}
+  tbody tr{cursor:pointer}tbody tr:hover{background:#18203c}
+  .up{color:var(--up)}.dn{color:var(--dn)}.muted{color:var(--muted)}
+  .sigb{font-weight:800;padding:2px 9px;border-radius:6px;font-size:12px}
+  .b-mua{background:rgba(33,150,243,.18);color:#7cc0ff}.b-ban{background:rgba(239,71,87,.18);color:#f5a3ac}
+  .fresh{background:rgba(34,197,94,.16);color:#7fe3a5;font-size:10px;font-weight:800;padding:1px 6px;border-radius:5px;margin-left:6px}
+  .vspike{color:var(--accent);font-weight:700}
+  .note{color:var(--muted);font-size:12px;margin-top:12px}
+  .bar{height:5px;background:var(--card2);border-radius:3px;margin-top:8px;overflow:hidden}
+  .bar > div{height:5px;background:var(--accent);width:0;transition:width .2s}
+  .mini{font-size:11px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:9px"><span style="font-size:19px;font-weight:900;letter-spacing:3px;color:var(--accent)">KKINVEST</span><span style="font-size:11px;font-weight:600;letter-spacing:.5px;color:var(--muted)">· phân tích &amp; định giá chứng khoán</span></div>
+  <div class="navsheets">
+    <a class="ns" href="index.html">⭐ Tổng quan</a>
+    <a class="ns" href="phan-tich-co-ban.html">🧮 Phân tích cơ bản</a>
+    <a class="ns" href="phan-tich-ky-thuat.html">📊 Phân tích kỹ thuật</a>
+    <a class="ns active" href="diem-mua.html">🎯 Điểm mua</a>
+    <a class="ns" href="danh-muc.html">💼 Danh mục KH</a>
+  </div>
+  <header>
+    <span class="tag">Quét CANSLIM · breakout đỉnh 4 phiên</span>
+    <h1>Danh mục theo dõi điểm mua — quét toàn bộ VN100</h1>
+    <div class="sub">Tự động quét <b>toàn thị trường</b> (HOSE·HNX·UPCOM, lấy danh sách động từ VNDirect ~1.500 mã), lọc mã đang ở <b>điểm MUA</b> (đóng cửa vượt đỉnh 4 phiên) / <b>điểm BÁN</b> (thủng đáy 8 phiên) theo HungCanslim. Đã lọc ngầm <b>thanh khoản ≥ 100k cp/phiên</b> (bỏ mã thanh khoản kém). Bấm mã → mở chart kỹ thuật. Quét cả thị trường mất ~1–2 phút.</div>
+    <div class="ctrl">
+      <div class="seg" id="segType"><button class="on" data-t="MUA">🎯 Điểm MUA</button><button data-t="BÁN">🔻 Điểm BÁN</button></div>
+      <div class="seg" id="segFresh"><button data-f="3">≤3 phiên</button><button class="on" data-f="5">≤5 phiên</button><button data-f="10">≤10 phiên</button><button data-f="999">Tất cả đang giữ</button></div>
+      <select id="secSel"><option value="">Tất cả ngành</option></select>
+      <button class="rfbtn" id="scanBtn">↻ Quét lại</button>
+      <span class="stat" id="stat"></span>
+    </div>
+    <div class="bar"><div id="prog"></div></div>
+  </header>
+  <div class="tablebox"><table><thead><tr>
+    <th data-s="t">Mã</th><th data-s="sec">Ngành</th><th data-s="px">Giá</th><th data-s="pct">%TĐ</th>
+    <th data-s="sig">Tín hiệu</th><th data-s="ago">Khi nào</th><th data-s="vol">KL đột biến</th><th data-s="up">Upside FV</th><th>KN</th>
+  </tr></thead><tbody id="body"></tbody></table></div>
+  <div class="note">Điểm MUA = đóng cửa ≥ đỉnh cao nhất của 4 phiên liền trước (breakout). "Khi nào" = tín hiệu cách đây bao nhiêu phiên (0 = phiên gần nhất). "KL đột biến" = khối lượng phiên tín hiệu vs TB50. Tín hiệu xen kẽ (ExRem) — mã chỉ vào danh mục khi trạng thái hiện tại là loại đang chọn. Giá VNDirect (cần localhost). Tham khảo, không phải khuyến nghị.</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const fmt=n=>isFinite(n)?Math.round(n).toLocaleString('vi-VN'):'—';
+const fpx=n=>isFinite(n)?(+n).toLocaleString('en-US',{maximumFractionDigits:2}):'—';
+// VN100 [mã, ngành, FV(đồng)]
+const VN100=[
+  ['VCB','Ngân hàng',70000],['BID','Ngân hàng',47000],['CTG','Ngân hàng',40000],['TCB','Ngân hàng',44000],['MBB','Ngân hàng',29000],['ACB','Ngân hàng',31000],['VPB','Ngân hàng',33000],['STB','Ngân hàng',42000],['HDB','Ngân hàng',31000],['LPB','Ngân hàng',33000],['VIB','Ngân hàng',22000],['SHB','Ngân hàng',16000],['TPB','Ngân hàng',19000],['SSB','Ngân hàng',19000],['EIB','Ngân hàng',22000],['OCB','Ngân hàng',13000],['MSB','Ngân hàng',14000],['NAB','Ngân hàng',18000],
+  ['SSI','Chứng khoán',34000],['VND','Chứng khoán',18500],['VCI','Chứng khoán',25000],['HCM','Chứng khoán',27000],['VIX','Chứng khoán',18000],['SHS','Chứng khoán',19500],['MBS','Chứng khoán',21000],['FTS','Chứng khoán',24000],['BSI','Chứng khoán',38000],['CTS','Chứng khoán',32000],['VDS','Chứng khoán',20000],['BVH','Bảo hiểm',50000],['PVI','Bảo hiểm',55000],['BMI','Bảo hiểm',35000],['EVF','Tài chính',16000],
+  ['VHM','Bất động sản',103600],['VIC','Bất động sản',196600],['VRE','Bất động sản',32000],['KDH','Bất động sản',34100],['NLG','Bất động sản',42500],['DXG','Bất động sản',19250],['PDR','Bất động sản',21000],['NVL','Bất động sản',16000],['DIG','Bất động sản',22000],['KBC','KCN',32000],['IDC','KCN',52000],['HDC','Bất động sản',19500],['HDG','Bất động sản',32000],['DXS','Bất động sản',9000],['SJS','Bất động sản',75000],['SZC','KCN',30000],['BCM','KCN',70000],['SIP','KCN',65000],['TCH','Bất động sản',18000],['CII','Hạ tầng',18000],['VCG','Xây dựng',24000],['HHV','Hạ tầng',14000],['CTD','Xây dựng',90000],['VPI','Bất động sản',60000],['KOS','Bất động sản',40000],['NTL','Bất động sản',30000],['CEO','Bất động sản',16000],['VGC','VLXD·KCN',50000],['DPG','Bất động sản',50000],
+  ['HPG','Thép',31500],['HSG','Thép',14000],['NKG','Thép',15000],['GVR','Cao su·KCN',39000],['DGC','Hóa chất',52000],['DCM','Phân bón',35000],['DPM','Phân bón',30000],['MWG','Bán lẻ',108138],['FPT','Công nghệ',103000],['MSN','Tiêu dùng',80000],['VNM','Thực phẩm',74000],['SAB','Đồ uống',55000],['GAS','Dầu khí',86000],['PLX','Xăng dầu',42000],['POW','Điện',16000],['REE','Tiện ích',70000],['PNJ','Bán lẻ',100000],['FRT','Bán lẻ',200000],['DGW','Bán lẻ',50000],['VJC','Hàng không',110000],['HVN','Hàng không',30000],['GMD','Cảng biển',85000],['VSC','Cảng biển',22000],['PVT','Dầu khí',28000],['PVD','Dầu khí',35000],['PVS','Dầu khí',42000],['BSR','Dầu khí',28000],['DBC','Chăn nuôi',24000],['ANV','Thủy sản',30000],['VHC','Thủy sản',75000],['SBT','Đường',18000],['KDC','Thực phẩm',60000],['PAN','Nông nghiệp',28000],['DRC','Săm lốp',14000],['BMP','Nhựa',165000],['CTR','Hạ tầng VT',105000],['CMG','Công nghệ',38000],['NT2','Điện',24000],['PPC','Điện',12000],['PC1','Xây lắp điện',32000],['GEX','Thiết bị điện',28000],['HT1','Xi măng',16000],['BWE','Tiện ích',50000],['IMP','Dược',52000],['PTB','Gỗ·đá',60000],['TLG','VPP',55000],['AAA','Nhựa',12000],['HAG','Nông nghiệp',16000],['SCS','Logistics',75000],['CSV','Hóa chất',32000],['DHC','Giấy',45000],['DHG','Dược',110000],['ACV','Hàng không',60000]
+];
+// Mã mở rộng (ngoài VN100) — không có FV, vẫn lọc được theo CANSLIM + thanh khoản
+const EXTRA=[
+  ['ABB','Ngân hàng'],['BVB','Ngân hàng'],['BAB','Ngân hàng'],['VAB','Ngân hàng'],['SGB','Ngân hàng'],['PGB','Ngân hàng'],['KLB','Ngân hàng'],['NVB','Ngân hàng'],['VBB','Ngân hàng'],
+  ['ORS','Chứng khoán'],['AGR','Chứng khoán'],['APS','Chứng khoán'],['BVS','Chứng khoán'],['TVB','Chứng khoán'],['VIG','Chứng khoán'],['VFS','Chứng khoán'],['EVS','Chứng khoán'],['DSC','Chứng khoán'],
+  ['CRE','Bất động sản'],['AGG','Bất động sản'],['NBB','Bất động sản'],['SCR','Bất động sản'],['QCG','Bất động sản'],['LDG','Bất động sản'],['KHG','Bất động sản'],['HQC','Bất động sản'],['ITA','KCN'],['HID','Bất động sản'],['DRH','Bất động sản'],['SGR','Bất động sản'],['TDC','Bất động sản'],['NDN','Bất động sản'],['IDJ','Bất động sản'],['TIG','Bất động sản'],['L14','Bất động sản'],['DTD','Bất động sản'],['NRC','Bất động sản'],['HHS','Ô tô'],['VC3','Bất động sản'],['NHA','Bất động sản'],['NTL','Bất động sản'],['IJC','Bất động sản'],['D2D','KCN'],['LHG','KCN'],['SZC','KCN'],['SZL','KCN'],['TIP','KCN'],
+  ['HUT','Hạ tầng'],['FCN','Xây dựng'],['HBC','Xây dựng'],['HTN','Xây dựng'],['LCG','Xây dựng'],['C4G','Xây dựng'],['G36','Xây dựng'],['PHC','Xây dựng'],['TCD','Xây dựng'],['CTI','Hạ tầng'],['VCS','VLXD'],
+  ['SMC','Thép'],['VGS','Thép'],['POM','Thép'],['TLH','Thép'],['BCC','Xi măng'],['NTP','Nhựa'],['KSB','Khoáng sản'],['BMC','Khoáng sản'],['MSR','Khoáng sản'],
+  ['TNG','Dệt may'],['TCM','Dệt may'],['GIL','Dệt may'],['STK','Dệt may'],['MSH','Dệt may'],['VGT','Dệt may'],['ADS','Dệt may'],
+  ['IDI','Thủy sản'],['ACL','Thủy sản'],['FMC','Thủy sản'],['BAF','Chăn nuôi'],['HSL','Nông nghiệp'],['TAR','Nông nghiệp'],['LTG','Nông nghiệp'],['HNG','Nông nghiệp'],['LSS','Đường'],['QNS','Đường·sữa'],
+  ['DPR','Cao su'],['PHR','Cao su'],['TRC','Cao su'],
+  ['PVC','Dầu khí'],['PVG','Dầu khí'],['PVB','Dầu khí'],['OIL','Xăng dầu'],['PGV','Điện'],['GEG','Điện'],['VSH','Điện'],['SBA','Điện'],['TMP','Điện'],['NT2','Điện'],
+  ['HAH','Vận tải biển'],['VOS','Vận tải biển'],['VIP','Vận tải'],['VTO','Vận tải'],['VTP','Logistics'],
+  ['DBD','Dược'],['DCL','Dược'],['DVN','Dược'],['TNH','Y tế'],['DMC','Dược'],
+  ['ELC','Công nghệ'],['SGT','Công nghệ'],['ITD','Công nghệ'],['FOX','Công nghệ'],['VGI','Viễn thông'],
+  ['PET','Phân phối'],['MCH','Tiêu dùng'],['MML','Thực phẩm'],['VEA','Ô tô'],['SAB','Đồ uống'],
+  ['BFC','Phân bón'],['DDV','Phân bón'],['LAS','Phân bón'],
+  ['ASM','Đa ngành'],['BCG','Đa ngành'],['APH','Nhựa'],['FIT','Đa ngành'],['GEX','Thiết bị điện'],['TTF','Gỗ'],['YEG','Truyền thông']
+];
+// map FV + ngành cho các mã đã biết; universe thật lấy động từ VNDirect (toàn thị trường)
+const FVMAP={}, SECMAP={};
+VN100.forEach(r=>{FVMAP[r[0]]=r[2];SECMAP[r[0]]=r[1];});
+EXTRA.forEach(r=>{if(!SECMAP[r[0]])SECMAP[r[0]]=r[1];});
+// nạp ngành vào select
+(function(){const secs=[...new Set([...Object.values(SECMAP),'HOSE','HNX','UPCOM'])].sort();$('secSel').innerHTML='<option value="">Tất cả ngành / sàn</option>'+secs.map(s=>`<option>${s}</option>`).join('');})();
+
+let sigType='MUA', fresh=5, results=[], sortKey='ago', sortDir=1, minVol=true;
+const MINVOL=100000;   // lọc ẩn: chỉ giữ mã thanh khoản ≥ 100k cp/phiên
+
+async function tryFetch(u,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);
+  try{const r=await fetch(u,{cache:'no-store',signal:c.signal});if(!r.ok)throw 0;return await r.json();}finally{clearTimeout(t);}}
+const PROX=[x=>x,x=>'https://corsproxy.io/?url='+encodeURIComponent(x),x=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(x),x=>'https://api.allorigins.win/raw?url='+encodeURIComponent(x)];
+async function dchart(sym){
+  const to=Math.floor(Date.now()/1000),from=to-180*86400;
+  const u=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${sym}&from=${from}&to=${to}`;
+  for(const p of PROX){try{const j=await tryFetch(p(u),9000);if(j&&j.s==='ok'&&j.c&&j.c.length>20)return j;}catch(e){}}
+  return null;
+}
+async function getJSONp(u){for(const p of PROX){try{const j=await tryFetch(p(u),12000);if(j&&j.data)return j;}catch(e){}}return null;}
+async function loadUniverse(){
+  const j=await getJSONp('https://api-finfo.vndirect.com.vn/v4/stocks?q=type:STOCK~status:LISTED&size=2500&fields=code,floor');
+  if(j&&j.data&&j.data.length>200) return j.data.map(d=>[d.code, SECMAP[d.code]||d.floor, FVMAP[d.code]||0]);
+  // dự phòng: list cố định
+  const s={},u=[];VN100.forEach(r=>{if(!s[r[0]]){s[r[0]]=1;u.push(r);}});EXTRA.forEach(r=>{if(!s[r[0]]){s[r[0]]=1;u.push([r[0],r[1],0]);}});return u;
+}
+function sma(a,n){const o=Array(a.length).fill(null);let s=0;for(let i=0;i<a.length;i++){s+=a[i];if(i>=n)s-=a[i-n];if(i>=n-1)o[i]=s/n;}return o;}
+function scan(j){
+  const H=j.h,L=j.l,C=j.c,V=j.v||[],n=C.length;
+  let inBuy=false,inSell=false,last=null;
+  for(let i=8;i<n;i++){
+    const mua=C[i]>=H[i-1]&&C[i]>=H[i-2]&&C[i]>=H[i-3]&&C[i]>=H[i-4];
+    const ban=C[i]<=L[i-1]&&C[i]<=L[i-2]&&C[i]<=L[i-3]&&C[i]<=L[i-4]&&C[i]<=L[i-5]&&C[i]<=L[i-6]&&C[i]<=L[i-7]&&C[i]<=L[i-8];
+    if(mua&&!inBuy){inBuy=true;inSell=false;last={t:'MUA',i};}
+    if(ban&&!inSell){inSell=true;inBuy=false;last={t:'BÁN',i};}
+  }
+  if(!last)return null;
+  const px=C[n-1], prev=C[n-2]||px, pct=prev?(px-prev)/prev*100:0;
+  const vma=sma(V,50)[last.i], vsp=(vma&&V[last.i])?Math.round((V[last.i]-vma)/vma*100):0;
+  const vol20=sma(V,20)[n-1]||0;   // KL TB 20 phiên (cp/ngày) — lọc thanh khoản
+  return {sig:last.t, ago:n-1-last.i, px, pct, vsp, vol20};
+}
+function classCl(v){return v>0?'up':(v<0?'dn':'muted');}
+function render(){
+  const sec=$('secSel').value;
+  let rows=results.filter(r=>r.d && r.d.sig===sigType && r.d.ago<=fresh && (!sec||r.sec===sec) && (!minVol||r.d.vol20>=MINVOL));
+  rows.sort((a,b)=>{const k=sortKey; let va,vb;
+    if(k==='t'){va=a.tk;vb=b.tk;return sortDir*(va<vb?-1:va>vb?1:0);}
+    if(k==='sec'){return sortDir*((a.sec<b.sec)?-1:1);}
+    if(k==='px')[va,vb]=[a.d.px,b.d.px]; else if(k==='pct')[va,vb]=[a.d.pct,b.d.pct];
+    else if(k==='vol')[va,vb]=[a.d.vsp,b.d.vsp]; else if(k==='kl')[va,vb]=[a.d.vol20,b.d.vol20];
+    else if(k==='up')[va,vb]=[a.up,b.up];
+    else if(k==='sig')[va,vb]=[a.d.sig,b.d.sig]; else [va,vb]=[a.d.ago,b.d.ago];
+    return sortDir*((va||0)-(vb||0));});
+  $('body').innerHTML=rows.map(r=>{
+    const d=r.d, sigCls=d.sig==='MUA'?'b-mua':'b-ban', kn=d.sig==='MUA'?(r.up>=10?'MUA':'THEO DÕI'):'CHỐT/TRÁNH';
+    const knCls=d.sig==='MUA'?'up':'dn';
+    return `<tr onclick="location.href='phan-tich-ky-thuat.html#${r.tk}'">
+      <td style="font-weight:800">${r.tk}</td><td class="mini">${r.sec}</td>
+      <td>${fpx(d.px)}</td><td class="${classCl(d.pct)}">${(d.pct>=0?'+':'')+d.pct.toFixed(2)}%</td>
+      <td><span class="sigb ${sigCls}">${d.sig}</span>${d.ago<=2?'<span class="fresh">MỚI</span>':''}</td>
+      <td>${d.ago===0?'phiên này':(d.ago+' phiên trước')}</td>
+      <td class="${d.vsp>=30?'vspike':'muted'}">${d.vsp>0?'+'+d.vsp+'%':'—'}</td>
+      <td class="${classCl(r.up)}">${isFinite(r.up)?(r.up>=0?'+':'')+r.up.toFixed(0)+'%':'—'}</td>
+      <td class="${knCls}" style="font-weight:700">${kn}</td></tr>`;}).join('')
+    || `<tr><td colspan="9" class="mini" style="padding:18px;text-align:center">Không có mã nào ở điểm ${sigType} (${fresh===999?'đang giữ':'≤'+fresh+' phiên'})${sec?' · ngành '+sec:''}.</td></tr>`;
+  $('stat').textContent=`${rows.length} mã ở điểm ${sigType}`;
+}
+async function runScan(){
+  results=[]; $('scanBtn').disabled=true; $('stat').textContent='⏳ đang lấy danh sách toàn thị trường…';
+  const UNIVERSE=await loadUniverse();
+  const total=UNIVERSE.length; let done=0,ok=0;
+  const CONC=8;
+  for(let i=0;i<total;i+=CONC){
+    const part=UNIVERSE.slice(i,i+CONC);
+    await Promise.all(part.map(async ([tk,sec,fv])=>{
+      let d=null; try{const j=await dchart(tk); if(j)d=scan(j);}catch(e){}
+      if(d){ok++; const priceD=d.px*1000, up=fv>0?(fv-priceD)/priceD*100:NaN; results.push({tk,sec,fv,d,up});}
+      done++;
+    }));
+    $('prog').style.width=Math.round(done/total*100)+'%';
+    $('stat').textContent=`⏳ quét ${done}/${total}…`;
+    render();
+  }
+  $('scanBtn').disabled=false;
+  $('prog').style.width='100%';
+  render();
+  $('stat').textContent=`✓ quét ${ok}/${total} mã · ${new Date().toLocaleTimeString('vi-VN')}`;
+}
+// controls
+$('segType').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('segType').querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');sigType=b.dataset.t;$('segType').className='seg'+(sigType==='BÁN'?' sell':'');render();});
+$('segFresh').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('segFresh').querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');fresh=+b.dataset.f;render();});
+$('secSel').onchange=render;
+$('scanBtn').onclick=runScan;
+document.querySelectorAll('thead th[data-s]').forEach(th=>th.onclick=()=>{const k=th.dataset.s;if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=(k==='ago'||k==='t'||k==='sec')?1:-1;}render();});
+runScan();
+</script>
+</body>
+</html>

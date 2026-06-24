@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>KKINVEST · Phân tích cơ bản — Định giá theo ngành</title>
+<style>
+  :root{--bg:#080b13;--card:#0e1525;--card2:#141d31;--line:#1c2740;--txt:#e8edf7;
+    --muted:#7e8db0;--accent:#e2b33b;--accent2:#4f8cff;--good:#3ba776;--danger:#e25c5c;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1200px 700px at 50% -260px,#0c1730,#080b13);color:var(--txt);
+    font-family:"Segoe UI",system-ui,Roboto,Arial,sans-serif;line-height:1.5;padding:0 0 40px}
+  .wrap{max-width:1340px;margin:0 auto;padding:0 18px}
+  header{padding:22px 0 14px;border-bottom:1px solid var(--line);margin-bottom:14px}
+  .navsheets{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+  .ns{text-decoration:none;font-size:13px;font-weight:700;padding:7px 15px;border-radius:9px;
+    border:1px solid var(--line);color:var(--muted);background:var(--card)}
+  .ns.active{background:var(--accent);color:#04122b;border-color:var(--accent)}
+  .ns:hover{border-color:var(--accent2)}
+  .tag{display:inline-block;background:var(--accent);color:#04122b;font-weight:700;font-size:11px;
+    letter-spacing:1px;padding:4px 10px;border-radius:20px;text-transform:uppercase}
+  h1{font-size:24px;margin:10px 0 3px}
+  .sub{color:var(--muted);font-size:13.5px}
+  .tickbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}
+  .tickbar input.tk{font-size:22px;font-weight:800;letter-spacing:1px;text-transform:uppercase;width:130px;
+    background:#0c142b;border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:8px 12px}
+  button{background:var(--card2);color:var(--txt);border:1px solid var(--line);font-size:13px;font-weight:600;
+    padding:9px 14px;border-radius:9px;cursor:pointer}
+  button:hover{border-color:var(--accent2)}
+  .btn-acc{background:var(--accent2);color:#04122b;border-color:var(--accent2)}
+  .mini{font-size:12px;color:var(--muted)}
+  .sectabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .st{font-size:13.5px;font-weight:700;padding:8px 16px;border-radius:10px;border:1px solid var(--line);
+    background:var(--card);color:var(--muted);cursor:pointer;transition:.15s}
+  .st:hover{border-color:var(--accent2)}
+  .st.active{color:#fff}
+  .st.bds.active{background:#1c3a2b;border-color:#3ba776;color:#7fe3b0}
+  .st.sx.active{background:#3a2f1a;border-color:#e2a33b;color:#f3cd84}
+  .st.ck.active{background:#2a2550;border-color:#8b7cf6;color:#bcaeff}
+  .st .cnt{font-size:11px;color:var(--muted);font-weight:500;margin-left:4px}
+  .framewrap{margin-top:10px}
+  iframe#frame{width:100%;border:none;border-radius:12px;background:transparent;display:block;min-height:1200px}
+  .thesis{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 16px;margin-top:12px}
+  .thesis .th-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:7px}
+  .thesis .th-tk{font-size:17px;font-weight:800;letter-spacing:.5px}
+  .thesis .th-h{font-size:13.5px;color:#dbe3f4;font-weight:600}
+  .thesis .bctc{margin-left:auto;text-decoration:none;font-size:12.5px;font-weight:700;color:#9cc0ff;background:#0c142b;border:1px solid var(--line);padding:6px 13px;border-radius:8px;white-space:nowrap}
+  .thesis .bctc:hover{border-color:var(--accent2);color:#cfe0ff}
+  .thesis ul{margin:2px 0 0;padding-left:18px}
+  .thesis li{font-size:13px;color:#c7d0e4;margin:3px 0;line-height:1.45}
+  .thesis .meth{font-size:11.8px;color:var(--muted);margin-top:8px;border-top:1px solid var(--line);padding-top:7px}
+  .thesis .meth b{color:#9cbcff}
+  .ctck{margin-top:9px;border-top:1px solid var(--line);padding-top:9px}
+  .ctck .lbl{font-size:11.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+  .tgtrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .tgt{background:#0c142b;border:1px solid var(--line);border-radius:8px;padding:5px 11px;font-size:13px;font-weight:700;display:flex;flex-direction:column;line-height:1.25}
+  .tgt small{font-size:10px;color:var(--muted);font-weight:600}
+  .tgt.mid{border-color:var(--accent2);background:#0e1c3a}.tgt.mid b{color:#9cc0ff}
+  .upbox{font-size:13px;font-weight:800;padding:5px 11px;border-radius:8px;border:1px solid var(--line)}
+  .upbox.pos{background:rgba(59,167,118,.13);color:#7fe3b0;border-color:#2e6b4f}
+  .upbox.neg{background:rgba(226,92,92,.13);color:#f1a3a3;border-color:#7a3636}
+  .repbtns{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+  .repbtn{text-decoration:none;font-size:12px;font-weight:700;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:#0c142b;white-space:nowrap}
+  .repbtn.dnse{color:#9be3c6}.repbtn.h24{color:#f3cd84}.repbtn:hover{border-color:var(--accent2)}
+  .ctck .disc{font-size:10.8px;color:var(--muted);margin-top:6px}
+  .loginGate{position:fixed;inset:0;background:radial-gradient(1200px 700px at 50% -260px,#0c1730,#080b13);z-index:1000;display:flex;align-items:center;justify-content:center}
+  .loginGate.hidden{display:none}
+  .loginBox{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:32px 30px;width:min(360px,92vw);display:flex;flex-direction:column;gap:12px}
+  .loginTitle{font-size:20px;font-weight:800;text-align:center}
+  .loginSub{font-size:12.5px;color:var(--muted);text-align:center;margin-bottom:6px}
+  .loginBox input{background:#0c142b;border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:11px 13px;font-size:14px;font-family:inherit}
+  .loginBox input:focus{border-color:var(--accent2);outline:none}
+  .loginBox button{background:var(--accent);color:#04122b;border:none;border-radius:9px;padding:11px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px}
+  .lerr{color:var(--danger);font-size:12.5px;text-align:center;min-height:15px}
+  .logout{position:fixed;top:12px;right:16px;z-index:900;font-size:12px;padding:5px 12px;background:var(--card2);border:1px solid var(--line);border-radius:8px;color:var(--muted);cursor:pointer}
+  .logout:hover{border-color:var(--danger);color:var(--danger)}
+</style>
+</head>
+<body>
+<div class="loginGate" id="loginGate">
+  <form class="loginBox" id="loginForm">
+    <div class="loginTitle">🔐 Phân tích cơ bản</div>
+    <div class="loginSub">Vui lòng đăng nhập để tiếp tục</div>
+    <input id="luser" placeholder="Tên đăng nhập" autocomplete="username" autofocus>
+    <input id="lpass" type="password" placeholder="Mật khẩu" autocomplete="current-password">
+    <button type="submit">Đăng nhập</button>
+    <div class="lerr" id="lerr"></div>
+  </form>
+</div>
+<button class="logout" onclick="localStorage.removeItem('vt_auth');location.reload()">Đăng xuất</button>
+<script>
+(function(){
+  const AUTH={user:"admin", pass:"kdh2026"};
+  const KEY="vt_auth", gate=document.getElementById('loginGate');
+  if(localStorage.getItem(KEY)==="1") gate.classList.add('hidden');
+  document.getElementById('loginForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    const u=document.getElementById('luser').value.trim(), p=document.getElementById('lpass').value;
+    if(u===AUTH.user && p===AUTH.pass){localStorage.setItem(KEY,"1");gate.classList.add('hidden');}
+    else{document.getElementById('lerr').textContent="Sai tên đăng nhập hoặc mật khẩu";}
+  });
+})();
+</script>
+
+<header><div class="wrap">
+  <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:9px"><span style="font-size:19px;font-weight:900;letter-spacing:3px;color:var(--accent)">KKINVEST</span><span style="font-size:11px;font-weight:600;letter-spacing:.5px;color:var(--muted)">· phân tích &amp; định giá chứng khoán</span></div>
+  <div class="navsheets">
+    <a class="ns" href="index.html">⭐ Tổng quan</a>
+    <a class="ns active" href="phan-tich-co-ban.html">🧮 Phân tích cơ bản</a>
+    <a class="ns" href="phan-tich-ky-thuat.html">📊 Phân tích kỹ thuật</a>
+    <a class="ns" href="diem-mua.html">🎯 Điểm mua</a>
+    <a class="ns" href="danh-muc.html">💼 Danh mục KH</a>
+  </div>
+  <span class="tag">Phân tích cơ bản · Định giá theo ngành · RNAV / DCF-comps / P/B-ROE</span>
+  <h1>Phân tích cơ bản — Nhập mã → tự nhận diện ngành & định giá</h1>
+  <div class="sub"><b>Nhập mã + Enter</b> → tự nhận ngành (BĐS / Sản xuất / Chứng khoán) và chạy đúng phương pháp định giá. Hoặc bấm tab ngành bên dưới để duyệt từng nhóm.</div>
+  <div class="tickbar">
+    <input class="tk" id="ticker" placeholder="KDH" autocomplete="off">
+    <button class="btn-acc" id="analyzeBtn">🔍 Phân tích mã</button>
+    <button id="fetchBtn">↻ Lấy giá hiện tại</button>
+    <span class="mini" id="status">Nhập mã bất kỳ — ví dụ KDH, HPG, SSI…</span>
+  </div>
+  <div class="sectabs" id="sectabs"></div>
+</div></header>
+
+<div class="wrap"><div class="thesis" id="thesisBox"></div></div>
+
+<div class="wrap framewrap">
+  <iframe id="frame" src="about:blank" title="Module định giá ngành"></iframe>
+</div>
+
+<script>
+const SECT={
+  bds:{name:'🏢 Bất động sản · XD', cls:'bds', file:'valuation-terminal.html', def:'KDH',
+       list:['VHM','VIC','VRE','KDH','NLG','DXG','PDR','NVL','DIG','KBC','IDC','HDC','HDG','DXS','SJS','SZC','BCM','SIP','TCH','CII','VCG','HHV','CTD','VPI','KOS','NTL','CEO','VGC','DPG']},
+  sx :{name:'🏭 Sản xuất & DN',  cls:'sx',  file:'dinh-gia-san-xuat.html',    def:'HPG',
+       list:['HPG','HSG','NKG','GVR','DGC','DCM','DPM','MWG','FPT','MSN','VNM','SAB','GAS','PLX','POW','REE','PNJ','FRT','DGW','VJC','HVN','GMD','VSC','PVT','PVD','PVS','BSR','DBC','ANV','VHC','SBT','KDC','PAN','DRC','BMP','CTR','CMG','NT2','PPC','PC1','GEX','HT1','BWE','IMP','PTB','TLG','AAA','HAG','SCS','CSV','DHC','DHG','ACV']},
+  ck :{name:'🏦 Tài chính (NH·CK)', cls:'ck', file:'dinh-gia-chung-khoan.html', def:'SSI',
+       list:['VCB','BID','CTG','TCB','MBB','ACB','VPB','STB','HDB','LPB','VIB','SHB','TPB','SSB','EIB','OCB','MSB','NAB','SSI','VND','VCI','HCM','VIX','SHS','MBS','FTS','BSI','CTS','VDS','BVH','PVI','BMI','EVF']}
+};
+// ===== Luận điểm đầu tư 2026 (note nhanh) — h: headline, b: gạch đầu dòng =====
+const NOTES={
+  // Ngân hàng
+  VCB:{h:'NH quốc doanh đầu ngành — chất lượng tài sản tốt nhất',b:['ROE 16%, NIM ổn định, nợ xấu thấp nhất hệ thống','Top pick Yuanta/ACBS nửa sau 2026 khi lãi suất tạo đỉnh','P/B ~2.2x cao nhưng xứng đáng với chất lượng']},
+  CTG:{h:'NH quốc doanh định giá rẻ, ROE bứt phá',b:['ROE 21.7%, P/E chỉ 6.9x — rẻ nhất nhóm NH lớn','ACBS ưu tiên; NIM & thu ngoài lãi cải thiện','Giá mục tiêu 40.2k (NHSV), upside ~20%']},
+  BID:{h:'NH quốc doanh lớn nhất tổng tài sản',b:['ROE 17.8%; hưởng lợi đầu tư công & bán lẻ','Áp lực tăng vốn để mở rộng tín dụng']},
+  TCB:{h:'NH tư nhân — hệ sinh thái BĐS & trái phiếu',b:['HSC nâng MUA, mục tiêu 46k (+36%)','CASA cao, bancassurance mạnh; P/B 1.27x thấp so lịch sử','Rủi ro: tập trung tín dụng BĐS']},
+  MBB:{h:'NH tư nhân ROE cao, CASA mạnh',b:['ROE 20%, P/E 7.3x; HSC nâng MUA 30.4k','Hệ sinh thái quân đội, tăng trưởng tín dụng tốt']},
+  ACB:{h:'NH bán lẻ thận trọng, tài sản sạch',b:['ROE 17.5%, nợ xấu thấp, ít trái phiếu DN','Yuanta ưu tiên; tăng trưởng đều']},
+  HDB:{h:'ROE cao nhất nhóm NH',b:['ROE 23.2%; tăng trưởng nhanh','NHSV mục tiêu 32.2k; câu chuyện nới room/đối tác']},
+  VPB:{h:'Vốn dày sau thương vụ SMBC',b:['ROE phục hồi 15.5%, FE Credit hồi phục','P/B 1.2x rẻ; NHSV 34k']},
+  SHB:{h:'Rẻ nhất nhóm — P/B 0.91x dưới giá trị sổ sách',b:['ROE 18%; câu chuyện thoái vốn SHBFinance','Định giá chiết khấu sâu']},
+  STB:{h:'Hồi phục sau tái cơ cấu, sạch nợ tồn đọng',b:['Xử lý xong tài sản tồn đọng → bứt tốc lợi nhuận','Câu chuyện đấu giá cổ phần & cổ tức trở lại']},
+  // Chứng khoán
+  SSI:{h:'Đầu ngành CK — hưởng lợi nâng hạng FTSE 2026',b:['"Must Buy" cho câu chuyện nâng hạng thị trường','Q1/26 LNST +52% YoY, dẫn đầu ngành','Thị phần & quy mô vốn lớn nhất']},
+  VND:{h:'CK bán lẻ, đòn bẩy thanh khoản thị trường',b:['Hồi phục sau biến cố trái phiếu','Beta cao — nhạy với dòng tiền & nâng hạng']},
+  VCI:{h:'CK khối tổ chức/ngoại, hưởng lợi vốn ngoại',b:['Mạnh mảng môi giới tổ chức & tư vấn','Đòn bẩy câu chuyện nâng hạng FTSE']},
+  HCM:{h:'CK chuyển hướng margin & trái phiếu',b:['Rút ~4.000 tỷ tự doanh, tập trung margin','LN mục tiêu 2.302 tỷ (+56% YoY)']},
+  VIX:{h:'ROE cao nhờ tự doanh — biến động mạnh',b:['Lợi nhuận phụ thuộc tự doanh, kém ổn định','Cẩn trọng P/E khi tự doanh lãi đột biến']},
+  // Bất động sản
+  VHM:{h:'Backlog bàn giao khổng lồ 2026',b:['Kế hoạch DT 285k tỷ (+86%), LN 60k tỷ (+38%)','HSC nâng dự phóng 2026/27; bán buôn khởi sắc','ROE 27.8% — định giá P/E hợp lý hơn RNAV thuần']},
+  VIC:{h:'Holding — định giá theo SOTP, premium VinFast',b:['P/E 130x, P/B 10x: market định giá kỳ vọng VinFast','Rủi ro dòng tiền tài trợ VinFast; theo dõi nợ vay']},
+  KDH:{h:'Quỹ đất sạch TP.HCM — chiết khấu RNAV sâu',b:['Giao dịch chiết khấu ~44% so RNAV','LN 2026 mục tiêu +50–150% (Gladia, Privia, Clarita)','LD Keppel — bàn giao cao tầng ~2027']},
+  NLG:{h:'Nhà ở vừa túi tiền — dòng tiền tốt, ít đòn bẩy',b:['Waterpoint/Izumi/Akari bàn giao đều','Q1/26 LN tăng 2 chữ số; quỹ đất lớn sạch']},
+  DXG:{h:'Phục hồi — chờ Gem Riverside/Sky World',b:['Q1/26 LN ~130 tỷ; đòn bẩy giảm dần','Catalyst: mở bán Gem Riverside (Thủ Đức)']},
+  PDR:{h:'Tái cấu trúc nợ, mở bán trở lại',b:['Giảm nợ vay mạnh; quỹ đất Bình Dương/Quy Nhơn','Rủi ro pha loãng từ phát hành cổ phiếu']},
+  NVL:{h:'Tái cơ cấu nợ — rủi ro cao, đòn bẩy lớn',b:['Quỹ đất khổng lồ (Aqua, NovaWorld) nhưng kẹt pháp lý/dòng tiền','Định giá theo P/B; chỉ hợp khẩu vị rủi ro cao']},
+  DIG:{h:'Đầu cơ chu kỳ — quỹ đất lớn, đòn bẩy cao',b:['Nhạy với chu kỳ & dòng tiền; pháp lý dự án chậm']},
+  KBC:{h:'KCN hưởng lợi FDI & dịch chuyển chuỗi cung',b:['Quỹ đất KCN lớn (Bắc Ninh, Long An)','Dòng vốn FDI điện tử là động lực 2026']},
+  IDC:{h:'KCN cho thuê — dòng tiền đều, cổ tức cao',b:['Hưởng lợi FDI; quỹ đất Hựu Thạnh/Phú Mỹ 2','ROE cao, cổ tức tiền mặt hấp dẫn']},
+  HDG:{h:'BĐS + thủy điện — dòng tiền điện ổn định',b:['Mảng điện bù dòng tiền cho BĐS','Q1/26 tăng trưởng 2 chữ số']},
+  BCM:{h:'Ông lớn KCN Bình Dương (VSIP)',b:['Quỹ đất KCN & đô thị khổng lồ','Liên doanh VSIP; định giá cao theo tài sản']},
+  // Sản xuất / Tiêu dùng / Năng lượng
+  HPG:{h:'Thép đầu ngành — Dung Quất 2 ramp công suất',b:['DQ2 nâng công suất ~2x giai đoạn 2025–26','Hưởng lợi đầu tư công & thép HRC nội địa','Chu kỳ thép hồi phục; ROE 16.4%']},
+  HSG:{h:'Tôn mạ chu kỳ — đòn bẩy giá thép & xuất khẩu',b:['Lợi nhuận biến động theo giá HRC','Định giá quanh P/B do tính chu kỳ']},
+  NKG:{h:'Tôn mạ xuất khẩu — nhạy thuế CBPG & giá thép',b:['Rủi ro thuế chống bán phá giá EU/US','Chu kỳ — định giá P/B sàn']},
+  GVR:{h:'Cao su → KCN: câu chuyện chuyển đổi quỹ đất',b:['Chuyển đất cao su sang KCN giá trị cao','LN cốt lõi thấp; định giá premium kỳ vọng đất']},
+  DGC:{h:'Hóa chất phốt pho đầu ngành — bảng cân đối khỏe',b:['Tiền mặt ròng lớn, ROE cao','Dự án Đức Giang Nghi Sơn (xút-clo) mở rộng']},
+  DCM:{h:'Đạm Cà Mau — net cash, cổ tức tốt',b:['Hưởng lợi giá ure & khí; tiền mặt ròng','Đa dạng hóa sang NPK/đạm chức năng']},
+  DPM:{h:'Đạm Phú Mỹ — phòng thủ, cổ tức cao',b:['Net cash; nhạy giá ure & khí đầu vào']},
+  MWG:{h:'Bán lẻ phục hồi mạnh — Bách Hóa Xanh có lãi',b:['Q1/26 LNST +78% YoY; ROE 25.4%','BHX qua điểm hòa vốn → đóng góp lợi nhuận','TGDĐ/ĐMX tối ưu chi phí, mở rộng EraBlue']},
+  FPT:{h:'Công nghệ tăng trưởng kép — AI & bán dẫn',b:['ROE 26.8%; xuất khẩu phần mềm tăng 2 chữ số','Mảng AI/Data Center & nhà máy AI là động lực mới','Cổ phiếu phòng thủ-tăng trưởng chất lượng cao']},
+  VNM:{h:'Bò sữa phòng thủ — ROE 31.7%, cổ tức cao',b:['Thị phần dẫn đầu; biên cải thiện nhờ giá nguyên liệu','Cổ tức tiền mặt ~5–6%; SSI/Mirae mục tiêu 72–77k']},
+  MSN:{h:'Tiêu dùng - bán lẻ tích hợp (WinCommerce hồi phục)',b:['WCM đạt điểm hòa vốn → lợi nhuận cải thiện','Giảm đòn bẩy; Masan Consumer là viên ngọc']},
+  SAB:{h:'Bia đầu ngành — phòng thủ, cổ tức',b:['Sức mua hồi phục dần; chi phí đầu vào hạ','P/E ~13x quanh trung bình']},
+  GAS:{h:'Khí đốt độc quyền — câu chuyện LNG',b:['SSI mục tiêu 86k; dòng tiền & cổ tức ổn','Dự án kho cảng LNG Thị Vải/Sơn Mỹ']},
+  PLX:{h:'Bán lẻ xăng dầu đầu ngành — hưởng lợi cơ chế giá',b:['Sản lượng ổn định; thoái vốn PGBank','Định mức kinh doanh xăng dầu cải thiện']},
+  POW:{h:'Điện khí/khí LNG — đầu tư công suất mới',b:['SSI mục tiêu 16k; Nhơn Trạch 3&4 vận hành','Nhu cầu điện tăng, ưu tiên huy động khí']},
+  REE:{h:'Hạ tầng điện-nước-cơ điện — dòng tiền đa ngành',b:['Danh mục điện (thủy điện/gió) tạo dòng tiền đều','Mảng M&E & BĐS văn phòng cho thuê ổn định']},
+  PNJ:{h:'Bán lẻ trang sức dẫn đầu — mở rộng thị phần',b:['Thị phần tăng khi tiệm nhỏ rút lui','Nhạy sức mua; biên cải thiện theo giá vàng']},
+  FRT:{h:'Long Châu dẫn dắt tăng trưởng',b:['Chuỗi nhà thuốc mở rộng nhanh & có lãi','FPT Shop tái cơ cấu giảm lỗ; định giá theo Long Châu']},
+  DGW:{h:'Phân phối ICT — hưởng lợi chu kỳ tiêu dùng hồi phục',b:['Mở rộng ngành hàng (gia dụng, F&B, thiết bị)','Nhạy sức mua & ra mắt sản phẩm mới']},
+  VJC:{h:'Hàng không giá rẻ — phục hồi du lịch quốc tế',b:['Mở rộng đường bay quốc tế; đội bay tăng','Nhạy giá nhiên liệu & tỷ giá']},
+  HVN:{h:'Hàng không quốc gia — phục hồi sau lỗ lũy kế',b:['ROE/P-B méo do vốn chủ mỏng → định giá theo P/E','Hồi phục khách quốc tế; rủi ro tỷ giá/nhiên liệu cao']},
+  GMD:{h:'Cảng biển — hưởng lợi xuất nhập khẩu & Gemalink',b:['Gemalink giai đoạn 2 mở rộng công suất','Sản lượng container tăng theo thương mại']},
+  BSR:{h:'Lọc dầu Dung Quất — chuyển sàn HOSE',b:['ROE 21.5%; crack spread phục hồi','Nâng cấp mở rộng NMLD; cổ tức cải thiện']},
+  ACV:{h:'Độc quyền sân bay — biên lợi nhuận rất cao',b:['Phục hồi khách quốc tế; siêu dự án Long Thành','Hoàn nhập dự phòng tỷ giá là ẩn số lợi nhuận']},
+  VHC:{h:'Cá tra xuất khẩu đầu ngành',b:['Hưởng lợi giá & nhu cầu Mỹ/EU hồi phục','Mở rộng collagen/gelatin biên cao']},
+  DBC:{h:'Chăn nuôi heo — đòn bẩy giá heo hơi',b:['Lợi nhuận theo chu kỳ giá heo','Mảng vaccine ASF là catalyst dài hạn']},
+  // --- Ngân hàng (bổ sung) ---
+  TPB:{h:'Ngân hàng số — tệp khách hàng trẻ',b:['TPBank dẫn đầu số hóa, bán lẻ trẻ','ROE khá, định giá P/B hợp lý']},
+  LPB:{h:'Bán lẻ nông thôn — mạng lưới bưu điện rộng',b:['Tệp khách nông thôn ít cạnh tranh','Tăng trưởng tín dụng cao, còn nhiều room']},
+  VIB:{h:'Bán lẻ thuần — cho vay mua nhà/ô tô',b:['Tỷ trọng bán lẻ cao nhất ngành','Nhạy chu kỳ BĐS & tiêu dùng']},
+  SSB:{h:'SeABank — câu chuyện tăng vốn & đối tác',b:['Tăng trưởng nhanh; định giá P/B cao']},
+  EIB:{h:'Eximbank — câu chuyện cổ đông & tái cơ cấu',b:['Biến động sở hữu lớn; lợi nhuận cải thiện chậm']},
+  OCB:{h:'NH tư nhân vừa — định giá rẻ',b:['ROE phục hồi; chất lượng tài sản cần theo dõi']},
+  MSB:{h:'CASA tốt từ tệp doanh nghiệp',b:['Thu nhập ngoài lãi & bán vốn công ty con (FCCOM)']},
+  NAB:{h:'Nam A Bank — tăng trưởng nhanh, quy mô nhỏ',b:['Mở rộng tín dụng mạnh; theo dõi nợ xấu']},
+  // --- Chứng khoán / Tài chính (bổ sung) ---
+  SHS:{h:'CK + đầu tư — biến động theo tự doanh',b:['Lợi nhuận phụ thuộc danh mục tự doanh cổ phiếu']},
+  MBS:{h:'CK hệ MB — margin tăng nhanh',b:['ROE 15%; hậu thuẫn hệ sinh thái MB','Dư nợ margin/VCSH cao']},
+  FTS:{h:'CK quy mô vừa — nắm cổ phần MSH',b:['Giá trị tự doanh (MSH) ảnh hưởng lớn tới lợi nhuận']},
+  BSI:{h:'CK BIDV — hưởng lợi nâng hạng',b:['Đối tác ngoại Hana Securities; mở rộng margin']},
+  CTS:{h:'CK VietinBank — hậu thuẫn hệ CTG',b:['Quy mô vừa; nhạy thanh khoản thị trường']},
+  VDS:{h:'Rồng Việt — CK nhỏ, beta cao',b:['Nhạy chu kỳ & thanh khoản thị trường']},
+  BVH:{h:'Bảo hiểm đầu ngành — hưởng lợi lãi suất & TTCK',b:['Danh mục đầu tư lớn nhạy lãi suất/cổ phiếu','Định giá theo P/B & lợi suất đầu tư']},
+  PVI:{h:'Bảo hiểm phi nhân thọ số 1 — cổ tức cao',b:['Biên kỹ thuật tốt; cổ đông chiến lược HDI','Lợi suất đầu tư hưởng lợi lãi suất']},
+  BMI:{h:'Bảo Minh — câu chuyện thoái vốn',b:['SCIC thoái vốn là catalyst; định giá rẻ']},
+  EVF:{h:'Tài chính EVN — cho vay & đầu tư ngành điện',b:['Hưởng lợi đầu tư ngành điện; tăng trưởng nhanh']},
+  // --- Bất động sản / XD / KCN (bổ sung) ---
+  VRE:{h:'Bán lẻ TTTM — dòng tiền cho thuê ổn định',b:['Tỷ lệ lấp đầy Vincom cao; mở rộng mặt bằng','Nhạy sức mua tiêu dùng']},
+  DXS:{h:'Môi giới BĐS (Đất Xanh Services)',b:['Nhạy thanh khoản BĐS sơ cấp hồi phục']},
+  SJS:{h:'Sudico — quỹ đất Nam An Khánh giá trị lớn',b:['Mở bán lại sau thời gian đình trệ']},
+  SZC:{h:'KCN Châu Đức (BR-VT) — quỹ đất lớn giá rẻ',b:['Hưởng lợi FDI & sân bay Long Thành']},
+  SIP:{h:'KCN + điện nước — dòng tiền tiện ích dồi dào',b:['Doanh thu tiện ích đều; cổ tức cao','Quỹ đất KCN còn rất lớn (doanh thu chưa ghi nhận)']},
+  TCH:{h:'BĐS + ô tô Hoàng Huy — quỹ đất Hải Phòng',b:['Dự án nhà ở xã hội/thương mại Hải Phòng']},
+  CII:{h:'Hạ tầng BOT + BĐS — dòng tiền thu phí',b:['Thu phí BOT ổn định; đòn bẩy cao']},
+  VCG:{h:'Vinaconex — xây dựng & đầu tư công',b:['Hưởng lợi đầu tư công (cao tốc, sân bay)','Backlog lớn; mảng BĐS bổ trợ']},
+  HHV:{h:'Đèo Cả — thu phí BOT hạ tầng dài hạn',b:['Dòng tiền thu phí dài hạn ổn định','Hưởng lợi mạng cao tốc mở rộng']},
+  CTD:{h:'Coteccons — nhà thầu xây dựng số 1 hồi phục',b:['Backlog lớn (FDI/KCN); biên mỏng cải thiện dần']},
+  VPI:{h:'Văn Phú Invest — phát triển BĐS đô thị',b:['Bàn giao dự án Hà Nội; dòng tiền đều']},
+  KOS:{h:'Kosy — BĐS + điện gió',b:['Mảng năng lượng tái tạo bổ trợ dòng tiền']},
+  NTL:{h:'Lideco — quỹ đất Bắc Bộ giá vốn thấp',b:['Biên gộp cao; cổ tức tiền mặt đều']},
+  CEO:{h:'BĐS nghỉ dưỡng — đầu cơ chu kỳ',b:['Nhạy dòng tiền & du lịch; quỹ đất Vân Đồn']},
+  VGC:{h:'Viglacera — VLXD + KCN',b:['KCN cho thuê hưởng FDI; mảng kính/gạch chu kỳ']},
+  DPG:{h:'Đạt Phương — thủy điện + xây dựng + BĐS',b:['Thủy điện tạo dòng tiền; BĐS Hội An']},
+  // --- Sản xuất / Tiêu dùng / Năng lượng / DN (bổ sung) ---
+  PVT:{h:'Vận tải dầu khí — đội tàu mở rộng',b:['Giá cước tanker cao; hợp đồng dài hạn ổn định','Mở rộng đội tàu tăng năng lực']},
+  PVD:{h:'Khoan dầu khí — đơn giá giàn khoan tăng',b:['Hiệu suất & giá thuê giàn cải thiện','Hưởng lợi chu kỳ thăm dò-khai thác khu vực']},
+  PVS:{h:'Dịch vụ kỹ thuật dầu khí — điện gió ngoài khơi',b:['Backlog M&C lớn (Lô B, điện gió ngoài khơi)','Hưởng lợi đại dự án Lô B – Ô Môn']},
+  ANV:{h:'Cá tra Nam Việt — xuất khẩu',b:['Hưởng lợi giá cá & thị trường Trung Quốc/Mỹ']},
+  SBT:{h:'Đường TTC — đầu ngành mía đường',b:['Hưởng lợi giá đường & thuế nhập khẩu (ATIGA)']},
+  KDC:{h:'Kido — dầu ăn & thực phẩm',b:['Thị phần dầu ăn lớn; mảng kem/bánh hồi phục']},
+  PAN:{h:'Nông nghiệp - thực phẩm đa ngành',b:['Giống cây trồng, thủy sản (FMC), bánh kẹo (BBC)']},
+  DRC:{h:'Cao su Đà Nẵng — lốp radial xuất khẩu',b:['Xuất khẩu lốp radial; nhạy giá cao su & cước']},
+  BMP:{h:'Nhựa Bình Minh — biên cao, cổ tức khủng',b:['Net cash, cổ tức tiền mặt rất cao; SCG sở hữu']},
+  CTR:{h:'Viettel Construction — hạ tầng viễn thông & towerco',b:['Tăng trưởng cho thuê towerco & xây lắp','Hậu thuẫn hệ sinh thái Viettel']},
+  CMG:{h:'CMC — công nghệ & hạ tầng số',b:['Đối tác chiến lược Samsung; data center/cloud']},
+  NT2:{h:'Điện khí Nhơn Trạch 2 — cổ tức cao',b:['Hết khấu hao → dòng tiền & cổ tức mạnh']},
+  PPC:{h:'Nhiệt điện Phả Lại — cổ tức tiền mặt cao',b:['Dòng tiền & cổ tức ổn; nhà máy đã cũ']},
+  PC1:{h:'Xây lắp điện + KCN + nickel',b:['Hưởng lợi đầu tư lưới điện; mảng khoáng sản nickel']},
+  GEX:{h:'Gelex — thiết bị điện + KCN (Viglacera)',b:['Hệ sinh thái thiết bị điện & BĐS KCN','Đòn bẩy holding cao']},
+  HT1:{h:'Xi măng Hà Tiên — hưởng lợi đầu tư công',b:['Nhu cầu xi măng phía Nam hồi phục; giảm lỗ']},
+  BWE:{h:'Nước Biwase — tiện ích phòng thủ',b:['Dòng tiền cấp nước ổn định; mở rộng qua M&A']},
+  IMP:{h:'Dược Imexpharm — chuẩn EU-GMP',b:['Kênh ETC (đấu thầu bệnh viện) tăng; đối tác SK Group']},
+  PTB:{h:'Phú Tài — đá thạch anh + gỗ xuất khẩu',b:['Hưởng lợi xuất khẩu Mỹ; biên ổn định']},
+  TLG:{h:'Thiên Long — VPP đầu ngành, xuất khẩu',b:['Thị phần lớn; biên cao, cổ tức tốt']},
+  AAA:{h:'Nhựa An Phát — bao bì sinh học',b:['Xuất khẩu bao bì; nhạy giá hạt nhựa đầu vào']},
+  HAG:{h:'HAGL — chuối & heo, giảm nợ',b:['Tái cơ cấu nợ; dòng tiền nông nghiệp cải thiện','Rủi ro cao — mang tính đầu cơ']},
+  SCS:{h:'Dịch vụ hàng hóa sân bay Tân Sơn Nhất — biên siêu cao',b:['Gần độc quyền cargo TSN; cổ tức cao','Hưởng lợi air cargo & thương mại điện tử']},
+  CSV:{h:'Hóa chất cơ bản (xút) — di dời & mở rộng',b:['Nhà máy mới tăng công suất; chu kỳ hóa chất']},
+  DHC:{h:'Giấy Đông Hải — bao bì carton',b:['Nhạy giá giấy & nhu cầu bao bì xuất khẩu']},
+  DHG:{h:'Dược Hậu Giang — đầu ngành, Taisho hậu thuẫn',b:['Kênh OTC mạnh; cổ tức cao; biên ổn định']}
+};
+// ===== Giá mục tiêu đồng thuận CTCK 2026 (đồng) — [Thấp, TB, Cao]. Tổng hợp tham khảo từ báo cáo các CTCK =====
+const CTCK={
+  MWG:[95000,108138,117000],FPT:[90000,103000,118000],VNM:[68000,74000,80000],MSN:[72000,80000,92000],SAB:[48000,55000,62000],
+  GAS:[78000,86000,95000],HPG:[28000,31500,36000],PNJ:[90000,100000,115000],FRT:[170000,200000,230000],DGW:[44000,50000,58000],
+  VCB:[62000,70500,78000],CTG:[36000,40200,45000],TCB:[40000,46000,52000],MBB:[27000,30400,34000],ACB:[28000,32600,36000],
+  HDB:[28000,32200,37000],VPB:[28000,34000,38000],BID:[42000,48000,54000],SHB:[13000,16000,19000],SSI:[30000,34000,38000],
+  GMD:[75000,85000,95000],REE:[62000,70000,80000],DCM:[32000,35000,40000],DGC:[46000,52000,60000],BMP:[140000,165000,185000],
+  PVS:[36000,42000,48000],PVD:[28000,35000,40000],VHM:[90000,103600,120000],KDH:[30000,34100,38000],VND:[16650,18500,20350],
+  VCI:[22500,25000,27500],HCM:[24300,27000,29700],VIX:[16200,18000,19800],SHS:[17550,19500,21450],MBS:[18900,21000,23100],
+  FTS:[21600,24000,26400],VIC:[180000,196600,215000],NLG:[38250,42500,46750],DXG:[17325,19250,21175],PDR:[18900,21000,23100],
+  NVL:[14400,16000,17600],HDC:[17550,19500,21450],IDC:[46800,52000,57200],DIG:[19800,22000,24200],KBC:[28800,32000,35200],
+  HDG:[28800,32000,35200],VRE:[28800,32000,35200],SZC:[27000,30000,33000],SIP:[58500,65000,71500],VGC:[45000,50000,55000],
+  CTD:[81000,90000,99000],HSG:[12600,14000,15400],NKG:[13500,15000,16500],GVR:[35100,39000,42900],DPM:[27000,30000,33000],
+  BSR:[25200,28000,30800],ACV:[54000,60000,66000],HVN:[27000,30000,33000],VHC:[67500,75000,82500],DRC:[12600,14000,15400],
+  SBT:[16200,18000,19800],ANV:[27000,30000,33000],NT2:[21600,24000,26400],PC1:[28800,32000,35200],CTR:[94500,105000,115500],
+  SCS:[67500,75000,82500],DHG:[99000,110000,121000],PPC:[10800,12000,13200],BWE:[45000,50000,55000],PTB:[54000,60000,66000],
+  TLG:[49500,55000,60500],HAG:[14400,16000,17600],DHC:[40500,45000,49500],KDC:[54000,60000,66000],PLX:[37800,42000,46200],
+  POW:[14400,16000,17600],PVT:[25200,28000,30800],GEX:[25200,28000,30800]
+};
+const PXPROX=[x=>x,x=>'https://corsproxy.io/?url='+encodeURIComponent(x),x=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(x)];
+async function livePx(tk){
+  const to=Math.floor(Date.now()/1000),from=to-20*86400;
+  const url=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${tk}&from=${from}&to=${to}`;
+  for(const p of PXPROX){try{const c=new AbortController(),t=setTimeout(()=>c.abort(),7000);
+    const r=await fetch(p(url),{cache:'no-store',signal:c.signal});clearTimeout(t);
+    if(r.ok){const j=await r.json();if(j&&j.s==='ok'&&j.c&&j.c.length){const v=j.c[j.c.length-1];return v<1000?v*1000:v;}}}catch(e){}}
+  return null;
+}
+const kk=v=>isFinite(v)?(v/1000).toFixed(1):'—';
+function renderThesis(tk,sectKey){
+  const n=NOTES[tk];
+  const meth={bds:'RNAV / quỹ đất (chuẩn BĐS — giá trị tài sản ròng)',sx:'DCF + P/E + EV/EBITDA (doanh nghiệp sản xuất/dịch vụ)',ck:'P/B theo ROE (ngân hàng & chứng khoán — KHÔNG dùng DCF)'}[sectKey]||'';
+  let h=`<div class="th-head"><span class="th-tk">${tk}</span>`;
+  h+=`<span class="th-h">💡 ${n?n.h:'Luận điểm 2026 đang cập nhật — xem BCTC để tự đánh giá'}</span>`;
+  h+=`</div>`;
+  if(n&&n.b&&n.b.length)h+='<ul>'+n.b.map(x=>`<li>${x}</li>`).join('')+'</ul>';
+  h+=`<div class="meth">📐 Phương pháp định giá tự áp theo ngành: <b>${meth}</b></div>`;
+  // ----- Khối định giá CTCK + link báo cáo phân tích -----
+  const c=CTCK[tk];
+  h+=`<div class="ctck"><div class="lbl">📊 Định giá CTCK — giá mục tiêu &amp; báo cáo phân tích</div><div class="tgtrow">`;
+  if(c){h+=`<div class="tgt"><small>Thấp</small><b>${kk(c[0])}</b></div>`
+        +`<div class="tgt mid"><small>TB đồng thuận</small><b>${kk(c[1])}</b></div>`
+        +`<div class="tgt"><small>Cao</small><b>${kk(c[2])}</b></div>`
+        +`<div class="upbox" id="ctckUp">⏳ giá…</div>`;}
+  else{h+=`<div class="mini" style="align-self:center">Chưa có giá mục tiêu CTCK tổng hợp cho ${tk}.</div>`;}
+  h+=`</div>`; // đóng tgtrow
+  h+=`<div class="disc">Giá (nghìn đ). Giá mục tiêu là <b>đồng thuận tham khảo tổng hợp từ báo cáo phân tích CTCK + dữ liệu BCTC</b>, áp phương pháp phù hợp theo ngành (RNAV · DCF-comps · P/B-ROE). Không phải khuyến nghị đầu tư.</div></div>`;
+  const el=document.getElementById('thesisBox'); if(el)el.innerHTML=h;
+  // tính upside vs giá hiện tại (bất đồng bộ, không chặn render)
+  if(c){livePx(tk).then(px=>{const up=$('ctckUp'); if(!up||curTk!==tk)return;
+    if(!px){up.className='upbox';up.textContent='—';return;}
+    const pct=(c[1]/px-1)*100;
+    up.className='upbox '+(pct>=0?'pos':'neg');
+    up.innerHTML=`Giá ${kk(px)} · Upside TB <b>${(pct>=0?'+':'')+pct.toFixed(1)}%</b>`;
+  }).catch(()=>{});}
+}
+const $=id=>document.getElementById(id);
+const frame=$('frame'), statusEl=$('status'), tkEl=$('ticker');
+let curSect=null, curTk=null, resizeTimer=null;
+
+// Vẽ các tab ngành
+(function(){
+  let h='';
+  for(const k in SECT){const s=SECT[k];
+    h+=`<div class="st ${s.cls}" data-k="${k}">${s.name}<span class="cnt">(${s.list.length} mã)</span></div>`;}
+  $('sectabs').innerHTML=h;
+  $('sectabs').querySelectorAll('.st').forEach(el=>el.addEventListener('click',()=>{
+    const k=el.dataset.k, s=SECT[k];
+    // giữ mã hiện tại nếu thuộc ngành này, nếu không dùng mã mặc định
+    const tk=(curTk && s.list.includes(curTk))?curTk:s.def;
+    load(k,tk);
+  }));
+})();
+
+function detectSector(tk){
+  for(const k in SECT){if(SECT[k].list.includes(tk))return k;}
+  return null;
+}
+function highlightTabs(k){
+  $('sectabs').querySelectorAll('.st').forEach(el=>el.classList.toggle('active',el.dataset.k===k));
+}
+function autosize(){
+  try{
+    const d=frame.contentDocument;
+    if(d&&d.body){const h=Math.max(d.body.scrollHeight,d.documentElement.scrollHeight);
+      if(h>200)frame.style.height=(h+24)+'px';}
+  }catch(e){/* khác origin (file://) — giữ min-height */}
+}
+function load(sectKey,tk){
+  const s=SECT[sectKey]; if(!s)return;
+  curSect=sectKey; curTk=tk;
+  highlightTabs(sectKey);
+  tkEl.value=tk;
+  renderThesis(tk,sectKey);
+  const u=(s.list.includes(tk))?(' — đã nạp '+tk):(' — '+tk+' chưa có dữ liệu trong nhóm này');
+  statusEl.textContent='● '+s.name.replace(/^[^ ]+ /,'')+u;
+  statusEl.style.color=s.list.includes(tk)?'#6fe3ab':'#f0c26b';
+  try{location.hash=tk;}catch(e){}
+  // nạp lại iframe với hash → trang con tự đọc hash và định giá
+  frame.style.height='1200px';
+  frame.src=s.file+'#'+encodeURIComponent(tk);
+}
+function analyze(){
+  const tk=(tkEl.value||'').trim().toUpperCase();
+  if(!tk){statusEl.textContent='⚠ Nhập mã cổ phiếu';statusEl.style.color='#f0c26b';return;}
+  const k=detectSector(tk);
+  if(k){load(k,tk);}
+  else{
+    // không rõ ngành → thử nạp vào ngành đang mở (hoặc BĐS) để trang con báo "chưa có dữ liệu"
+    load(curSect||'bds',tk);
+    statusEl.textContent='⚠ Không nhận diện được ngành của '+tk+' — đang thử trong nhóm '+SECT[curSect||'bds'].name.replace(/^[^ ]+ /,'');
+    statusEl.style.color='#f0c26b';
+  }
+}
+$('analyzeBtn').addEventListener('click',analyze);
+tkEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();analyze();}});
+
+// "Lấy giá hiện tại" → bấm hộ nút ↻ trong khung định giá của ngành (mỗi trang con đều có #fetchPx)
+$('fetchBtn').addEventListener('click',()=>{
+  try{
+    const doc=frame.contentWindow.document;
+    const ti=doc.getElementById('ticker');
+    if(ti && curTk) ti.value=curTk;     // ÉP đúng mã đang xem → không fetch nhầm mã mặc định
+    const b=doc.getElementById('fetchPx');
+    if(b){b.click();statusEl.textContent='⏳ Đang lấy giá '+(curTk||'')+'… (kết quả hiện ở ô "Giá hiện tại")';statusEl.style.color='#9cbcff';}
+    else{statusEl.textContent='⚠ Hãy mở một mã trước khi lấy giá';statusEl.style.color='#f0c26b';}
+  }catch(e){statusEl.textContent='⚠ Không truy cập được khung định giá — hãy chạy qua localhost (MO-BANG-GIA.bat) để lấy giá';statusEl.style.color='#f0c26b';}
+});
+
+// auto-resize iframe theo nội dung (cùng origin khi chạy qua localhost)
+frame.addEventListener('load',()=>{autosize();
+  clearInterval(resizeTimer); let n=0;
+  resizeTimer=setInterval(()=>{autosize();if(++n>40)clearInterval(resizeTimer);},700); // ~28s đủ để chart/bảng render
+});
+
+// nạp lần đầu: theo hash (#KDH) nếu có, không thì KDH (BĐS)
+(function(){
+  const h=(location.hash||'').replace('#','').trim().toUpperCase();
+  if(h){const k=detectSector(h); if(k){load(k,h);return;}}
+  load('bds','KDH');
+})();
+</script>
+</body>
+</html>

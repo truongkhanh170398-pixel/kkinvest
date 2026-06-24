@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KDH — Định giá & Phân tích | Khang Điền Q1/2026</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#080b13; --card:#0e1525; --card2:#141d31; --line:#1c2740;
+    --txt:#e8edf7; --muted:#7e8db0; --accent:#e2b33b; --accent2:#4f8cff;
+    --warn:#e2a33b; --danger:#e25c5c; --good:#3ba776;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1200px 700px at 50% -260px,#0c1730,#080b13);color:var(--txt);
+    font-family:"Segoe UI",system-ui,Roboto,Arial,sans-serif;line-height:1.5;padding:0 0 60px}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+  header{padding:38px 0 26px;border-bottom:1px solid var(--line);margin-bottom:30px}
+  .tag{display:inline-block;background:var(--accent);color:#04110a;font-weight:700;
+    font-size:12px;letter-spacing:1px;padding:4px 10px;border-radius:20px;text-transform:uppercase}
+  h1{font-size:34px;margin:14px 0 6px;letter-spacing:-.5px}
+  .sub{color:var(--muted);font-size:15px}
+  h2{font-size:21px;margin:38px 0 16px;display:flex;align-items:center;gap:10px}
+  h2 .bar{width:5px;height:22px;background:var(--accent);border-radius:3px;display:inline-block}
+  .grid{display:grid;gap:16px}
+  .g4{grid-template-columns:repeat(4,1fr)} .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:880px){.g4,.g3,.g2{grid-template-columns:1fr 1fr}}
+  @media(max-width:560px){.g4,.g3,.g2{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+  .kpi .label{color:var(--muted);font-size:13px}
+  .kpi .val{font-size:26px;font-weight:700;margin:6px 0 2px}
+  .kpi .delta{font-size:13px;font-weight:600}
+  .up{color:var(--good)} .down{color:var(--danger)} .flat{color:var(--warn)}
+  .chartbox{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;height:340px;position:relative}
+  table{width:100%;border-collapse:collapse;font-size:14.5px}
+  th,td{padding:11px 12px;text-align:right;border-bottom:1px solid var(--line)}
+  th:first-child,td:first-child{text-align:left}
+  thead th{color:var(--muted);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.4px}
+  tbody tr:hover{background:#18203c}
+  .pill{font-weight:700;padding:3px 9px;border-radius:8px;font-size:13px}
+  .pill.base{background:rgba(59,167,118,.16);color:#6fe3ab}
+  .pill.low{background:rgba(226,163,59,.16);color:#f0c26b}
+  .pill.high{background:rgba(79,140,255,.16);color:#9cbcff}
+  .target{background:linear-gradient(135deg,#16321f,#13243f);border:1px solid #2c5a3f;border-radius:16px;
+    padding:26px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:20px;margin-top:8px}
+  .target .big{font-size:44px;font-weight:800;color:#6fe3ab;letter-spacing:-1px}
+  .target .rng{color:var(--muted);font-size:14px;margin-top:4px}
+  .note{color:var(--muted);font-size:13px;margin-top:8px;max-width:420px}
+  ul.clean{list-style:none}
+  ul.clean li{padding:9px 0 9px 26px;position:relative;border-bottom:1px solid var(--line);font-size:14.5px}
+  ul.clean li:before{content:"";position:absolute;left:0;top:15px;width:9px;height:9px;border-radius:50%}
+  li.r:before{background:var(--danger)} li.y:before{background:var(--warn)} li.g:before{background:var(--good)}
+  .foot{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
+  .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:6px;background:#2a2030;color:#f0c26b;border:1px solid #54422a;margin-left:8px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <span class="tag">Báo cáo định giá</span>
+  <h1>Khang Điền (HOSE: KDH)</h1>
+  <div class="sub">Phân tích BCTC hợp nhất Quý 1/2026 · Đơn vị: tỷ VND · Lập ngày 09/06/2026</div>
+</div></header>
+
+<div class="wrap">
+
+  <!-- KPI -->
+  <h2><span class="bar"></span>Chỉ số then chốt</h2>
+  <div class="grid g4">
+    <div class="card kpi"><div class="label">Giá trị sổ sách (BVPS)</div><div class="val">16.757</div><div class="delta flat">VND/cp · VCSH mẹ 18.804 tỷ</div></div>
+    <div class="card kpi"><div class="label">LNST công ty mẹ Q1</div><div class="val">281,4</div><div class="delta up">▲ 131% YoY <span class="badge">gồm 285 tỷ lãi mua rẻ</span></div></div>
+    <div class="card kpi"><div class="label">Doanh thu thuần Q1</div><div class="val">281,4</div><div class="delta down">▼ 60% YoY (709,9)</div></div>
+    <div class="card kpi"><div class="label">Biên lãi gộp</div><div class="val">65,0%</div><div class="delta up">▲ từ 43,2%</div></div>
+    <div class="card kpi"><div class="label">Tổng tài sản</div><div class="val">39.862</div><div class="delta up">▲ 17% so với cuối 2025</div></div>
+    <div class="card kpi"><div class="label">Hàng tồn kho (quỹ đất)</div><div class="val">29.126</div><div class="delta flat">73% tổng tài sản</div></div>
+    <div class="card kpi"><div class="label">Nợ vay / VCSH</div><div class="val">0,71x</div><div class="delta down">vay tăng +51% trong quý</div></div>
+    <div class="card kpi"><div class="label">Dòng tiền HĐKD</div><div class="val down">-634</div><div class="delta down">âm, do tích lũy quỹ đất</div></div>
+  </div>
+
+  <!-- Charts -->
+  <h2><span class="bar"></span>Diễn biến tài chính</h2>
+  <div class="grid g2">
+    <div class="chartbox"><canvas id="cPL"></canvas></div>
+    <div class="chartbox"><canvas id="cBS"></canvas></div>
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="chartbox"><canvas id="cDebt"></canvas></div>
+    <div class="chartbox"><canvas id="cInv"></canvas></div>
+  </div>
+
+  <!-- Valuation -->
+  <h2><span class="bar"></span>Định giá theo kịch bản</h2>
+  <div class="card" style="padding:6px 20px">
+  <table>
+    <thead><tr><th>Phương pháp</th><th>Giả định chính</th><th>Hệ số</th><th>Giá trị/cp (VND)</th></tr></thead>
+    <tbody>
+      <tr><td>P/B — Thận trọng</td><td>thị trường chiết khấu rủi ro nợ vay</td><td>1,30x BVPS</td><td><span class="pill low">21.800</span></td></tr>
+      <tr><td>P/B — Cơ sở</td><td>mức P/B trung bình ngành BĐS chất lượng</td><td>1,70x BVPS</td><td><span class="pill base">28.500</span></td></tr>
+      <tr><td>P/B — Lạc quan</td><td>chu kỳ BĐS hồi phục, quỹ đất sạch</td><td>2,20x BVPS</td><td><span class="pill high">36.900</span></td></tr>
+      <tr><td>RNAV</td><td>đánh giá lại quỹ đất +35%, thuế 20%, chiết khấu 15%</td><td>—</td><td><span class="pill base">~24.500</span></td></tr>
+      <tr><td>P/E chuẩn hóa</td><td>LNST chuẩn hóa ~750 tỷ (loại lãi 1 lần), P/E 16x</td><td>16x</td><td><span class="pill low">~10.700</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="target">
+    <div>
+      <div style="color:var(--muted);font-size:13px;letter-spacing:1px;text-transform:uppercase">Giá mục tiêu (blended, trọng số P/B + RNAV)</div>
+      <div class="big">28.000 VND</div>
+      <div class="rng">Vùng hợp lý: <b style="color:#f0c26b">26.000 – 30.000 VND/cp</b></div>
+    </div>
+    <div class="note">
+      Trọng số: 60% P/B cơ sở + 30% RNAV + 10% kịch bản lạc quan.
+      P/E bị bóp méo bởi khoản lãi mua rẻ 285 tỷ nên chỉ tham chiếu.
+      So sánh với thị giá hiện tại để xác định khuyến nghị Mua/Nắm giữ/Bán.
+    </div>
+  </div>
+
+  <!-- Live upside calculator -->
+  <div class="card" style="margin-top:16px;padding:22px 24px">
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:18px;justify-content:space-between">
+      <div>
+        <div style="color:var(--muted);font-size:13px;letter-spacing:1px;text-transform:uppercase">Nhập thị giá hiện tại để tính upside</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+          <input id="px" type="number" value="33000" step="100" min="0"
+            style="width:160px;font-size:24px;font-weight:700;background:#0c142b;border:1px solid var(--line);
+            border-radius:10px;padding:8px 12px;color:var(--txt)">
+          <span style="color:var(--muted);font-size:15px">VND/cp</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap">
+          <button id="refresh" style="background:var(--accent2);color:#04122b;border:none;font-weight:700;
+            font-size:13px;padding:7px 14px;border-radius:8px;cursor:pointer">↻ Lấy giá tự động</button>
+          <span id="status" style="color:var(--muted);font-size:12.5px">Mục tiêu cơ sở 28.000 · vùng 26.000–30.000</span>
+          <label style="color:var(--muted);font-size:12.5px;display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="checkbox" id="auto"> tự làm mới 60s</label>
+        </div>
+      </div>
+      <div id="reco" style="text-align:right"></div>
+    </div>
+    <div class="grid g3" style="margin-top:18px">
+      <div class="card" style="background:var(--card2)"><div class="kpi"><div class="label">Upside vs Cơ sở (28.000)</div><div class="val" id="upBase">—</div></div></div>
+      <div class="card" style="background:var(--card2)"><div class="kpi"><div class="label">Upside vs Sàn (26.000)</div><div class="val" id="upLow">—</div></div></div>
+      <div class="card" style="background:var(--card2)"><div class="kpi"><div class="label">Upside vs Trần (30.000)</div><div class="val" id="upHigh">—</div></div></div>
+    </div>
+  </div>
+
+  <!-- Risk & catalyst -->
+  <h2><span class="bar"></span>Rủi ro & Động lực</h2>
+  <div class="grid g2">
+    <div class="card">
+      <div style="color:var(--danger);font-weight:700;margin-bottom:6px">⚠ Rủi ro kéo định giá xuống</div>
+      <ul class="clean">
+        <li class="r">Nợ vay tăng vọt +5.200 tỷ trong 1 quý (lên 15.348 tỷ)</li>
+        <li class="r">Lợi nhuận Q1 chủ yếu là <b>lãi kế toán một lần</b> (mua rẻ An Lập)</li>
+        <li class="r">LN cốt lõi giảm: 76,5 tỷ vs 161,6 tỷ cùng kỳ</li>
+        <li class="y">Dòng tiền kinh doanh âm 634 tỷ; backlog (trả trước) chỉ 688 tỷ</li>
+        <li class="y">Tồn kho phình to, rủi ro pháp lý & hấp thụ thị trường</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div style="color:var(--good);font-weight:700;margin-bottom:6px">✓ Động lực tăng giá</div>
+      <ul class="clean">
+        <li class="g">Quỹ đất lõi nội đô TP.HCM, giá vốn thấp → biên gộp 65%</li>
+        <li class="g">Năng lực M&A quỹ đất giá tốt (lãi mua rẻ An Lập)</li>
+        <li class="g">KCN Lê Minh Xuân mở rộng (1.842 tỷ) — dòng tiền cho thuê ổn định</li>
+        <li class="g">Đòn bẩy ròng vẫn an toàn: Nợ vay ròng/VCSH = 0,54x</li>
+        <li class="g">VCSH vững 21.524 tỷ; nền tảng cho chu kỳ bàn giao 2027</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="foot">
+    <b>Lưu ý:</b> Báo cáo mang tính minh họa/giáo dục, dựng từ BCTC hợp nhất Q1/2026 do KDH công bố (ký 29/04/2026).
+    Các giả định P/B, RNAV, P/E là tham số người dùng có thể điều chỉnh; không có thị giá thời gian thực trong dữ liệu nguồn.
+    Đây <b>không phải</b> khuyến nghị đầu tư. Nhà đầu tư cần tự đánh giá và tham vấn chuyên gia.
+  </div>
+</div>
+
+<script>
+const f={responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{labels:{color:'#cdd6ea'}},title:{color:'#e8edf7',font:{size:15,weight:'600'}}},
+  scales:{x:{ticks:{color:'#93a0bd'},grid:{color:'#26324f'}},y:{ticks:{color:'#93a0bd'},grid:{color:'#26324f'}}}};
+const C={a:'#3ba776',b:'#4f8cff',w:'#e2a33b',d:'#e25c5c'};
+
+new Chart(cPL,{type:'bar',data:{labels:['Doanh thu thuần','LN gộp','LN thuần HĐKD','LNST cty mẹ'],
+  datasets:[{label:'Q1/2025',data:[709.9,306.7,161.6,121.9],backgroundColor:'#5b6788'},
+    {label:'Q1/2026',data:[281.4,182.8,76.5,281.4],backgroundColor:C.a}]},
+  options:{...f,plugins:{...f.plugins,title:{display:true,text:'Kết quả kinh doanh (tỷ VND)',color:'#e8edf7'}}}});
+
+new Chart(cBS,{type:'doughnut',data:{labels:['Hàng tồn kho','Phải thu NH','Tiền & TĐ','Tài sản dài hạn','Khác'],
+  datasets:[{data:[29126,4261,3614,2551,310],backgroundColor:[C.a,C.b,'#6fe3ab',C.w,'#5b6788'],borderColor:'#141c33',borderWidth:2}]},
+  options:{...f,scales:{},plugins:{...f.plugins,title:{display:true,text:'Cơ cấu tài sản (39.862 tỷ)',color:'#e8edf7'},legend:{position:'right',labels:{color:'#cdd6ea'}}}}});
+
+new Chart(cDebt,{type:'bar',data:{labels:['Cuối 2025','Q1/2026'],
+  datasets:[{label:'Vay ngắn hạn',data:[1801.8,1952.4],backgroundColor:C.w},
+    {label:'Vay dài hạn',data:[8347.6,13395.8],backgroundColor:C.d}]},
+  options:{...f,scales:{...f.scales,x:{...f.scales.x,stacked:true},y:{...f.scales.y,stacked:true}},
+    plugins:{...f.plugins,title:{display:true,text:'Dư nợ vay (tỷ VND): +51% trong quý',color:'#e8edf7'}}}});
+
+new Chart(cInv,{type:'bar',indexAxis:'y',data:{labels:['Tân Tạo (Khang Phúc)','An Lập - BTĐ','Bình Trưng - BTĐ','Đoàn Nguyên - BTĐ','Bình Hưng 11A','Phong Phú 2','Dự án khác'],
+  datasets:[{label:'Giá trị tồn kho (tỷ VND)',data:[8924.6,5445.4,4887.1,3445.9,2066.7,1918.1,1469.1],backgroundColor:C.b}]},
+  options:{...f,plugins:{...f.plugins,legend:{display:false},title:{display:true,text:'Quỹ đất theo dự án (29.126 tỷ)',color:'#e8edf7'}}}});
+
+// ---- Live upside calculator ----
+const TARGET={low:26000, base:28000, high:30000};
+const pxEl=document.getElementById('px');
+function fmtPct(p){const s=(p>=0?'+':'')+p.toFixed(1)+'%';return s;}
+function cls(p){return p>0?'up':(p<0?'down':'flat');}
+function calc(){
+  const px=parseFloat(pxEl.value)||0;
+  const sets=[['upBase',TARGET.base],['upLow',TARGET.low],['upHigh',TARGET.high]];
+  sets.forEach(([id,t])=>{
+    const el=document.getElementById(id);
+    if(px<=0){el.textContent='—';el.className='val';return;}
+    const u=(t-px)/px*100;
+    el.textContent=fmtPct(u);
+    el.className='val '+cls(u);
+  });
+  // recommendation based on upside to base target
+  const reco=document.getElementById('reco');
+  let label,color,bg,sub;
+  if(px<=0){reco.innerHTML='';return;}
+  const uBase=(TARGET.base-px)/px*100;
+  if(uBase>=15){label='MUA';color='#04110a';bg='#3ba776';sub='Định giá hấp dẫn so với mục tiêu cơ sở';}
+  else if(uBase>=-10){label='NẮM GIỮ';color='#1a1405';bg='#e2a33b';sub='Giá quanh vùng hợp lý';}
+  else{label='BÁN / CHỜ';color='#fff';bg='#e25c5c';sub='Giá đã vượt vùng định giá hợp lý';}
+  reco.innerHTML='<div style="font-size:12px;color:#93a0bd;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Khuyến nghị</div>'+
+    '<div style="display:inline-block;font-size:30px;font-weight:800;padding:8px 22px;border-radius:12px;background:'+bg+';color:'+color+'">'+label+'</div>'+
+    '<div style="color:#93a0bd;font-size:12.5px;margin-top:8px;max-width:230px">'+sub+'</div>';
+}
+pxEl.addEventListener('input',()=>{setStatus('Nhập thủ công',' ');calc();});
+
+// ---- Auto price fetch (TCBS primary, VNDirect fallback) ----
+const statusEl=document.getElementById('status');
+function setStatus(msg,color){statusEl.textContent=msg;statusEl.style.color=color&&color!==' '?color:'#93a0bd';}
+function normPrice(v){v=Number(v);if(!isFinite(v)||v<=0)return 0;return v<1000?Math.round(v*1000):Math.round(v);}
+
+async function fromTCBS(){
+  const to=Math.floor(Date.now()/1000);
+  const u=`https://apipubaws.tcbs.com.vn/stock-insight/v1/stock/bars-long-term?ticker=KDH&type=stock&resolution=D&to=${to}&countBack=1`;
+  const r=await fetch(u,{cache:'no-store'});
+  if(!r.ok)throw new Error('TCBS '+r.status);
+  const j=await r.json();const d=j.data&&j.data[j.data.length-1];
+  if(!d)throw new Error('TCBS no data');
+  return {px:normPrice(d.close), date:d.tradingDate, src:'TCBS'};
+}
+async function fromVND(){
+  const u=`https://finfo-api.vndirect.com.vn/v4/stock_prices?sort=date:desc&size=1&q=code:KDH`;
+  const r=await fetch(u,{cache:'no-store'});
+  if(!r.ok)throw new Error('VND '+r.status);
+  const j=await r.json();const d=j.data&&j.data[0];
+  if(!d)throw new Error('VND no data');
+  return {px:normPrice(d.close), date:d.date, src:'VNDirect'};
+}
+async function fetchPrice(){
+  setStatus('⏳ Đang lấy giá KDH…');
+  for(const fn of [fromTCBS, fromVND]){
+    try{
+      const o=await fn();
+      if(o.px>0){
+        pxEl.value=o.px; calc();
+        const t=new Date().toLocaleTimeString('vi-VN');
+        setStatus(`● Live ${o.px.toLocaleString('vi-VN')} VND · ${o.src} · ${o.date||''} · cập nhật ${t}`,'#6fe3ab');
+        return;
+      }
+    }catch(e){/* try next */}
+  }
+  setStatus('⚠ Không lấy được giá tự động (CORS hoặc mạng) — vui lòng nhập tay','#f0c26b');
+}
+document.getElementById('refresh').addEventListener('click',fetchPrice);
+let timer=null;
+function setupAuto(){
+  if(timer){clearInterval(timer);timer=null;}
+  if(document.getElementById('auto').checked){timer=setInterval(fetchPrice,60000);}
+}
+document.getElementById('auto').addEventListener('change',setupAuto);
+calc(); // mặc định: nhập tay. Bấm nút ↻ nếu muốn thử lấy giá tự động.
+</script>
+</body>
+</html>

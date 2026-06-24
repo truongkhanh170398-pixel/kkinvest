@@ -1,0 +1,8 @@
+# Không publish các file nội bộ — chỉ deploy site HTML
+*.skill
+*.md
+*.bat
+*.afl
+node_modules
+.vercel
+.claude

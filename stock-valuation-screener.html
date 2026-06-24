@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Danh mục Khuyến nghị — Theo dõi & Định giá</title>
+<style>
+  :root{--bg:#080b13;--card:#0e1525;--card2:#141d31;--line:#1c2740;--txt:#e8edf7;
+    --muted:#7e8db0;--accent:#e2b33b;--accent2:#4f8cff;--warn:#e2a33b;--danger:#e25c5c;--good:#3ba776;--orange:#e2823b;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1200px 700px at 50% -260px,#0c1730,#080b13);color:var(--txt);
+    font-family:"Segoe UI",system-ui,Roboto,Arial,sans-serif;line-height:1.5;padding:0 0 60px}
+  .wrap{max-width:1440px;margin:0 auto;padding:0 18px}
+  header{padding:28px 0 18px;border-bottom:1px solid var(--line);margin-bottom:20px}
+  .tag{display:inline-block;background:var(--accent);color:#04110a;font-weight:700;font-size:11px;
+    letter-spacing:1px;padding:4px 10px;border-radius:20px;text-transform:uppercase}
+  h1{font-size:27px;margin:12px 0 4px}
+  .sub{color:var(--muted);font-size:14px}
+  .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:16px 0}
+  button{background:var(--card2);color:var(--txt);border:1px solid var(--line);font-size:13.5px;
+    font-weight:600;padding:9px 14px;border-radius:9px;cursor:pointer;transition:.15s}
+  button:hover{border-color:var(--accent2)}
+  .btn-primary{background:var(--accent);color:#04110a;border-color:var(--accent)}
+  .btn-danger{background:transparent;color:var(--danger);border-color:#4a2630}
+  .grid{display:grid;gap:13px;grid-template-columns:repeat(6,1fr);margin-bottom:18px}
+  @media(max-width:1000px){.grid{grid-template-columns:1fr 1fr 1fr}}
+  @media(max-width:620px){.grid{grid-template-columns:1fr 1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:14px 15px}
+  .card .label{color:var(--muted);font-size:12px}
+  .card .val{font-size:21px;font-weight:700;margin-top:4px}
+  .up{color:var(--good)}.down{color:var(--danger)}.flat{color:var(--warn)}
+  .tablebox{background:var(--card);border:1px solid var(--line);border-radius:13px;overflow:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:1300px}
+  th,td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+  th:first-child,td:first-child,th:nth-child(2),td:nth-child(2),th:nth-child(3),td:nth-child(3){text-align:left}
+  thead th{position:sticky;top:0;background:#10182e;color:var(--muted);font-size:11px;
+    text-transform:uppercase;letter-spacing:.3px;cursor:pointer;user-select:none}
+  thead th:hover{color:var(--txt)}
+  tbody tr:hover{background:#18203c}
+  td input{width:100%;background:transparent;border:1px solid transparent;border-radius:6px;
+    color:var(--txt);font-size:13px;padding:5px 5px;text-align:right;font-family:inherit;min-width:54px}
+  td:first-child input,td:nth-child(2) input,td:nth-child(3) input{text-align:left}
+  td input.tick{font-weight:700;letter-spacing:.5px;text-transform:uppercase;min-width:60px}
+  td input:focus{border-color:var(--accent2);background:#0c142b;outline:none}
+  .st{font-weight:700;padding:3px 8px;border-radius:7px;font-size:11.5px;display:inline-block}
+  .s-stop{background:rgba(226,92,92,.18);color:#f59595}
+  .s-t2{background:rgba(59,167,118,.22);color:#7ff0b8}
+  .s-t1{background:rgba(59,167,118,.15);color:#6fe3ab}
+  .s-hold{background:rgba(226,163,59,.16);color:#f0c26b}
+  .s-watch{background:rgba(226,130,59,.16);color:#f0a868}
+  .del{background:transparent;border:none;color:#5b6788;cursor:pointer;font-size:15px;padding:2px 6px}
+  .del:hover{color:var(--danger)}
+  .act{background:transparent;border:1px solid var(--line);border-radius:6px;cursor:pointer;
+    font-size:11.5px;font-weight:700;padding:3px 7px;margin:0 1px}
+  .act-tp{color:#6fe3ab;border-color:#2c5a3f}.act-tp:hover{background:rgba(59,167,118,.18)}
+  .act-sl{color:#f59595;border-color:#4a2630}.act-sl:hover{background:rgba(226,92,92,.18)}
+  .act-rp{color:#9cbcff;border-color:#2b3d63}.act-rp:hover{background:rgba(79,140,255,.18)}
+  h2.sec{font-size:18px;margin:30px 0 12px;display:flex;align-items:center;gap:9px}
+  h2.sec .bar{width:5px;height:19px;background:var(--accent2);border-radius:3px}
+  .closedbar{color:var(--muted);font-size:13px;margin-bottom:10px}
+  .closedbar b{color:var(--txt)}
+  .modal{position:fixed;inset:0;background:rgba(4,8,18,.75);display:none;align-items:center;justify-content:center;z-index:50}
+  .modal.show{display:flex}
+  .modal .box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;width:min(680px,92vw)}
+  .modal h3{margin-bottom:6px}.modal p{color:var(--muted);font-size:13px;margin-bottom:12px}
+  textarea{width:100%;height:170px;background:#0c142b;border:1px solid var(--line);border-radius:10px;
+    color:var(--txt);padding:12px;font-family:Consolas,monospace;font-size:12.5px;resize:vertical}
+  .row-end{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}
+  .help{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px 16px;
+    margin:14px 0;color:var(--muted);font-size:12.5px}
+  .help b{color:var(--txt)}
+  .note{color:var(--muted);font-size:12px;margin-top:14px}
+  input[type=file]{display:none}
+  .mini{color:var(--muted);font-size:11px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <span class="tag">Danh mục khuyến nghị · Quý 2 2026</span>
+  <h1>Bảng Theo dõi & Định giá Danh mục</h1>
+  <div class="sub">Nguồn: <b>File Danh Muc.xlsx</b> (sheet "Danh mục") · Đơn vị giá: <b>nghìn VND</b> (×1.000đ) · Giá hiện tại cập nhật <b>09/06/2026</b> (simplize.vn)</div>
+</div></header>
+
+<div class="wrap">
+  <div class="grid">
+    <div class="card"><div class="label">Số mã</div><div class="val" id="sCount">0</div></div>
+    <div class="card"><div class="label">Tổng % giải ngân</div><div class="val" id="sAlloc">—</div></div>
+    <div class="card"><div class="label">LL hiện tại bình quân</div><div class="val" id="sPnlNow">—</div></div>
+    <div class="card"><div class="label">LL dự tính bình quân</div><div class="val" id="sPnlExp">—</div></div>
+    <div class="card"><div class="label">🟢 Đạt mục tiêu</div><div class="val up" id="sHit">0</div></div>
+    <div class="card"><div class="label">🔴 Chạm dừng lỗ</div><div class="val down" id="sStop">0</div></div>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn-primary" id="addRow">+ Thêm mã</button>
+    <button id="updPrice" style="background:var(--accent2);color:#04122b;border-color:var(--accent2)">↻ Cập nhật giá tự động</button>
+    <button id="pasteBtn">📋 Dán từ Excel</button>
+    <button id="importBtn">⬆ Import CSV</button>
+    <button id="exportBtn">⬇ Export CSV</button>
+    <button id="resetBtn">↺ Nạp lại danh mục gốc</button>
+    <button class="btn-danger" id="clearBtn">🗑 Xóa tất cả</button>
+    <input type="file" id="fileInput" accept=".csv,.txt">
+    <span class="mini" id="savedMsg"></span>
+  </div>
+
+  <div class="help">
+    <b>Công thức:</b> LL hiện tại = (Giá hiện tại − Giá mua) / Giá mua · LL dự tính = (Giá TB mục tiêu − Giá mua) / Giá mua · Upside còn lại = (Giá TB − Giá hiện tại) / Giá hiện tại.
+    <b>Trạng thái:</b> Giá ≤ Dừng lỗ → 🔴 DỪNG LỖ · ≥ MT2 → 🟢 ĐẠT MT2 · ≥ MT1 → 🟢 ĐẠT MT1 · ≥ Giá mua → 🟡 NẮM GIỮ · &lt; Giá mua → 🟠 THEO DÕI.
+    <br><b>↻ Cập nhật giá tự động:</b> lấy giá đóng cửa gần nhất cho mọi mã (nguồn VNDirect/TCBS qua proxy). Nếu trình duyệt chặn CORS khi mở file trực tiếp, nút sẽ báo lỗi — khi đó nhập tay hoặc mở trang qua local server.
+  </div>
+
+  <div class="tablebox">
+    <table>
+      <thead><tr>
+        <th data-k="ma">Mã ▾</th>
+        <th data-k="ky">Kỳ hạn</th>
+        <th data-k="ngay">Ngày KN</th>
+        <th data-k="mua">Giá mua</th>
+        <th data-k="gia">Giá hiện tại</th>
+        <th data-k="llnow">LL hiện tại</th>
+        <th data-k="dl">Dừng lỗ</th>
+        <th data-k="mt1">Giá MT1</th>
+        <th data-k="mt2">Giá MT2</th>
+        <th data-k="tb">Giá TB MT</th>
+        <th data-k="ups">Upside còn lại</th>
+        <th data-k="llexp">LL dự tính</th>
+        <th data-k="alloc">% Giải ngân</th>
+        <th data-k="st">Trạng thái</th>
+        <th></th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    Dữ liệu danh mục lấy từ file của anh (Quý 2 2026). Cột "Giá hiện tại" trong file Excel gốc bị lỗi <b>#NAME?</b> (hàm lấy giá thị trường không khả dụng) — ở đây anh nhập tay hoặc bấm <b>↻ Cập nhật giá tự động</b>.
+    Bảng tự lưu trong trình duyệt. Đây không phải khuyến nghị đầu tư.
+  </div>
+
+  <h2 class="sec"><span class="bar"></span>Lịch sử lệnh đã đóng</h2>
+  <div class="closedbar" id="closedBar">Chưa có lệnh nào được đóng.</div>
+  <div class="tablebox" id="closedBox" style="display:none">
+    <table>
+      <thead><tr>
+        <th>Mã</th><th>Kỳ hạn</th><th>Ngày KN</th><th>Giá mua</th><th>Giá đóng</th>
+        <th>LL thực hiện</th><th>Lý do</th><th>Ngày đóng</th><th>% GN</th><th></th>
+      </tr></thead>
+      <tbody id="tbodyClosed"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Paste modal -->
+<div class="modal" id="modal">
+  <div class="box">
+    <h3>Dán dữ liệu từ Excel / CSV</h3>
+    <p>Mỗi dòng một mã, cột cách nhau bằng <b>Tab</b> hoặc <b>dấu phẩy</b>. Thứ tự:
+    <b>Mã, Kỳ hạn, Ngày KN, Giá mua, Giá hiện tại, Dừng lỗ, Giá MT1, Giá MT2, Giá TB MT, % Giải ngân</b>.</p>
+    <textarea id="pasteArea" placeholder="VD:
+KDH	Trung Hạn	2/3/2026	23.9		22.2	32	38	35	20
+SSI	Ngắn hạn	3/2/2026	28.3		26.3	35	40	37.5	20"></textarea>
+    <div class="row-end">
+      <button id="pasteCancel">Hủy</button>
+      <button class="btn-primary" id="pasteLoad">Nạp vào bảng</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const FIELDS=['ma','ky','ngay','mua','gia','dl','mt1','mt2','tb','alloc'];
+const LS='portfolio_screener_v3';
+let data=[];
+let closed=[];
+function todayStr(){return new Date().toLocaleDateString('vi-VN');}
+
+function num(v){if(v==null)return NaN;v=(''+v).replace(/\s/g,'').replace(',','.').replace(/[^0-9.\-]/g,'');const n=parseFloat(v);return n;}
+function fmt(n,d){return isFinite(n)?n.toLocaleString('vi-VN',{minimumFractionDigits:d||0,maximumFractionDigits:d||0}):'—';}
+function pct(p){return isFinite(p)?((p>=0?'+':'')+p.toFixed(1)+'%'):'—';}
+function pcls(p){return !isFinite(p)?'':(p>0?'up':(p<0?'down':'flat'));}
+
+function calc(r){
+  const mua=num(r.mua),gia=num(r.gia),dl=num(r.dl),mt1=num(r.mt1),mt2=num(r.mt2),tb=num(r.tb);
+  const llnow=(isFinite(gia)&&isFinite(mua)&&mua>0)?(gia-mua)/mua*100:NaN;
+  const llexp=(isFinite(tb)&&isFinite(mua)&&mua>0)?(tb-mua)/mua*100:NaN;
+  const ups=(isFinite(tb)&&isFinite(gia)&&gia>0)?(tb-gia)/gia*100:NaN;
+  let st={t:'—',c:''};
+  if(isFinite(gia)&&gia>0){
+    if(isFinite(dl)&&gia<=dl)st={t:'DỪNG LỖ',c:'s-stop'};
+    else if(isFinite(mt2)&&gia>=mt2)st={t:'ĐẠT MT2',c:'s-t2'};
+    else if(isFinite(mt1)&&gia>=mt1)st={t:'ĐẠT MT1',c:'s-t1'};
+    else if(isFinite(mua)&&gia>=mua)st={t:'NẮM GIỮ',c:'s-hold'};
+    else st={t:'THEO DÕI',c:'s-watch'};
+  }
+  return {llnow,llexp,ups,st};
+}
+
+function render(){
+  const tb=document.getElementById('tbody');tb.innerHTML='';
+  data.forEach((r,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=
+      ci(i,'ma',r.ma,'tick')+ci(i,'ky',r.ky)+ci(i,'ngay',r.ngay)+
+      ci(i,'mua',r.mua)+ci(i,'gia',r.gia)+
+      `<td id="llnow-${i}"></td>`+
+      ci(i,'dl',r.dl)+ci(i,'mt1',r.mt1)+ci(i,'mt2',r.mt2)+ci(i,'tb',r.tb)+
+      `<td id="ups-${i}"></td><td id="llexp-${i}"></td>`+
+      ci(i,'alloc',r.alloc)+
+      `<td id="st-${i}"></td>`+
+      `<td style="white-space:nowrap">`+
+        `<button class="act act-tp" data-tp="${i}" title="Chốt lời: đóng lệnh & ghi vào lịch sử">Chốt</button>`+
+        `<button class="act act-sl" data-sl="${i}" title="Cắt lỗ: đóng lệnh & ghi vào lịch sử">Cắt</button>`+
+        `<button class="act act-rp" data-rp="${i}" title="Đóng lệnh & thêm mã thay thế">Thay</button>`+
+        `<button class="del" data-del="${i}" title="Xóa khỏi bảng">✕</button>`+
+      `</td>`;
+    tb.appendChild(tr);computeRow(i);
+  });
+  summary();
+}
+function ci(i,f,v,cls){return `<td><input class="${cls||''}" data-i="${i}" data-f="${f}" value="${(v==null?'':String(v)).replace(/"/g,'&quot;')}"></td>`;}
+function computeRow(i){
+  const c=calc(data[i]);
+  const a=document.getElementById('llnow-'+i);a.textContent=pct(c.llnow);a.className=pcls(c.llnow);
+  const u=document.getElementById('ups-'+i);u.textContent=pct(c.ups);u.className=pcls(c.ups);
+  const e=document.getElementById('llexp-'+i);e.textContent=pct(c.llexp);e.className=pcls(c.llexp);
+  document.getElementById('st-'+i).innerHTML=`<span class="st ${c.st.c}">${c.st.t}</span>`;
+}
+function summary(){
+  let alloc=0,hit=0,stop=0,wNow=0,wExp=0,wA=0;
+  data.forEach(r=>{
+    const a=num(r.alloc);if(isFinite(a))alloc+=a;
+    const c=calc(r);
+    if(c.st.t==='ĐẠT MT1'||c.st.t==='ĐẠT MT2')hit++;
+    if(c.st.t==='DỪNG LỖ')stop++;
+    if(isFinite(a)&&a>0){wA+=a;if(isFinite(c.llnow))wNow+=c.llnow*a;if(isFinite(c.llexp))wExp+=c.llexp*a;}
+  });
+  document.getElementById('sCount').textContent=data.length;
+  document.getElementById('sAlloc').textContent=isFinite(alloc)?alloc.toFixed(0)+'%':'—';
+  const pn=document.getElementById('sPnlNow'),pe=document.getElementById('sPnlExp');
+  const vn=wA>0?wNow/wA:NaN,ve=wA>0?wExp/wA:NaN;
+  pn.textContent=pct(vn);pn.className='val '+pcls(vn);
+  pe.textContent=pct(ve);pe.className='val '+pcls(ve);
+  document.getElementById('sHit').textContent=hit;
+  document.getElementById('sStop').textContent=stop;
+}
+
+document.getElementById('tbody').addEventListener('input',e=>{
+  const el=e.target;if(!el.dataset.f)return;
+  data[el.dataset.i][el.dataset.f]=el.value;computeRow(+el.dataset.i);summary();save();
+});
+document.getElementById('tbody').addEventListener('click',e=>{
+  const d=e.target.dataset;
+  if(d.del!=null){data.splice(+d.del,1);render();save();}
+  else if(d.tp!=null)closePosition(+d.tp,'Chốt lời');
+  else if(d.sl!=null)closePosition(+d.sl,'Cắt lỗ');
+  else if(d.rp!=null)replacePosition(+d.rp);
+});
+
+function closePosition(i,reason){
+  const r=data[i];
+  let giaDong=num(r.gia);
+  if(!isFinite(giaDong)||giaDong<=0){
+    const inp=prompt(`Nhập giá đóng cho ${r.ma||'mã này'} (nghìn VND):`, r.gia||r.mua||'');
+    if(inp===null)return false;
+    giaDong=num(inp);
+    if(!isFinite(giaDong)||giaDong<=0){alert('Giá đóng không hợp lệ.');return false;}
+  }
+  const mua=num(r.mua);
+  const ll=(isFinite(mua)&&mua>0)?(giaDong-mua)/mua*100:NaN;
+  closed.unshift({ma:r.ma,ky:r.ky,ngay:r.ngay,mua:r.mua,giaDong:String(giaDong),
+    ll:isFinite(ll)?ll:'',lyDo:reason,ngayDong:todayStr(),alloc:r.alloc});
+  data.splice(i,1);
+  render();renderClosed();save();
+  return true;
+}
+function replacePosition(i){
+  const r=data[i];
+  const mua=num(r.mua),g=num(r.gia);
+  const reason=(isFinite(g)&&isFinite(mua)&&g>=mua)?'Chốt lời':'Cắt lỗ';
+  const ok=closePosition(i,reason);
+  if(!ok)return;
+  data.push({ma:'',ky:r.ky,ngay:todayStr(),mua:'',gia:'',dl:'',mt1:'',mt2:'',tb:'',alloc:r.alloc});
+  render();save();
+  const inps=document.querySelectorAll('#tbody tr:last-child input');if(inps[0])inps[0].focus();
+}
+function renderClosed(){
+  const tb=document.getElementById('tbodyClosed');tb.innerHTML='';
+  document.getElementById('closedBox').style.display=closed.length?'':'none';
+  closed.forEach((c,i)=>{
+    const llv=num(c.ll);const cls=isFinite(llv)?(llv>0?'up':(llv<0?'down':'flat')):'';
+    const rc=c.lyDo==='Chốt lời'?'s-t2':'s-stop';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="font-weight:700">${c.ma||''}</td><td>${c.ky||''}</td><td>${c.ngay||''}</td>`+
+      `<td>${c.mua||''}</td><td>${c.giaDong||''}</td>`+
+      `<td class="${cls}">${isFinite(llv)?pct(llv):'—'}</td>`+
+      `<td><span class="st ${rc}">${c.lyDo}</span></td><td>${c.ngayDong||''}</td><td>${c.alloc||''}</td>`+
+      `<td style="white-space:nowrap"><button class="act act-rp" data-restore="${i}" title="Mở lại vào danh mục">↩ Mở lại</button>`+
+      `<button class="del" data-delc="${i}" title="Xóa khỏi lịch sử">✕</button></td>`;
+    tb.appendChild(tr);
+  });
+  closedSummary();
+}
+function closedSummary(){
+  const bar=document.getElementById('closedBar');
+  if(!closed.length){bar.textContent='Chưa có lệnh nào được đóng.';return;}
+  let win=0,loss=0,wSum=0,wA=0;
+  closed.forEach(c=>{const l=num(c.ll),a=num(c.alloc);if(isFinite(l)){if(l>0)win++;else loss++;if(isFinite(a)&&a>0){wSum+=l*a;wA+=a;}}});
+  const avg=wA>0?wSum/wA:NaN;
+  const wr=(win+loss)>0?(win/(win+loss)*100).toFixed(0):'—';
+  bar.innerHTML=`Đã đóng <b>${closed.length}</b> lệnh · Thắng <b class="up">${win}</b> / Thua <b class="down">${loss}</b> · Tỷ lệ thắng <b>${wr}%</b> · LL thực hiện bình quân (trọng số %GN): <b class="${avg>0?'up':(avg<0?'down':'')}">${isFinite(avg)?pct(avg):'—'}</b>`;
+}
+document.getElementById('tbodyClosed').addEventListener('click',e=>{
+  const d=e.target.dataset;
+  if(d.delc!=null){if(confirm('Xóa lệnh này khỏi lịch sử?')){closed.splice(+d.delc,1);renderClosed();save();}}
+  else if(d.restore!=null){
+    const c=closed[+d.restore];
+    data.push({ma:c.ma,ky:c.ky,ngay:c.ngay,mua:c.mua,gia:c.giaDong,dl:'',mt1:'',mt2:'',tb:'',alloc:c.alloc});
+    closed.splice(+d.restore,1);render();renderClosed();save();
+  }
+});
+document.getElementById('addRow').onclick=()=>{data.push({ma:'',ky:'',ngay:'',mua:'',gia:'',dl:'',mt1:'',mt2:'',tb:'',alloc:''});render();save();
+  const inps=document.querySelectorAll('#tbody tr:last-child input');if(inps[0])inps[0].focus();};
+document.getElementById('clearBtn').onclick=()=>{if(confirm('Xóa toàn bộ bảng?')){data=[];render();save();}};
+document.getElementById('resetBtn').onclick=()=>{if(confirm('Nạp lại danh mục gốc (Quý 2 2026)? Dữ liệu hiện tại sẽ bị thay.')){data=SEED.map(o=>({...o}));render();save();}};
+
+let sortDir={};
+document.querySelectorAll('thead th[data-k]').forEach(th=>{th.onclick=()=>{
+  const k=th.dataset.k;const dir=sortDir[k]=-(sortDir[k]||1);
+  const val=r=>{
+    const c=calc(r);
+    if(k==='llnow')return isFinite(c.llnow)?c.llnow:-1e15;
+    if(k==='llexp')return isFinite(c.llexp)?c.llexp:-1e15;
+    if(k==='ups')return isFinite(c.ups)?c.ups:-1e15;
+    if(k==='st')return ({'DỪNG LỖ':0,'THEO DÕI':1,'NẮM GIỮ':2,'ĐẠT MT1':3,'ĐẠT MT2':4})[c.st.t]??-1;
+    if(['mua','gia','dl','mt1','mt2','tb','alloc'].includes(k)){const n=num(r[k]);return isFinite(n)?n:-1e15;}
+    return (r[k]||'').toString().toLowerCase();
+  };
+  data.sort((a,b)=>{const x=val(a),y=val(b);if(typeof x==='number'&&typeof y==='number')return (x-y)*dir;return x<y?-dir:(x>y?dir:0);});
+  render();save();
+};});
+
+const modal=document.getElementById('modal');
+document.getElementById('pasteBtn').onclick=()=>{document.getElementById('pasteArea').value='';modal.classList.add('show');};
+document.getElementById('pasteCancel').onclick=()=>modal.classList.remove('show');
+document.getElementById('pasteLoad').onclick=()=>{parseBulk(document.getElementById('pasteArea').value,false);modal.classList.remove('show');};
+modal.onclick=e=>{if(e.target===modal)modal.classList.remove('show');};
+
+document.getElementById('importBtn').onclick=()=>document.getElementById('fileInput').click();
+document.getElementById('fileInput').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>parseBulk(rd.result,true);rd.readAsText(f,'utf-8');e.target.value='';};
+document.getElementById('exportBtn').onclick=()=>{
+  const head=['Ma','KyHan','NgayKN','GiaMua','GiaHienTai','LL_HienTai_%','DungLo','GiaMT1','GiaMT2','GiaTB_MT','Upside_%','LL_DuTinh_%','GiaiNgan_%','TrangThai'];
+  const rows=data.map(r=>{const c=calc(r);
+    return [r.ma,r.ky,r.ngay,r.mua,r.gia,isFinite(c.llnow)?c.llnow.toFixed(2):'',r.dl,r.mt1,r.mt2,r.tb,
+      isFinite(c.ups)?c.ups.toFixed(2):'',isFinite(c.llexp)?c.llexp.toFixed(2):'',r.alloc,c.st.t]
+      .map(x=>{x=(x==null?'':''+x);return /[",\n]/.test(x)?'"'+x.replace(/"/g,'""')+'"':x;}).join(',');});
+  const csv='﻿'+[head.join(',')].concat(rows).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='danh-muc-khuyen-nghi.csv';a.click();
+};
+function parseBulk(text,replace){
+  const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);const out=[];
+  lines.forEach(line=>{
+    const c=line.split(/\t|,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(s=>s.replace(/^"|"$/g,'').trim());
+    if(!c[0])return;if(/^(mã|ma|ticker|symbol)$/i.test(c[0]))return;
+    out.push({ma:c[0]||'',ky:c[1]||'',ngay:c[2]||'',mua:c[3]||'',gia:c[4]||'',dl:c[5]||'',mt1:c[6]||'',mt2:c[7]||'',tb:c[8]||'',alloc:c[9]||''});
+  });
+  if(!out.length){alert('Không đọc được dòng hợp lệ.');return;}
+  data=replace?out:data.concat(out);render();save();flash(out.length+' mã đã nạp');
+}
+
+function save(){localStorage.setItem(LS,JSON.stringify({data,closed}));flash('Đã lưu');}
+function flash(m){const e=document.getElementById('savedMsg');e.textContent='✓ '+m;clearTimeout(flash.t);flash.t=setTimeout(()=>e.textContent='',1600);}
+
+// ===== Danh mục gốc Quý 2 2026 (từ File Danh Muc.xlsx) =====
+// Giá hiện tại cập nhật 09/06/2026 (nguồn: simplize.vn) — đơn vị nghìn VND
+const SEED=[
+  {ma:'HAG',ky:'Dài hạn', ngay:'11/11/2024',mua:'15.5',gia:'15.2', dl:'14.4',mt1:'22', mt2:'30', tb:'26',  alloc:'30'},
+  {ma:'HPG',ky:'Dài hạn', ngay:'13/8/2025', mua:'25.1',gia:'23.55',dl:'23.3',mt1:'35', mt2:'40', tb:'37.5',alloc:'30'},
+  {ma:'MWG',ky:'Trung hạn',ngay:'26/11/2025',mua:'80',  gia:'77.4', dl:'74.4',mt1:'100',mt2:'140',tb:'120', alloc:'20'},
+  {ma:'KDH',ky:'Trung hạn',ngay:'2/3/2026',  mua:'23.9',gia:'23.7', dl:'22.2',mt1:'32', mt2:'38', tb:'35',  alloc:'20'},
+  {ma:'SSI',ky:'Ngắn hạn', ngay:'3/2/2026',  mua:'28.3',gia:'26.5', dl:'26.3',mt1:'35', mt2:'40', tb:'37.5',alloc:'20'},
+  {ma:'VIX',ky:'Ngắn hạn', ngay:'28/5/2026', mua:'18.3',gia:'17.1', dl:'17.0',mt1:'22', mt2:'40', tb:'31',  alloc:'20'},
+  {ma:'FPT',ky:'Ngắn hạn', ngay:'28/5/2026', mua:'74',  gia:'73.7', dl:'70.0',mt1:'80',mt2:'90', tb:'85',  alloc:'20'}
+];
+function load(){const s=localStorage.getItem(LS);if(s){try{const o=JSON.parse(s)||{};data=o.data||[];closed=o.closed||[];}catch(e){data=[];closed=[];}}if(!data.length)data=SEED.map(o=>({...o}));}
+
+// ===== Auto cập nhật giá =====
+// Giá VN nằm trong khoảng ~1–600 nghìn VND. API có thể trả nghìn VND (23.7) hoặc VND (23700).
+function normNghin(v){v=Number(v);if(!isFinite(v)||v<=0)return 0;return v>1000?v/1000:v;}
+async function getJSON(url){const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error(r.status);return r.json();}
+async function priceNghin(t){
+  const to=Math.floor(Date.now()/1000)+86400, from=to-25*86400;
+  const vnd=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${t}&from=${from}&to=${to}`;
+  const tcbs=`https://apipubaws.tcbs.com.vn/stock-insight/v1/stock/bars-long-term?ticker=${t}&type=stock&resolution=D&to=${to}&countBack=1`;
+  const prox=u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`;
+  const tries=[
+    async()=>{const j=await getJSON(vnd);if(j.s==='ok'&&j.c&&j.c.length)return j.c[j.c.length-1];throw 0;},
+    async()=>{const j=await getJSON(prox(vnd));if(j.s==='ok'&&j.c&&j.c.length)return j.c[j.c.length-1];throw 0;},
+    async()=>{const j=await getJSON(prox(tcbs));const d=j.data&&j.data[j.data.length-1];if(d&&d.close!=null)return d.close;throw 0;}
+  ];
+  for(const fn of tries){try{const n=normNghin(await fn());if(n>0)return n;}catch(e){}}
+  return null;
+}
+async function updateAllPrices(){
+  const btn=document.getElementById('updPrice');if(btn.disabled)return;
+  const label=btn.textContent;btn.disabled=true;
+  const rows=data.filter(r=>r.ma&&r.ma.trim());const total=rows.length;
+  let done=0,ok=0,fail=0;flash('Đang lấy giá…');
+  await Promise.all(rows.map(async r=>{
+    const p=await priceNghin(r.ma.trim().toUpperCase());
+    done++;btn.textContent=`⏳ ${done}/${total}…`;
+    if(p){r.gia=String(Math.round(p*100)/100);ok++;}else fail++;
+  }));
+  render();save();btn.disabled=false;btn.textContent=label;
+  if(ok&&!fail)flash(`✓ Đã cập nhật ${ok} mã · ${new Date().toLocaleTimeString('vi-VN')}`);
+  else if(ok)flash(`✓ ${ok} mã OK, ${fail} mã lỗi (CORS?) — nhập tay phần còn lại`);
+  else flash('⚠ Không lấy được giá (bị chặn CORS/mạng) — vui lòng nhập tay');
+}
+document.getElementById('updPrice').onclick=updateAllPrices;
+
+load();render();
+</script>
+</body>
+</html>

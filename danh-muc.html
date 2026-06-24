@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>KKINVEST · Danh mục KH — NAV 1 tỷ (auto theo PTKT)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{--bg:#080b13;--card:#0e1525;--card2:#141d31;--line:#1c2740;--txt:#e8edf7;--muted:#7e8db0;--accent:#e2b33b;--accent2:#4f8cff;--up:#26c281;--dn:#f0556b;--warn:#e2b33b;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1200px 700px at 50% -260px,#0c1730,#080b13);color:var(--txt);font-family:"Segoe UI",system-ui,Roboto,Arial,sans-serif;line-height:1.4;padding:0 0 40px}
+  .wrap{max-width:1440px;margin:0 auto;padding:0 16px}
+  .navsheets{display:flex;gap:8px;padding:11px 0 0;flex-wrap:wrap}
+  .ns{text-decoration:none;font-size:13px;font-weight:700;padding:7px 14px;border-radius:9px;border:1px solid var(--line);color:var(--muted);background:var(--card)}
+  .ns.active{background:var(--accent);color:#04140c;border-color:var(--accent)}.ns:hover{border-color:var(--accent2)}
+  header{padding:14px 0 12px;border-bottom:1px solid var(--line);margin:8px 0 14px}
+  .tag{display:inline-block;background:var(--accent);color:#04140c;font-weight:700;font-size:11px;letter-spacing:1px;padding:4px 10px;border-radius:6px}
+  h1{font-size:21px;font-weight:800;margin:8px 0 3px}.sub{color:var(--muted);font-size:12.5px}
+  .ctrl{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+  .ctrl label{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px}
+  .ctrl input,.ctrl select{background:var(--card);border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:6px 9px;font-size:12.5px;font-family:inherit;width:70px}
+  .btn{background:var(--accent);color:#04140c;border:1px solid var(--accent);font-size:12.5px;font-weight:800;padding:8px 15px;border-radius:9px;cursor:pointer}
+  .btn:disabled{opacity:.5}
+  .stat{color:var(--muted);font-size:12px;margin-left:auto}
+  .seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .seg button{background:var(--card);color:var(--muted);border:none;border-right:1px solid var(--line);font-size:12px;font-weight:700;padding:7px 12px;cursor:pointer;width:auto}
+  .seg button:last-child{border-right:none}.seg button.on{background:var(--accent);color:#04140c}
+  .banner{font-size:12px;padding:8px 12px;border-radius:9px;margin-bottom:10px;font-weight:600}
+  .banner.live{background:rgba(34,197,94,.12);color:#7fe3a5;border:1px solid rgba(34,197,94,.3)}
+  .banner.sim{background:rgba(226,179,59,.12);color:#f0c26b;border:1px solid rgba(226,179,59,.3)}
+  .cards{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:14px 0}
+  @media(max-width:1000px){.cards{grid-template-columns:1fr 1fr 1fr}}@media(max-width:560px){.cards{grid-template-columns:1fr 1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:12px 13px}
+  .card .l{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .card .v{font-size:21px;font-weight:800;margin-top:4px}
+  .card .s{font-size:11px;color:var(--muted);margin-top:2px}
+  .up{color:var(--up)}.dn{color:var(--dn)}.warnc{color:var(--warn)}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:14px}
+  .panel h3{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .panel h3 .c{font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0;margin-left:auto;font-size:11px}
+  .chartbox{position:relative;height:280px}
+  #equity{width:100%;height:100%}
+  .tablebox{overflow:auto;max-height:420px}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:680px}
+  th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+  th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+  thead th{background:#0e1525;color:var(--muted);font-size:10.5px;text-transform:uppercase;position:sticky;top:0}
+  tbody tr:hover{background:#161f37}
+  .sb{font-weight:800;padding:1px 8px;border-radius:5px;font-size:11px}.b-mua{background:rgba(34,197,94,.18);color:#7fe3a5}.b-ban{background:rgba(239,71,87,.18);color:#f5a3ac}
+  .rs{font-size:11px;padding:1px 7px;border-radius:5px;background:var(--card2);color:var(--muted)}
+  .rs.chot{background:rgba(226,179,59,.16);color:#f0c26b}.rs.lo{background:rgba(239,71,87,.16);color:#f5a3ac}.rs.sig{background:rgba(79,140,255,.16);color:#9cc0ff}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:1000px){.two{grid-template-columns:1fr}}
+  .note{color:var(--muted);font-size:11.5px;margin-top:10px;line-height:1.6}
+  .bar{height:5px;background:var(--card2);border-radius:3px;margin-top:10px;overflow:hidden}.bar>div{height:5px;background:var(--accent);width:0;transition:width .2s}
+  .mini{font-size:11px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:9px"><span style="font-size:19px;font-weight:900;letter-spacing:3px;color:var(--accent)">KKINVEST</span><span style="font-size:11px;font-weight:600;letter-spacing:.5px;color:var(--muted)">· phân tích &amp; định giá chứng khoán</span></div>
+  <div class="navsheets">
+    <a class="ns" href="index.html">⭐ Tổng quan</a>
+    <a class="ns" href="phan-tich-co-ban.html">🧮 Phân tích cơ bản</a>
+    <a class="ns" href="phan-tich-ky-thuat.html">📊 Phân tích kỹ thuật</a>
+    <a class="ns" href="diem-mua.html">🎯 Điểm mua</a>
+    <a class="ns active" href="danh-muc.html">💼 Danh mục KH</a>
+  </div>
+  <header>
+    <span class="tag">Danh mục tín hiệu · tự động</span>
+    <h1>Danh mục mẫu — NAV 1 tỷ, tự giải ngân theo tín hiệu kỹ thuật</h1>
+    <div class="sub"><b>Bắt đầu 22/06/2026</b> với NAV 1 tỷ tiền mặt — hệ thống tự MUA khi có tín hiệu breakout, tự BÁN khi cắt lỗ / chốt lời / tín hiệu bán. Lịch sử mua-bán & đường NAV tích lũy dần từ mốc này trở đi (mỗi phiên mới cập nhật thêm).</div>
+    <div class="ctrl">
+      <div class="seg" id="segMode"><button class="on" data-m="today">Thật · từ 22/6</button><button data-m="3m">MP 3 tháng</button><button data-m="6m">MP 6 tháng</button><button data-m="1y">MP 1 năm</button></div>
+      <label>Số mã tối đa <input type="number" id="pMax" value="5" min="3" max="5"></label>
+      <label>Cắt lỗ % <input type="number" id="pStop" value="8" min="3" max="20"></label>
+      <label>Chốt lời % <input type="number" id="pTgt" value="25" min="10" max="60"></label>
+      <button class="btn" id="runBtn">▶ Chạy lại</button>
+      <span class="stat" id="status"></span>
+    </div>
+    <div class="bar"><div id="prog"></div></div>
+  </header>
+
+  <div class="banner live" id="modeBanner">📌 Danh mục thật — bắt đầu 22/06/2026.</div>
+  <div class="cards">
+    <div class="card"><div class="l">NAV hiện tại</div><div class="v" id="cNav">—</div><div class="s" id="cCash">—</div></div>
+    <div class="card"><div class="l">Tổng lợi nhuận</div><div class="v" id="cRet">—</div><div class="s">so vốn 1 tỷ</div></div>
+    <div class="card"><div class="l">Tỷ lệ thắng</div><div class="v" id="cWin">—</div><div class="s" id="cWinS">lệnh đã chốt</div></div>
+    <div class="card"><div class="l">Số lệnh</div><div class="v" id="cTrades">—</div><div class="s" id="cTradesS">mua / bán</div></div>
+    <div class="card"><div class="l">Đang nắm</div><div class="v" id="cOpen">—</div><div class="s" id="cOpenS">mã</div></div>
+    <div class="card"><div class="l">Sụt giảm tối đa</div><div class="v" id="cDD">—</div><div class="s">max drawdown</div></div>
+  </div>
+
+  <div class="panel"><h3>Đường NAV danh mục <span class="c" id="navRange"></span></h3><div class="chartbox"><canvas id="equity"></canvas></div>
+    <div class="mini" style="margin-top:6px">● Chấm trên đường NAV = điểm <b style="color:#22c55e">chốt lời/bán lãi</b> hoặc <b style="color:#ef4757">cắt lỗ</b> — rê chuột xem mã & lợi nhuận lệnh.</div></div>
+
+  <div class="panel"><h3>Đang nắm giữ (mở) <span class="c" id="openSum"></span></h3>
+    <div class="tablebox"><table><thead><tr><th>Mã</th><th>Ngày mua</th><th>Giá mua</th><th>Giá HT</th><th>SL</th><th>Giá trị (tr)</th><th>Tỷ trọng</th><th>P/L %</th><th>Số ngày</th></tr></thead><tbody id="openBody"></tbody></table></div>
+  </div>
+
+  <div class="two">
+    <div class="panel"><h3>Lệnh đã chốt (chốt lời / cắt lỗ) <span class="c" id="closedSum"></span></h3>
+      <div class="tablebox"><table><thead><tr><th>Mã</th><th>Mua → Bán</th><th>Giá mua</th><th>Giá bán</th><th>P/L %</th><th>Lãi/lỗ (tr)</th><th>Lý do</th></tr></thead><tbody id="closedBody"></tbody></table></div>
+    </div>
+    <div class="panel"><h3>Lịch sử giao dịch (gần nhất) <span class="c" id="logSum"></span></h3>
+      <div class="tablebox"><table><thead><tr><th>Ngày</th><th>Mã</th><th>Lệnh</th><th>Giá</th><th>SL</th><th>Giá trị (tr)</th><th>Ghi chú</th></tr></thead><tbody id="logBody"></tbody></table></div>
+    </div>
+  </div>
+  <div class="note">Quy tắc: <b>MUA</b> khi đóng cửa vượt đỉnh 4 phiên (breakout) + trên MA20, gói gọn <b>tối đa 5 mã</b> cùng lúc, mỗi vị thế ~ NAV/5 ≈ 20% (lô 100). <b>BÁN</b> khi: chạm cắt lỗ, đạt chốt lời, hoặc thủng đáy 8 phiên (tín hiệu bán) — ưu tiên điều kiện đến trước. Rổ: ~36 mã thanh khoản cao. Danh mục bắt đầu <b>22/06/2026</b> (toàn tiền mặt), giải ngân dần khi xuất hiện tín hiệu — những ngày đầu có thể chưa/ít vị thế là bình thường. Dữ liệu giá VNDirect. Đây là MÔ PHỎNG theo tín hiệu để tham khảo hiệu suất, không phải khuyến nghị/đảm bảo lợi nhuận.</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const NAV0=1e9;
+const START_DATE='2026-06-22';   // danh mục bắt đầu từ hôm nay, không tính lịch sử trước đó
+const fmt=n=>isFinite(n)?Math.round(n).toLocaleString('vi-VN'):'—';
+const trM=n=>isFinite(n)?(n/1e6).toLocaleString('vi-VN',{maximumFractionDigits:1}):'—';
+const UNIV=['HPG','SSI','MWG','FPT','VND','VIX','SHB','STB','MBB','VPB','TCB','ACB','CTG','VCB','HDB','DIG','DXG','KDH','NLG','PDR','GEX','DGC','HSG','NKG','GVR','POW','VRE','KBC','VHM','HAG','DBC','PVD','PVS','GMD','VCI','HCM','BSR','DCM','FRT','PNJ'];
+const PROX=[x=>x,x=>'https://corsproxy.io/?url='+encodeURIComponent(x),x=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(x),x=>'https://api.allorigins.win/raw?url='+encodeURIComponent(x)];
+async function tf(u,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(u,{cache:'no-store',signal:c.signal});if(!r.ok)throw 0;return await r.json();}finally{clearTimeout(t);}}
+async function dchart(sym){const to=Math.floor(Date.now()/1000),from=to-380*86400;const u=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${sym}&from=${from}&to=${to}`;for(const p of PROX){try{const j=await tf(p(u),9000);if(j&&j.s==='ok'&&j.c&&j.c.length>60)return j;}catch(e){}}return null;}
+const toV=v=>v<1000?v*1000:v;
+function sma(a,n){const o=Array(a.length).fill(null);let s=0;for(let i=0;i<a.length;i++){s+=a[i];if(i>=n)s-=a[i-n];if(i>=n-1)o[i]=s/n;}return o;}
+
+let SYM={}; let AXIS=[]; let equityChart=null; let startMode='today';
+async function fetchAll(){
+  SYM={}; const dateset={};
+  const CONC=6; let done=0;
+  for(let i=0;i<UNIV.length;i+=CONC){
+    const part=UNIV.slice(i,i+CONC);
+    await Promise.all(part.map(async tk=>{
+      const j=await dchart(tk); done++;
+      $('prog').style.width=Math.round(done/UNIV.length*100)+'%'; $('status').textContent='⏳ tải giá '+done+'/'+UNIV.length+'…';
+      if(!j)return;
+      const seen={},dates=[],C=[],H=[],L=[];
+      const rows=j.t.map((t,k)=>({d:new Date(t*1000).toISOString().slice(0,10),c:toV(j.c[k]),h:toV(j.h[k]),l:toV(j.l[k])})).filter(r=>r.c).sort((a,b)=>a.d<b.d?-1:1);
+      rows.forEach(r=>{if(!seen[r.d]){seen[r.d]=1;dates.push(r.d);C.push(r.c);H.push(r.h);L.push(r.l);}});
+      const ma20=sma(C,20),n=C.length, bd={};
+      for(let k=0;k<n;k++){
+        let buy=false,sell=false;
+        if(k>=4){const bo=C[k]>=H[k-1]&&C[k]>=H[k-2]&&C[k]>=H[k-3]&&C[k]>=H[k-4]&&ma20[k]&&C[k]>ma20[k];
+          const boPrev=k>=5&&C[k-1]>=H[k-2]&&C[k-1]>=H[k-3]&&C[k-1]>=H[k-4]&&C[k-1]>=H[k-5]&&ma20[k-1]&&C[k-1]>ma20[k-1];
+          buy=bo&&!boPrev;}
+        if(k>=8)sell=C[k]<=L[k-1]&&C[k]<=L[k-2]&&C[k]<=L[k-3]&&C[k]<=L[k-4]&&C[k]<=L[k-5]&&C[k]<=L[k-6]&&C[k]<=L[k-7]&&C[k]<=L[k-8];
+        bd[dates[k]]={c:C[k],buy,sell}; dateset[dates[k]]=1;
+      }
+      SYM[tk]={bd, lastClose:C[n-1]};
+    }));
+  }
+  AXIS=Object.keys(dateset).sort();
+  // forward-fill giá theo AXIS để tính NAV mượt (giữ giá gần nhất khi mã ko có phiên)
+  for(const tk in SYM){const bd=SYM[tk].bd,arr=Array(AXIS.length);let last=null;
+    for(let i=0;i<AXIS.length;i++){const b=bd[AXIS[i]];if(b)last=b.c;arr[i]=last;}SYM[tk].pxAxis=arr;}
+}
+function backtest(){
+  const maxPos=Math.min(5,Math.max(1,+$('pMax').value||5)), stop=(+$('pStop').value||8)/100, tgt=(+$('pTgt').value||25)/100;
+  let cash=NAV0, pos={}, trades=[], closed=[], equity=[];
+  let start;
+  if(startMode==='today'){start=AXIS.findIndex(d=>d>=START_DATE);if(start<0)start=AXIS.length;}
+  else{const days={'3m':63,'6m':126,'1y':250}[startMode]||63;start=Math.max(0,AXIS.length-days);}
+  for(let di=start;di<AXIS.length;di++){
+    const d=AXIS[di];
+    // EXITS
+    for(const tk of Object.keys(pos)){
+      const bar=SYM[tk].bd[d]; if(!bar)continue; const px=bar.c, p=pos[tk];
+      let reason=null;
+      if(px<=p.entry*(1-stop))reason='Cắt lỗ';
+      else if(px>=p.entry*(1+tgt))reason='Chốt lời';
+      else if(bar.sell)reason='Tín hiệu bán';
+      if(reason){const pnl=(px-p.entry)*p.qty, pct=(px/p.entry-1)*100;
+        cash+=p.qty*px;
+        trades.push({d,tk,side:'BÁN',px,qty:p.qty,note:reason});
+        closed.push({tk,buyD:p.entryD,sellD:d,buyPx:p.entry,sellPx:px,qty:p.qty,pnl,pct,reason});
+        delete pos[tk];}
+    }
+    // equity (trước khi mua) để chia vốn — dùng giá forward-fill
+    let mv=0; for(const tk in pos){mv+=pos[tk].qty*(SYM[tk].pxAxis[di]||pos[tk].entry);}
+    const eqNow=cash+mv;
+    // ENTRIES
+    let slots=maxPos-Object.keys(pos).length;
+    if(slots>0){
+      const cands=UNIV.filter(tk=>!pos[tk]&&SYM[tk]&&SYM[tk].bd[d]&&SYM[tk].bd[d].buy);
+      for(const tk of cands){ if(slots<=0)break;
+        const px=SYM[tk].bd[d].c, size=Math.min(cash,eqNow/maxPos), qty=Math.floor(size/px/100)*100;
+        if(qty>0&&qty*px<=cash){cash-=qty*px;pos[tk]={qty,entry:px,entryD:d};trades.push({d,tk,side:'MUA',px,qty,note:'Breakout'});slots--;}
+      }
+    }
+    let mv2=0; for(const tk in pos){mv2+=pos[tk].qty*(SYM[tk].pxAxis[di]||pos[tk].entry);}
+    equity.push({d,nav:cash+mv2});
+  }
+  return {cash,pos,trades,closed,equity};
+}
+function render(R){
+  const eq=R.equity, navEnd=eq.length?eq[eq.length-1].nav:NAV0;
+  const ret=(navEnd-NAV0)/NAV0*100;
+  // cash now
+  let mv=0; for(const tk in R.pos){const p=R.pos[tk];mv+=p.qty*(SYM[tk]?SYM[tk].lastClose:p.entry);}
+  $('cNav').textContent=fmt(navEnd)+'đ'; $('cNav').className='v '+(ret>=0?'up':'dn');
+  $('cCash').textContent='Tiền mặt '+(navEnd?R.cash/navEnd*100:0).toFixed(0)+'% · '+trM(R.cash)+' tr';
+  $('cRet').textContent=(ret>=0?'+':'')+ret.toFixed(1)+'%'; $('cRet').className='v '+(ret>=0?'up':'dn');
+  const wins=R.closed.filter(c=>c.pnl>0).length, nc=R.closed.length;
+  $('cWin').textContent=nc?Math.round(wins/nc*100)+'%':'—'; $('cWinS').textContent=wins+'/'+nc+' lệnh chốt';
+  $('cTrades').textContent=R.trades.length; $('cTradesS').textContent=R.trades.filter(t=>t.side==='MUA').length+' mua · '+R.trades.filter(t=>t.side==='BÁN').length+' bán';
+  $('cOpen').textContent=Object.keys(R.pos).length;
+  // max drawdown
+  let peak=-1e18,dd=0; eq.forEach(e=>{peak=Math.max(peak,e.nav);dd=Math.min(dd,(e.nav-peak)/peak);});
+  $('cDD').textContent=(dd*100).toFixed(1)+'%'; $('cDD').className='v dn';
+  $('navRange').textContent=eq.length?(eq[0].d+' → '+eq[eq.length-1].d):'';
+  // equity chart + đánh dấu lệnh bán/chốt lời
+  const dateIdx={}; eq.forEach((e,i)=>dateIdx[e.d]=i);
+  const mY=Array(eq.length).fill(null),mC=Array(eq.length).fill('#22c55e'),mInfo=Array(eq.length).fill('');
+  R.closed.forEach(c=>{const i=dateIdx[c.sellD];if(i==null)return;mY[i]=eq[i].nav/1e6;mC[i]=c.pnl>=0?'#22c55e':'#ef4757';
+    mInfo[i]=(mInfo[i]?mInfo[i]+' · ':'')+'BÁN '+c.tk+' '+(c.pct>=0?'+':'')+c.pct.toFixed(1)+'% ('+c.reason+')';});
+  if(equityChart)equityChart.destroy();
+  equityChart=new Chart($('equity'),{type:'line',data:{labels:eq.map(e=>e.d),datasets:[
+    {label:'NAV',data:eq.map(e=>e.nav/1e6),borderColor:ret>=0?'#22c55e':'#ef4757',backgroundColor:ret>=0?'rgba(34,197,94,.10)':'rgba(239,71,87,.10)',fill:true,pointRadius:0,borderWidth:2,tension:.15,order:2},
+    {label:'Lệnh bán',data:mY,showLine:false,pointRadius:mY.map(v=>v==null?0:4.5),pointHoverRadius:6,pointBackgroundColor:mC,pointBorderColor:'#fff',pointBorderWidth:1,order:1}
+  ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:c=>c.datasetIndex===1?(mInfo[c.dataIndex]||''):('NAV '+c.parsed.y.toLocaleString('vi-VN',{maximumFractionDigits:0})+' tr')}}},
+      scales:{x:{ticks:{color:'#8595b5',maxTicksLimit:8},grid:{color:'#172238'}},y:{ticks:{color:'#8595b5',callback:v=>v.toLocaleString('vi-VN')+'tr'},grid:{color:'#172238'}}}}});
+  // open positions
+  const ob=$('openBody'); const opens=Object.keys(R.pos).map(tk=>{const p=R.pos[tk],px=SYM[tk]?SYM[tk].lastClose:p.entry;return {tk,p,px,val:p.qty*px,pct:(px/p.entry-1)*100};});
+  opens.sort((a,b)=>b.val-a.val);
+  ob.innerHTML=opens.map(o=>{const days=Math.round((Date.parse(eq[eq.length-1].d)-Date.parse(o.p.entryD))/864e5);
+    return `<tr><td style="font-weight:800">${o.tk}</td><td class="mini">${o.p.entryD}</td><td>${fmt(o.p.entry)}</td><td>${fmt(o.px)}</td><td>${fmt(o.p.qty)}</td><td>${trM(o.val)}</td><td>${(o.val/navEnd*100).toFixed(1)}%</td><td class="${o.pct>=0?'up':'dn'}">${(o.pct>=0?'+':'')+o.pct.toFixed(1)}%</td><td class="mini">${days}</td></tr>`;}).join('')||'<tr><td colspan="9" class="mini" style="padding:14px;text-align:center">Hiện không nắm mã nào (đang giữ tiền mặt).</td></tr>';
+  $('openSum').textContent=opens.length+' mã · '+trM(mv)+' tr ('+(navEnd?mv/navEnd*100:0).toFixed(0)+'% NAV)';
+  // closed trades
+  const cl=R.closed.slice().reverse();
+  $('closedBody').innerHTML=cl.map(c=>{const rc=c.reason==='Chốt lời'?'chot':(c.reason==='Cắt lỗ'?'lo':'sig');
+    return `<tr><td style="font-weight:800">${c.tk}</td><td class="mini">${c.buyD} → ${c.sellD}</td><td>${fmt(c.buyPx)}</td><td>${fmt(c.sellPx)}</td><td class="${c.pct>=0?'up':'dn'}">${(c.pct>=0?'+':'')+c.pct.toFixed(1)}%</td><td class="${c.pnl>=0?'up':'dn'}">${(c.pnl>=0?'+':'')+trM(c.pnl)}</td><td><span class="rs ${rc}">${c.reason}</span></td></tr>`;}).join('')||'<tr><td colspan="7" class="mini" style="padding:14px;text-align:center">Chưa có lệnh chốt.</td></tr>';
+  const sumPnl=R.closed.reduce((s,c)=>s+c.pnl,0);
+  $('closedSum').textContent=nc+' lệnh · LN thực hiện '+(sumPnl>=0?'+':'')+trM(sumPnl)+' tr';
+  // log
+  const lg=R.trades.slice().reverse().slice(0,60);
+  $('logBody').innerHTML=lg.map(t=>`<tr><td class="mini">${t.d}</td><td style="font-weight:800">${t.tk}</td><td><span class="sb ${t.side==='MUA'?'b-mua':'b-ban'}">${t.side}</span></td><td>${fmt(t.px)}</td><td>${fmt(t.qty)}</td><td>${trM(t.qty*t.px)}</td><td class="mini">${t.note}</td></tr>`).join('');
+  $('logSum').textContent=R.trades.length+' lệnh';
+}
+async function run(){
+  $('runBtn').disabled=true; $('status').textContent='⏳ đang chạy mô phỏng…';
+  if(!AXIS.length)await fetchAll();
+  $('status').textContent='⏳ đang backtest…';
+  const R=backtest(); render(R);
+  $('prog').style.width='100%'; $('runBtn').disabled=false;
+  $('status').textContent='● xong · '+new Date().toLocaleTimeString('vi-VN');
+}
+function setBanner(){const b=$('modeBanner');
+  if(startMode==='today'){b.className='banner live';b.innerHTML='📌 <b>Danh mục thật</b> — bắt đầu 22/06/2026, giải ngân theo tín hiệu (history lớn dần mỗi phiên).';}
+  else{const lbl={'3m':'3 tháng','6m':'6 tháng','1y':'1 năm'}[startMode];b.className='banner sim';b.innerHTML='🧪 <b>Mô phỏng tham khảo '+lbl+' gần nhất</b> — xem chiến lược tín hiệu đã chạy thế nào trong quá khứ (KHÔNG phải danh mục thật).';}}
+$('segMode').querySelectorAll('button').forEach(bt=>bt.onclick=()=>{$('segMode').querySelectorAll('button').forEach(x=>x.classList.remove('on'));bt.classList.add('on');startMode=bt.dataset.m;setBanner();if(AXIS.length){render(backtest());}else run();});
+$('runBtn').onclick=()=>{ if(AXIS.length){const R=backtest();render(R);} else run(); };
+setBanner(); run();
+</script>
+</body>
+</html>

@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Terminal Định giá — Nhập mã → Định giá</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+  :root{--bg:#080b13;--card:#0e1525;--card2:#141d31;--line:#1c2740;--txt:#e8edf7;
+    --muted:#7e8db0;--accent:#e2b33b;--accent2:#4f8cff;--warn:#e2a33b;--danger:#e25c5c;--good:#3ba776;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1200px 700px at 50% -260px,#0c1730,#080b13);color:var(--txt);
+    font-family:"Segoe UI",system-ui,Roboto,Arial,sans-serif;line-height:1.5;padding:0 0 60px}
+  .wrap{max-width:1340px;margin:0 auto;padding:0 18px}
+  header{padding:26px 0 16px;border-bottom:1px solid var(--line);margin-bottom:20px}
+  .tag{display:inline-block;background:var(--accent);color:#04110a;font-weight:700;font-size:11px;
+    letter-spacing:1px;padding:4px 10px;border-radius:20px;text-transform:uppercase}
+  h1{font-size:25px;margin:11px 0 3px}
+  .sub{color:var(--muted);font-size:13.5px}
+  .tickbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}
+  .tickbar input.tk{font-size:22px;font-weight:800;letter-spacing:1px;text-transform:uppercase;width:130px;
+    background:#0c142b;border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:8px 12px}
+  button{background:var(--card2);color:var(--txt);border:1px solid var(--line);font-size:13px;font-weight:600;
+    padding:9px 14px;border-radius:9px;cursor:pointer}
+  button:hover{border-color:var(--accent2)}
+  .btn-acc{background:var(--accent2);color:#04122b;border-color:var(--accent2)}
+  .layout{display:grid;grid-template-columns:330px 1fr;gap:18px}
+  @media(max-width:980px){.layout{grid-template-columns:1fr}}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:14px 16px}
+  .panel h3{font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:14px 0 8px;
+    border-bottom:1px solid var(--line);padding-bottom:5px}
+  .panel h3:first-child{margin-top:2px}
+  .fld{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:5px 0}
+  .fld label{font-size:12.5px;color:#c7d0e4;flex:1}
+  .fld input,.fld select{width:96px;background:#0c142b;border:1px solid var(--line);border-radius:7px;
+    color:var(--txt);padding:5px 7px;text-align:right;font-size:13px;font-family:inherit}
+  .fld input:focus,.fld select:focus{border-color:var(--accent2);outline:none}
+  .fld .u{font-size:11px;color:var(--muted);width:34px;text-align:left}
+  .grow5{display:flex;gap:4px}.grow5 input{width:44px;padding:5px 3px}
+  .out{display:grid;gap:14px}
+  .gridc{display:grid;gap:13px;grid-template-columns:repeat(4,1fr)}
+  @media(max-width:760px){.gridc{grid-template-columns:1fr 1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:15px 16px}
+  .card .label{color:var(--muted);font-size:12px}
+  .card .val{font-size:23px;font-weight:700;margin-top:3px}
+  .up{color:var(--good)}.down{color:var(--danger)}.flat{color:var(--warn)}
+  .reco{display:inline-block;font-size:22px;font-weight:800;padding:6px 18px;border-radius:11px}
+  .r-buy{background:var(--good);color:#04110a}.r-hold{background:var(--warn);color:#1a1405}.r-sell{background:var(--danger);color:#fff}
+  .reco-sm{font-weight:700;padding:2px 8px;border-radius:6px;font-size:11.5px;display:inline-block}
+  .chartbox{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:16px 18px;height:300px;position:relative}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  thead th{color:var(--muted);font-size:11px;text-transform:uppercase}
+  .sens td{text-align:center;font-weight:600;border:1px solid var(--line)}
+  .sens th{text-align:center;border:1px solid var(--line);background:#10182e}
+  .sens .axis{color:var(--muted);font-weight:700}
+  .note{color:var(--muted);font-size:12px;margin-top:6px}
+  h2.sec{font-size:17px;margin:6px 0 2px;display:flex;align-items:center;gap:9px}
+  h2.sec .bar{width:5px;height:18px;background:var(--accent2);border-radius:3px}
+  .mini{font-size:11px;color:var(--muted)}
+  .navsheets{display:flex;gap:8px;margin-bottom:12px}
+  .ns{text-decoration:none;font-size:13px;font-weight:700;padding:7px 15px;border-radius:9px;
+    border:1px solid var(--line);color:var(--muted);background:var(--card)}
+  .ns.active{background:var(--accent);color:#04110a;border-color:var(--accent)}
+  .ns:hover{border-color:var(--accent2)}
+  .loginGate{position:fixed;inset:0;background:radial-gradient(1200px 700px at 50% -260px,#0c1730,#080b13);z-index:1000;display:flex;align-items:center;justify-content:center}
+  .loginGate.hidden{display:none}
+  .loginBox{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:32px 30px;width:min(360px,92vw);display:flex;flex-direction:column;gap:12px}
+  .loginTitle{font-size:20px;font-weight:800;text-align:center}
+  .loginSub{font-size:12.5px;color:var(--muted);text-align:center;margin-bottom:6px}
+  .loginBox input{background:#0c142b;border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:11px 13px;font-size:14px;font-family:inherit}
+  .loginBox input:focus{border-color:var(--accent2);outline:none}
+  .loginBox button{background:var(--accent);color:#04110a;border:none;border-radius:9px;padding:11px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px}
+  .lerr{color:var(--danger);font-size:12.5px;text-align:center;min-height:15px}
+  .logout{position:fixed;top:12px;right:16px;z-index:900;font-size:12px;padding:5px 12px;background:var(--card2);border:1px solid var(--line);border-radius:8px;color:var(--muted);cursor:pointer}
+  .logout:hover{border-color:var(--danger);color:var(--danger)}
+  .wacc{background:var(--card2);border-radius:8px;padding:8px 10px;margin-top:8px;font-size:12.5px}
+  .wacc b{color:#9cbcff}
+  .pgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:2px 16px}
+  @media(max-width:760px){.pgrid{grid-template-columns:1fr 1fr}}
+  .pres{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px;border-top:1px solid var(--line);padding-top:13px}
+  .chip{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:9px 15px;flex:1;min-width:130px}
+  .chip .l{font-size:11px;color:var(--muted)}
+  .chip .v{font-size:19px;font-weight:700;margin-top:2px}
+  .chip.hl{border-color:#2c5a3f}.chip.hl .v{color:#6fe3ab}
+</style>
+</head>
+<body>
+<script>if(window.top!==window.self)document.documentElement.classList.add('embed');</script>
+<style>html.embed header,html.embed .logout,html.embed .loginGate{display:none!important}html.embed body{padding-top:6px}html.embed .layout{margin-top:6px!important}</style>
+<div class="loginGate" id="loginGate">
+  <form class="loginBox" id="loginForm">
+    <div class="loginTitle">🔐 Terminal Định giá</div>
+    <div class="loginSub">Vui lòng đăng nhập để tiếp tục</div>
+    <input id="luser" placeholder="Tên đăng nhập" autocomplete="username" autofocus>
+    <input id="lpass" type="password" placeholder="Mật khẩu" autocomplete="current-password">
+    <button type="submit">Đăng nhập</button>
+    <div class="lerr" id="lerr"></div>
+  </form>
+</div>
+<button class="logout" onclick="localStorage.removeItem('vt_auth');location.reload()">Đăng xuất</button>
+<script>
+(function(){
+  // ==== ĐỔI TÀI KHOẢN / MẬT KHẨU TẠI ĐÂY ====
+  const AUTH={user:"admin", pass:"kdh2026"};
+  // ===========================================
+  const KEY="vt_auth", gate=document.getElementById('loginGate');
+  if(localStorage.getItem(KEY)==="1") gate.classList.add('hidden');
+  document.getElementById('loginForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    const u=document.getElementById('luser').value.trim(), p=document.getElementById('lpass').value;
+    if(u===AUTH.user && p===AUTH.pass){localStorage.setItem(KEY,"1");gate.classList.add('hidden');}
+    else{document.getElementById('lerr').textContent="Sai tên đăng nhập hoặc mật khẩu";}
+  });
+})();
+</script>
+<header><div class="wrap">
+  <div class="navsheets">
+    <a class="ns" href="index.html">⭐ Tổng quan</a>
+    <a class="ns active" href="phan-tich-co-ban.html">🧮 Phân tích cơ bản</a>
+    <a class="ns" href="phan-tich-ky-thuat.html">📊 Phân tích kỹ thuật</a>
+  </div>
+  <span class="tag">Ngành Bất động sản · RNAV / Quỹ đất · skill initiating-coverage</span>
+  <h1>Định giá BĐS — Nhập mã → RNAV & đa phương pháp</h1>
+  <div class="sub"><b>Nhập mã + Enter</b> (hoặc 🔍 Phân tích) → tự nạp toàn bộ dữ liệu & chạy định giá cho mã đó. RNAV làm neo · P/B · Tính lãi dự án · Football field · Khuyến nghị.</div>
+  <div class="tickbar">
+    <input class="tk" id="ticker" value="KDH">
+    <button class="btn-acc" id="analyzeBtn">🔍 Phân tích mã</button>
+    <button id="fetchPx">↻ Lấy giá</button>
+    <span class="mini" id="pxStatus">Mã có sẵn: KDH · DXG · NVL · NLG · VHM · VIC · PDR · HDC · IDC</span>
+  </div>
+</div></header>
+
+<div class="wrap layout">
+  <!-- INPUTS -->
+  <div class="panel">
+    <h3>Dữ liệu thị trường</h3>
+    <div class="fld"><label>Giá hiện tại</label><input id="price" value="23700"><span class="u">đ</span></div>
+    <div class="fld"><label>Số cổ phiếu</label><input id="shares" value="1122"><span class="u">tr</span></div>
+    <div class="fld"><label>Nợ ròng (Nợ vay − Tiền)</label><input id="netDebt" value="11523"><span class="u">tỷ</span></div>
+
+    <h3>DCF — Tăng trưởng & biên (Base case)</h3>
+    <div class="fld"><label>Doanh thu năm gốc</label><input id="rev0" value="3500"><span class="u">tỷ</span></div>
+    <div class="fld"><label>Tăng trưởng DT Y1–Y5</label></div>
+    <div class="grow5" style="margin:-2px 0 6px">
+      <input id="g1" value="12"><input id="g2" value="12"><input id="g3" value="10"><input id="g4" value="8"><input id="g5" value="6">
+    </div>
+    <div class="fld"><label>Biên EBIT đầu kỳ</label><input id="m0" value="28"><span class="u">%</span></div>
+    <div class="fld"><label>Biên EBIT cuối kỳ</label><input id="m1" value="32"><span class="u">%</span></div>
+    <div class="fld"><label>Thuế suất</label><input id="tax" value="20"><span class="u">%</span></div>
+    <div class="fld"><label>Khấu hao / DT</label><input id="da" value="1.5"><span class="u">%</span></div>
+    <div class="fld"><label>CapEx / DT</label><input id="capex" value="4"><span class="u">%</span></div>
+    <div class="fld"><label>Δ Vốn LĐ / Δ DT</label><input id="nwc" value="8"><span class="u">%</span></div>
+    <div class="fld"><label>Tăng trưởng dài hạn (g)</label><input id="termG" value="3"><span class="u">%</span></div>
+
+    <h3>WACC (CAPM)</h3>
+    <div class="fld"><label>Lãi suất phi rủi ro (10Y)</label><input id="rf" value="5"><span class="u">%</span></div>
+    <div class="fld"><label>Beta</label><input id="beta" value="1.1"><span class="u"></span></div>
+    <div class="fld"><label>Phần bù vốn CP (ERP)</label><input id="erp" value="7"><span class="u">%</span></div>
+    <div class="fld"><label>Chi phí nợ (trước thuế)</label><input id="kd" value="8.5"><span class="u">%</span></div>
+    <div class="wacc" id="waccBox"></div>
+
+    <h3>RNAV — định giá tài sản (chuẩn BĐS)</h3>
+    <div class="fld"><label>Vốn chủ sổ sách (mẹ)</label><input id="bookEq" value="18804"><span class="u">tỷ</span></div>
+    <div class="fld"><label>Quỹ đất sổ sách (tồn kho)</label><input id="landBook" value="29126"><span class="u">tỷ</span></div>
+    <div class="fld"><label>% đánh giá lại quỹ đất</label><input id="uplift" value="50"><span class="u">%</span></div>
+    <div class="fld"><label>Sở hữu hiệu dụng dự án</label><input id="ownEff" value="90"><span class="u">%</span></div>
+    <div class="wacc" id="rnavBox"></div>
+
+    <h3>So sánh (Comparables)</h3>
+    <div class="fld"><label>EPS (lãi/cp, chuẩn hóa)</label><input id="eps" value="1200"><span class="u">đ</span></div>
+    <div class="fld"><label>P/E mục tiêu</label><input id="pe" value="15"><span class="u">x</span></div>
+    <div class="fld"><label>BVPS (giá trị sổ sách)</label><input id="bvps" value="16757"><span class="u">đ</span></div>
+    <div class="fld"><label>P/B mục tiêu</label><input id="pb" value="1.7"><span class="u">x</span></div>
+    <div class="fld"><label>EBITDA</label><input id="ebitda" value="2000"><span class="u">tỷ</span></div>
+    <div class="fld"><label>EV/EBITDA mục tiêu</label><input id="evebitda" value="12"><span class="u">x</span></div>
+
+    <h3>Trọng số tổng hợp (%) <span class="mini">— BĐS: RNAV làm neo, bỏ DCF/EV</span></h3>
+    <div class="fld"><label>RNAV</label><input id="wRNAV" value="55"><span class="u">%</span></div>
+    <div class="fld"><label>P/B</label><input id="wPB" value="35"><span class="u">%</span></div>
+    <div class="fld"><label>P/E</label><input id="wPE" value="10"><span class="u">%</span></div>
+    <div class="fld"><label>DCF</label><input id="wDCF" value="0"><span class="u">%</span></div>
+    <div class="fld"><label>EV/EBITDA</label><input id="wEV" value="0"><span class="u">%</span></div>
+  </div>
+
+  <!-- OUTPUTS -->
+  <div class="out">
+    <div class="gridc">
+      <div class="card"><div class="label">Giá mục tiêu (blended)</div><div class="val" id="oTarget">—</div><div class="mini" id="oRange"></div><div class="mini" id="oCons" style="color:#9cbcff;margin-top:2px"></div><div class="mini" id="oFV" style="color:#f0c26b;margin-top:2px;font-weight:700"></div></div>
+      <div class="card"><div class="label">Giá hiện tại</div><div class="val" id="oPrice">—</div></div>
+      <div class="card"><div class="label">Upside / Downside</div><div class="val" id="oUpside">—</div></div>
+      <div class="card"><div class="label">Khuyến nghị</div><div style="margin-top:6px"><span class="reco" id="oReco">—</span></div></div>
+    </div>
+
+    <h2 class="sec"><span class="bar"></span>Biểu đồ giá (nến) — <span id="pcTk">KDH</span> <span class="mini" id="pcStatus" style="margin-left:8px;font-weight:400"></span></h2>
+    <div class="chartbox" style="padding:6px"><div id="priceChart" style="width:100%;height:288px"></div></div>
+
+    <h2 class="sec"><span class="bar"></span>Vốn hóa vs Tồn kho vs Tổng tài sản — <span id="szTk">KDH</span></h2>
+    <div class="chartbox" style="height:220px"><canvas id="sizeChart"></canvas></div>
+    <div class="pres" id="szRatios" style="margin-top:12px"></div>
+
+    <div id="histWrap">
+    <h2 class="sec"><span class="bar"></span>Lịch sử tài chính 2022–2026 — <span id="histTk">KDH</span></h2>
+    <div class="chartbox" style="height:250px"><canvas id="histChart"></canvas></div>
+    <div class="card" style="overflow:auto;margin-top:10px"><table id="histTable"></table></div>
+    <div class="note" id="histNote"></div>
+    </div>
+
+    <h2 class="sec"><span class="bar"></span>Football field — vùng định giá theo từng phương pháp</h2>
+    <div class="chartbox"><canvas id="cField"></canvas></div>
+
+    <h2 class="sec"><span class="bar"></span>DCF — dòng tiền tự do & hiện giá</h2>
+    <div class="card" style="padding:8px 14px;overflow:auto">
+      <table id="dcfTable"></table>
+    </div>
+    <div class="gridc" style="grid-template-columns:repeat(4,1fr)">
+      <div class="card"><div class="label">Σ PV dòng tiền</div><div class="val" id="oSumPV" style="font-size:18px">—</div></div>
+      <div class="card"><div class="label">PV giá trị cuối</div><div class="val" id="oPvTV" style="font-size:18px">—</div><div class="mini" id="oTvPct"></div></div>
+      <div class="card"><div class="label">Giá trị doanh nghiệp (EV)</div><div class="val" id="oEV" style="font-size:18px">—</div></div>
+      <div class="card"><div class="label">Giá/cp theo DCF</div><div class="val" id="oDcfPx" style="font-size:18px">—</div></div>
+    </div>
+
+    <h2 class="sec"><span class="bar"></span>Bảng độ nhạy — Giá/cp theo WACC × g dài hạn</h2>
+    <div class="card" style="overflow:auto"><table class="sens" id="sensTable"></table></div>
+    <div class="note">Ô giữa (đậm) = kịch bản cơ sở. Quy tắc khuyến nghị: Upside ≥ +15% → MUA · −10%…+15% → NẮM GIỮ · &lt; −10% → BÁN. Đây là công cụ minh họa theo phương pháp luận skill, không phải khuyến nghị đầu tư.</div>
+
+    <h2 class="sec"><span class="bar"></span>Tính lãi dự án — <span id="pjTitle">Gladia Heights (KDH × Keppel)</span></h2>
+    <div class="card">
+      <div class="pgrid">
+        <div class="fld"><label>Giá bán</label><input id="pj_price" value="83"><span class="u">tr/m²</span></div>
+        <div class="fld"><label>Diện tích sàn (NSA)</label><input id="pj_nsa" value="41000"><span class="u">m²</span></div>
+        <div class="fld"><label>Giá vốn</label><input id="pj_cogs" value="47"><span class="u">tr/m²</span></div>
+        <div class="fld"><label>CP bán hàng</label><input id="pj_sm" value="4"><span class="u">%DT</span></div>
+        <div class="fld"><label>CP quản lý</label><input id="pj_ga" value="2.5"><span class="u">%DT</span></div>
+        <div class="fld"><label>Thuế TNDN</label><input id="pj_tax" value="20"><span class="u">%</span></div>
+        <div class="fld"><label>Sở hữu KDH</label><input id="pj_own" value="51"><span class="u">%</span></div>
+      </div>
+      <div class="pres" id="pjResults"></div>
+      <div class="note" id="pjNote"></div>
+    </div>
+
+    <h2 class="sec"><span class="bar"></span>Hàng tồn kho theo dự án — <span id="invTk">KDH</span></h2>
+    <div class="card" style="overflow:auto"><table id="invTable"></table></div>
+    <div class="note" id="invNote"></div>
+    <div class="card" id="sotpSched" style="margin-top:10px;overflow:auto"></div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const N=id=>{const v=parseFloat(($(id).value+'').replace(',','.'));return isFinite(v)?v:0;};
+const fmt=n=>isFinite(n)?Math.round(n).toLocaleString('vi-VN'):'—';
+const fmt1=n=>isFinite(n)?n.toLocaleString('vi-VN',{minimumFractionDigits:1,maximumFractionDigits:1}):'—';
+const pct=p=>isFinite(p)?((p>=0?'+':'')+p.toFixed(1)+'%'):'—';
+
+let fieldChart=null;
+
+function computeWACC(){
+  const price=N('price'),shares=N('shares'),netDebt=N('netDebt');
+  const mktCap=price*shares/1000;            // tỷ VND
+  const ev=mktCap+netDebt;
+  const wE=ev?mktCap/ev:1, wD=ev?netDebt/ev:0;
+  const ke=N('rf')+N('beta')*N('erp');       // %
+  const kdAT=N('kd')*(1-N('tax')/100);       // %
+  const wacc=(ke*wE+kdAT*wD)/100;            // decimal
+  return {mktCap,ev,wE,wD,ke,kdAT,wacc};
+}
+function dcfPrice(waccDec,termGdec){
+  const rev0=N('rev0'),tax=N('tax')/100,daP=N('da')/100,cxP=N('capex')/100,nwcP=N('nwc')/100;
+  const g=[N('g1'),N('g2'),N('g3'),N('g4'),N('g5')].map(x=>x/100);
+  const m0=N('m0')/100,m1=N('m1')/100;
+  const shares=N('shares'),netDebt=N('netDebt');
+  let prev=rev0,sumPV=0,rows=[],fcf5=0;
+  for(let i=0;i<5;i++){
+    const rev=prev*(1+g[i]);
+    const margin=m0+(m1-m0)*(i/4);
+    const ebit=rev*margin;
+    const nopat=ebit*(1-tax);
+    const da=rev*daP, capex=rev*cxP, dnwc=(rev-prev)*nwcP;
+    const fcf=nopat+da-capex-dnwc;
+    const period=i+0.5;
+    const df=1/Math.pow(1+waccDec,period);
+    const pv=fcf*df;
+    sumPV+=pv; fcf5=fcf;
+    rows.push({y:i+1,rev,margin,ebit,nopat,da,capex,dnwc,fcf,df,pv});
+    prev=rev;
+  }
+  const termFCF=fcf5*(1+termGdec);
+  const tv=(waccDec>termGdec)?termFCF/(waccDec-termGdec):NaN;
+  const pvTV=isFinite(tv)?tv/Math.pow(1+waccDec,4.5):NaN;
+  const ev=sumPV+(isFinite(pvTV)?pvTV:0);
+  const equity=ev-netDebt;
+  const px=equity/shares*1000;              // VND
+  return {rows,sumPV,tv,pvTV,ev,equity,px,tvPct:isFinite(pvTV)?pvTV/ev*100:NaN};
+}
+function comps(){
+  const shares=N('shares'),netDebt=N('netDebt');
+  const pePx=N('eps')*N('pe');
+  const pbPx=N('bvps')*N('pb');
+  const evC=N('ebitda')*N('evebitda');
+  const evPx=(evC-netDebt)/shares*1000;
+  return {pePx,pbPx,evPx};
+}
+function recalc(){
+  const W=computeWACC();
+  $('waccBox').innerHTML=`Vốn hóa <b>${fmt(W.mktCap)}</b> tỷ · EV <b>${fmt(W.ev)}</b> tỷ · Tỷ trọng VCP <b>${(W.wE*100).toFixed(0)}%</b>/Nợ <b>${(W.wD*100).toFixed(0)}%</b><br>Ke = ${N('rf')}+${N('beta')}×${N('erp')} = <b>${W.ke.toFixed(1)}%</b> · Kd sau thuế <b>${W.kdAT.toFixed(1)}%</b> · <b style="color:#6fe3ab">WACC = ${(W.wacc*100).toFixed(2)}%</b>`;
+
+  const termG=N('termG')/100;
+  const D=dcfPrice(W.wacc,termG);
+  const C=comps();
+  const price=N('price');
+
+  // RNAV = vốn chủ sổ sách + thặng dư đánh giá lại. Ưu tiên SOTP (giá thị trường từng dự án); nếu chưa có thì dùng uplift %.
+  const taxR=N('tax')/100;
+  let upliftVal, rnavSrc;
+  if(window.sotpSurplus!=null && isFinite(window.sotpSurplus)){
+    upliftVal=window.sotpSurplus*(1-taxR)*(N('ownEff')/100);
+    rnavSrc='SOTP (giá TT từng dự án)';
+  } else {
+    upliftVal=N('landBook')*(N('uplift')/100)*(1-taxR)*(N('ownEff')/100);
+    rnavSrc='uplift '+N('uplift')+'%';
+  }
+  const rnavTotal=N('bookEq')+upliftVal;
+  const rnavPx=rnavTotal/N('shares')*1000; window.lastRnav=rnavPx;
+  $('rnavBox').innerHTML=`Thặng dư <b>${fmt(upliftVal)}</b> tỷ (sau thuế · ${rnavSrc}) · RNAV <b>${fmt(rnavTotal)}</b> tỷ · <b style="color:#6fe3ab">RNAV/cp = ${fmt(rnavPx)} đ</b>`;
+
+  // DCF table
+  let h='<thead><tr><th>Năm</th><th>Doanh thu</th><th>Biên EBIT</th><th>EBIT</th><th>NOPAT</th><th>+KH</th><th>−CapEx</th><th>−ΔVLĐ</th><th>FCF</th><th>Hệ số CK</th><th>PV</th></tr></thead><tbody>';
+  D.rows.forEach(r=>{h+=`<tr><td>Y${r.y}</td><td>${fmt(r.rev)}</td><td>${(r.margin*100).toFixed(1)}%</td><td>${fmt(r.ebit)}</td><td>${fmt(r.nopat)}</td><td>${fmt(r.da)}</td><td>${fmt(r.capex)}</td><td>${fmt(r.dnwc)}</td><td><b>${fmt(r.fcf)}</b></td><td>${r.df.toFixed(3)}</td><td>${fmt(r.pv)}</td></tr>`;});
+  h+='</tbody>';$('dcfTable').innerHTML=h;
+  $('oSumPV').textContent=fmt(D.sumPV)+' tỷ';
+  $('oPvTV').textContent=fmt(D.pvTV)+' tỷ';
+  $('oTvPct').textContent='TV = '+(isFinite(D.tvPct)?D.tvPct.toFixed(0):'—')+'% EV';
+  $('oEV').textContent=fmt(D.ev)+' tỷ';
+  $('oDcfPx').textContent=fmt(D.px)+' đ';
+
+  // Football field ranges (min,max)
+  const dcfLo=dcfPrice(W.wacc+0.01,termG-0.005).px, dcfHi=dcfPrice(W.wacc-0.01,termG+0.005).px;
+  const methods=[
+    {n:'RNAV',lo:rnavPx*0.92,hi:rnavPx*1.08,mid:rnavPx},
+    {n:'P/B',lo:C.pbPx*0.9,hi:C.pbPx*1.1,mid:C.pbPx},
+    {n:'P/E',lo:C.pePx*0.9,hi:C.pePx*1.1,mid:C.pePx},
+    {n:'EV/EBITDA',lo:C.evPx*0.9,hi:C.evPx*1.1,mid:C.evPx},
+    {n:'DCF',lo:Math.min(dcfLo,dcfHi),hi:Math.max(dcfLo,dcfHi),mid:D.px}
+  ];
+  drawField(methods,price);
+
+  // Blended target (weighted by mids) — RNAV, P/B, P/E, EV, DCF
+  const w=[N('wRNAV'),N('wPB'),N('wPE'),N('wEV'),N('wDCF')];
+  const mids=[rnavPx,C.pbPx,C.pePx,C.evPx,D.px];
+  let ws=0,tw=0;for(let i=0;i<mids.length;i++){if(isFinite(mids[i])&&mids[i]>0){ws+=mids[i]*w[i];tw+=w[i];}}
+  const target=tw?ws/tw:NaN; window.lastTarget=target;
+  const allMid=mids.filter(x=>isFinite(x)&&x>0);
+  $('oPrice').textContent=fmt(price)+' đ';
+  if(!allMid.length){
+    window.lastTarget=NaN;
+    $('oTarget').textContent='—';
+    $('oRange').textContent='Nhập VCSH / quỹ đất / EPS… để định giá';
+    $('oUpside').textContent='—';$('oUpside').className='val flat';
+    const re=$('oReco');re.textContent='CHƯA ĐỦ DỮ LIỆU';re.className='reco r-hold';
+  }else{
+    $('oTarget').textContent=fmt(target)+' đ';
+    $('oRange').textContent='Vùng: '+fmt(Math.min(...allMid))+' – '+fmt(Math.max(...allMid))+' đ';
+    const up=price>0?(target-price)/price*100:NaN;
+    const ue=$('oUpside');ue.textContent=pct(up);ue.className='val '+(up>0?'up':(up<0?'down':'flat'));
+    const re=$('oReco');
+    if(!isFinite(up)){re.textContent='—';re.className='reco';}
+    else if(up>=15){re.textContent='MUA';re.className='reco r-buy';}
+    else if(up>=-10){re.textContent='NẮM GIỮ';re.className='reco r-hold';}
+    else{re.textContent='BÁN';re.className='reco r-sell';}
+  }
+
+  buildSensitivity(W.wacc,termG,price);
+  projectPL();
+}
+function projectPL(){
+  if(!$('pj_price'))return;
+  const price=N('pj_price'),nsa=N('pj_nsa'),cogs=N('pj_cogs');
+  const sm=N('pj_sm')/100,ga=N('pj_ga')/100,tax=N('pj_tax')/100,own=N('pj_own')/100;
+  const gross_m2=price-cogs;
+  const opex_m2=price*(sm+ga);
+  const pbt_m2=gross_m2-opex_m2;
+  const net_m2=pbt_m2*(1-tax);
+  const margin=price?net_m2/price*100:0;
+  const rev=nsa*price/1000;          // tỷ VND
+  const net100=nsa*net_m2/1000;      // tỷ VND
+  const netKDH=net100*own;
+  const ptk=window.curProjTk||'KDH';
+  $('pjResults').innerHTML=
+    chip('Lãi ròng / m²',fmt1(net_m2)+' tr',true)+
+    chip('Biên ròng',margin.toFixed(0)+'%')+
+    chip('Doanh thu',fmt(rev)+' tỷ')+
+    chip('Lãi ròng (100%)',fmt(net100)+' tỷ')+
+    chip('Lãi ròng về '+ptk+' ('+(own*100).toFixed(0)+'%)',fmt(netKDH)+' tỷ',true);
+  $('pjNote').textContent = (ptk==='KDH')
+    ? 'Liên doanh KDH × Keppel — ~'+(own*100).toFixed(0)+'% lãi thuộc KDH (qua Đoàn Nguyên/Bình Trưng Mới), phần còn lại là CĐ không kiểm soát. Ghi nhận khi bàn giao ~cuối 2027.'
+    : (price>0 ? '⚠ Số liệu dự án là ƯỚC TÍNH minh họa cho '+ptk+' (sở hữu '+(own*100).toFixed(0)+'%) — chỉnh Giá bán/NSA/Giá vốn theo dự án thật để chính xác.'
+               : 'Nhập Giá bán / Diện tích sàn (NSA) / Giá vốn của một dự án cụ thể của '+ptk+' để ước tính lãi ròng.');
+}
+function chip(l,v,hl){return `<div class="chip${hl?' hl':''}"><div class="l">${l}</div><div class="v">${v}</div></div>`;}
+function drawField(methods,price){
+  methods.forEach(m=>{m.lo=Math.max(0,m.lo);m.hi=Math.max(0,m.hi);});
+  const labels=methods.map(m=>m.n);
+  const base=methods.map(m=>m.lo);
+  const span=methods.map(m=>Math.max(0,m.hi-m.lo));
+  const ctx=$('cField');
+  if(fieldChart)fieldChart.destroy();
+  fieldChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[
+    {label:'min',data:base,backgroundColor:'rgba(0,0,0,0)',stack:'s'},
+    {label:'Vùng định giá',data:span,backgroundColor:'#4f8cff',stack:'s',borderRadius:4}
+  ]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const m=methods[c.dataIndex];return ` ${fmt(m.lo)} – ${fmt(m.hi)} đ (giữa ${fmt(m.mid)})`;}}},
+      annotation:false},
+    scales:{x:{ticks:{color:'#93a0bd',callback:v=>fmt(v)},grid:{color:'#26324f'}},
+      y:{ticks:{color:'#cdd6ea',font:{weight:'700'}},grid:{display:false},stacked:true}}},
+    plugins:[{afterDraw:ch=>{const xa=ch.scales.x,ya=ch.scales.y,c=ch.ctx,px=xa.getPixelForValue(price);
+      c.save();c.strokeStyle='#e25c5c';c.lineWidth=2;c.setLineDash([5,4]);
+      c.beginPath();c.moveTo(px,ya.top);c.lineTo(px,ya.bottom);c.stroke();
+      c.setLineDash([]);c.fillStyle='#f59595';c.font='bold 11px Segoe UI';c.textAlign='center';
+      c.fillText('Giá HT '+fmt(price),px,ya.top-4);c.restore();}}]});
+}
+function buildSensitivity(wacc,termG,price){
+  const step=0.005;
+  const waccAx=[wacc-2*step,wacc-step,wacc,wacc+step,wacc+2*step];
+  const gAx=[termG-2*step,termG-step,termG,termG+step,termG+2*step];
+  let h='<thead><tr><th class="axis">WACC ＼ g</th>';
+  gAx.forEach(g=>h+=`<th>${(g*100).toFixed(1)}%</th>`);h+='</tr></thead><tbody>';
+  const vals=[];
+  waccAx.forEach(w=>{const row=[];gAx.forEach(g=>{row.push(dcfPrice(w,g).px);});vals.push(row);});
+  const flat=vals.flat().filter(isFinite);const mn=Math.min(...flat),mx=Math.max(...flat);
+  waccAx.forEach((w,ri)=>{
+    h+=`<tr><th class="axis">${(w*100).toFixed(2)}%</th>`;
+    gAx.forEach((g,ci)=>{
+      const v=vals[ri][ci];const t=(v-mn)/((mx-mn)||1);
+      const r=Math.round(226-(226-59)*t),gg=Math.round(92+(167-92)*t),b=Math.round(92+(118-92)*t);
+      const center=(ri===2&&ci===2);
+      const up=price>0?(v-price)/price*100:0;
+      h+=`<td style="background:rgba(${r},${gg},${b},.30);${center?'font-weight:800;outline:2px solid #6fe3ab':''}" title="Upside ${pct(up)}">${fmt(v)}</td>`;
+    });
+    h+='</tr>';
+  });
+  h+='</tbody>';$('sensTable').innerHTML=h;
+}
+
+// live recalc
+document.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',()=>{if(el.id!=='ticker')recalc();}));
+
+// price fetch (multi-source)
+function normNghin(v){v=Number(v);if(!isFinite(v)||v<=0)return 0;return v>1000?v/1000:v;}
+async function getJSON(u){const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw 0;return r.json();}
+async function fetchPrice(){
+  const t=($('ticker').value||'').trim().toUpperCase();if(!t)return;
+  $('pxStatus').textContent='⏳ Đang lấy giá '+t+'…';
+  const to=Math.floor(Date.now()/1000)+86400,from=to-25*86400;
+  const vnd=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${t}&from=${from}&to=${to}`;
+  const tcbs=`https://apipubaws.tcbs.com.vn/stock-insight/v1/stock/bars-long-term?ticker=${t}&type=stock&resolution=D&to=${to}&countBack=1`;
+  const px=u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`;
+  const tries=[
+    async()=>{const j=await getJSON(vnd);if(j.s==='ok'&&j.c&&j.c.length)return j.c[j.c.length-1];throw 0;},
+    async()=>{const j=await getJSON(px(vnd));if(j.s==='ok'&&j.c&&j.c.length)return j.c[j.c.length-1];throw 0;},
+    async()=>{const j=await getJSON(px(tcbs));const d=j.data&&j.data[j.data.length-1];if(d&&d.close!=null)return d.close;throw 0;}
+  ];
+  for(const fn of tries){try{const n=normNghin(await fn());if(n>0){$('price').value=Math.round(n*1000);recalc();
+    $('pxStatus').textContent=`● ${t}: ${fmt(n*1000)} đ · ${new Date().toLocaleTimeString('vi-VN')}`;return;}}catch(e){}}
+  $('pxStatus').textContent='⚠ Không lấy được giá (CORS/mạng) — nhập tay ô "Giá hiện tại"';
+}
+$('fetchPx').onclick=fetchPrice;
+
+recalc();
+</script>
+<script>
+// ===== Nhập mã → tự nạp toàn bộ dữ liệu & phân tích (BĐS) =====
+// Giá/P-E/P-B: simplize 13/06/2026. landBook = quỹ đất THẬT. eps = LỢI NHUẬN DỰ PHÓNG 2026F. uplift theo SOTP/chất lượng đất. cons = giá mục tiêu ĐỒNG THUẬN CTCK (T5–6/2026).
+const DATA={
+  KDH:{price:23000,shares:1122,netDebt:11523,bookEq:18804, landBook:29126, eps:1110, bvps:16757,tpb:1.7,tpe:17,uplift:60,ownEff:90,wRNAV:55,wPB:35,wPE:10,cons:34100, assets:39862}, // 24hmoney: EPS TTM 1.110, LNST TTM 1.842 tỷ (Q4/25 mạnh)
+  DXG:{price:13250,shares:1268,netDebt:6000,  bookEq:14238, landBook:13400, eps:183,  bvps:11253,tpb:1.4,tpe:15,uplift:55,ownEff:90,wRNAV:60,wPB:35,wPE:5, cons:19250, assets:29130}, // 24hmoney: LNST TTM 731 tỷ (lợi ích CĐ thiểu số lớn → EPS mẹ thấp ~250)
+  NVL:{price:13000,shares:2402,netDebt:55000, bookEq:46608, landBook:155000,eps:1397, bvps:19320,tpb:0.9,tpe:14,uplift:0, ownEff:80,wRNAV:30,wPB:40,wPE:30,cons:16000, assets:253000},
+  NLG:{price:27050,shares:485, netDebt:3000,  bookEq:12702, landBook:8400,  eps:1600, bvps:26243,tpb:1.5,tpe:14,uplift:60,ownEff:85,wRNAV:55,wPB:35,wPE:10,cons:42500, assets:25900}, // 24hmoney: EPS TTM 1.401, DT TTM 5.633 tỷ
+  VHM:{price:136500,shares:4364,netDebt:30000,bookEq:278500,landBook:125608,eps:15766,bvps:63801,tpb:2.1,tpe:9, uplift:15,ownEff:95,wRNAV:20,wPB:30,wPE:50,cons:103600,assets:600000}, // EPS/ROE thật Q1/26: ROE 27.8%, P/B 2.14
+  VIC:{price:196600,shares:3823,netDebt:200000,bookEq:74630,landBook:150000,eps:1506,bvps:19520,tpb:9.5,tpe:30,uplift:10,ownEff:90,wRNAV:15,wPB:35,wPE:50,cons:0,     assets:1179000}, // EPS thật Q1/26 1.506đ, P/B 10.07x (premium VinFast)
+  PDR:{price:14900,shares:998, netDebt:5000,  bookEq:12493, landBook:12854, eps:607,  bvps:12521,tpb:1.4,tpe:14,uplift:40,ownEff:95,wRNAV:55,wPB:35,wPE:10,cons:21000, assets:24000},
+  HDC:{price:17700,shares:200, netDebt:2000,  bookEq:2946,  landBook:1481,  eps:2973, bvps:12828,tpb:1.4,tpe:8, uplift:45,ownEff:95,wRNAV:45,wPB:30,wPE:25,cons:19500, assets:5500},
+  IDC:{price:43500,shares:380, netDebt:8000,  bookEq:6738,  landBook:8200,  eps:4899, bvps:17755,tpb:2.5,tpe:9, uplift:30,ownEff:95,wRNAV:15,wPB:35,wPE:50,cons:52000, assets:22000},
+  // ===== EPS thật TTM (24hmoney); bookEq/landBook (quỹ đất) ước tính từ hồ sơ — RNAV là neo, chỉnh tay nếu có BCĐKT =====
+  DIG:{price:13000,shares:610, netDebt:4000,  bookEq:10000, landBook:8000,  eps:900,  bvps:12616,tpb:1.2,tpe:14,uplift:30,ownEff:90,wRNAV:50,wPB:35,wPE:15,cons:22000, assets:30000}, // LNST TTM 695 tỷ (lumpy); quỹ đất lớn, đòn bẩy cao
+  KBC:{price:30450,shares:768, netDebt:5000,  bookEq:21000, landBook:12000, eps:1770, bvps:27344,tpb:1.3,tpe:15,uplift:40,ownEff:90,wRNAV:50,wPB:30,wPE:20,cons:32000, assets:42000}, // EPS TTM 1.770; KCN hưởng FDI, P/B ~1.1x
+  HDG:{price:21100,shares:305, netDebt:6000,  bookEq:8000,  landBook:3000,  eps:1635, bvps:16529,tpb:1.2,tpe:9, uplift:30,ownEff:95,wRNAV:35,wPB:30,wPE:35,cons:32000, assets:18000}, // EPS TTM 2.920; có thủy điện → weight P/E cao, P/B ~0.8x
+  CTD:{price:73000,shares:101, netDebt:-2000, bookEq:9000,  landBook:0,      eps:7565, bvps:84972,tpb:1.0,tpe:11,uplift:0, ownEff:100,wRNAV:10,wPB:30,wPE:60,cons:90000, assets:25000}, // NHÀ THẦU XD (không có quỹ đất) → định giá P/E; EPS TTM 8.337, P/E ~8.8x, P/B ~0.8x
+  VGC:{price:43800,shares:448, netDebt:8000,  bookEq:12000, landBook:6000,  eps:2898, bvps:19807,tpb:1.5,tpe:12,uplift:40,ownEff:90,wRNAV:40,wPB:30,wPE:30,cons:50000, assets:25000}, // EPS TTM 2.898; VLXD + KCN cho thuê
+  SZC:{price:23300,shares:217, netDebt:3000,  bookEq:3000,  landBook:4000,  eps:1309, bvps:17890,tpb:1.5,tpe:18,uplift:50,ownEff:90,wRNAV:45,wPB:25,wPE:30,cons:30000, assets:9000}, // KCN Châu Đức; EPS TTM 1.088 (Q1 yếu), quỹ đất giá rẻ
+  SIP:{price:51200,shares:262, netDebt:-3000, bookEq:6000,  landBook:5000,  eps:5106, bvps:22901,tpb:1.8,tpe:11,uplift:40,ownEff:95,wRNAV:35,wPB:25,wPE:40,cons:65000, assets:20000}, // KCN + điện nước; EPS TTM 5.106, dòng tiền tiện ích mạnh, P/E ~10x
+  VRE:{price:30100,shares:2272,netDebt:-5000, bookEq:40000, landBook:10000, eps:3026, bvps:21993,tpb:1.4,tpe:11,uplift:10,ownEff:100,wRNAV:15,wPB:30,wPE:55,cons:32000, assets:50000}, // TTTM cho thuê; EPS TTM 3.026, P/E ~10x
+  SJS:{price:48500,shares:114, netDebt:2000,  bookEq:5000,  landBook:4000,  eps:1580, bvps:12133,tpb:1.2,tpe:12,uplift:40,ownEff:90,wRNAV:45,wPB:25,wPE:30,cons:60000, assets:9000}, // Sudico Nam An Khánh; EPS TTM ~4.074, quỹ đất giá trị
+  BCM:{price:53300,shares:1035,netDebt:15000, bookEq:20000, landBook:15000, eps:3232, bvps:21135,tpb:2.5,tpe:16,uplift:50,ownEff:95,wRNAV:50,wPB:25,wPE:25,cons:70000, assets:55000}, // Becamex KCN (VSIP); EPS TTM 3.232, quỹ đất khổng lồ
+  TCH:{price:14850,shares:1006,netDebt:-2000, bookEq:10000, landBook:5000,  eps:193,  bvps:12603,tpb:1.3,tpe:18,uplift:40,ownEff:90,wRNAV:50,wPB:30,wPE:20,cons:18000, assets:15000}, // Hoàng Huy; EPS TTM thấp 193 (dự án chưa ghi nhận) → RNAV neo
+  CII:{price:17500,shares:960, netDebt:20000, bookEq:12000, landBook:3000,  eps:205,  bvps:14003,tpb:1.2,tpe:20,uplift:20,ownEff:90,wRNAV:30,wPB:40,wPE:30,cons:18000, assets:35000}, // hạ tầng BOT, đòn bẩy cao; EPS TTM 205, định giá theo book
+  VCG:{price:19800,shares:600, netDebt:8000,  bookEq:12000, landBook:3000,  eps:1935, bvps:20000,tpb:1.2,tpe:12,uplift:30,ownEff:90,wRNAV:30,wPB:30,wPE:40,cons:24000, assets:35000}, // Vinaconex; EPS lõi ~1.935 (loại 3.186 tỷ thu nhập TC bất thường Q3)
+  DXS:{price:7430, shares:890, netDebt:3000,  bookEq:6000,  landBook:0,      eps:826,  bvps:11286,tpb:1.0,tpe:11,uplift:0, ownEff:90,wRNAV:10,wPB:35,wPE:55,cons:9000,  assets:12000}, // Đất Xanh Services (môi giới) → P/E; EPS TTM 826, P/E ~9x
+  HHV:{price:11400,shares:570, netDebt:25000, bookEq:8000,  landBook:2000,  eps:1260, bvps:20638,tpb:0.9,tpe:9, uplift:10,ownEff:90,wRNAV:20,wPB:40,wPE:40,cons:14000, assets:38000}, // Đèo Cả BOT, đòn bẩy cao, thu phí ổn định; EPS TTM 1.260
+  VPI:{price:58900,shares:322, netDebt:5000,  bookEq:5000,  landBook:3000,  eps:865,  bvps:15528,tpb:2.0,tpe:14,uplift:40,ownEff:90,wRNAV:45,wPB:25,wPE:30,cons:60000, assets:15000}, // Văn Phú; EPS lumpy 865 → RNAV neo
+  NTL:{price:15450,shares:122, netDebt:-1000, bookEq:3000,  landBook:2500,  eps:200,  bvps:13318,tpb:0.7,tpe:10,uplift:40,ownEff:95,wRNAV:50,wPB:35,wPE:15,cons:20000, assets:5000}, // Lideco; giữa chu kỳ dự án (EPS thấp), quỹ đất giá vốn rẻ, P/B 0.6x
+  CEO:{price:15400,shares:514, netDebt:3000,  bookEq:7000,  landBook:5000,  eps:381,  bvps:10528,tpb:1.1,tpe:14,uplift:30,ownEff:90,wRNAV:45,wPB:35,wPE:20,cons:16000, assets:12000}, // BĐS nghỉ dưỡng Vân Đồn, đầu cơ chu kỳ; EPS TTM 381
+  DPG:{price:39000,shares:154, netDebt:3000,  bookEq:4000,  landBook:2000,  eps:3214, bvps:24655,tpb:1.5,tpe:12,uplift:30,ownEff:90,wRNAV:30,wPB:30,wPE:40,cons:50000, assets:10000}, // Đạt Phương (thủy điện+XD+BĐS); EPS TTM 2.839, dòng tiền điện ổn
+  KOS:{price:36500,shares:225, netDebt:4000,  bookEq:5000,  landBook:3000,  eps:86,   bvps:10776,tpb:1.4,tpe:10,uplift:30,ownEff:90,wRNAV:40,wPB:50,wPE:10,cons:30000, assets:12000}  // Kosy; EPS gần như 0 (P/E vô nghĩa) → định giá theo book/đất
+};
+// FV của tôi = định giá hợp lý tổng hợp (50% mô hình thận trọng + 35% đồng thuận CTCK + 15% chu kỳ/thị trường)
+const FV={KDH:30500,NLG:38000,DXG:17000,PDR:18500,NVL:15000,IDC:46500,HDC:19000,VHM:110000,VIC:0,
+  DIG:22000,KBC:32000,HDG:32000,CTD:90000,VGC:50000,SZC:30000,SIP:65000,VRE:32000,
+  SJS:60000,BCM:70000,TCH:18000,CII:18000,VCG:24000,DXS:9000,
+  HHV:14000,VPI:60000,NTL:20000,CEO:16000,DPG:50000,KOS:30000};
+// Hàng tồn kho theo dự án: [tên, sổ sách (tỷ), GIÁ THỊ TRƯỜNG KHU VỰC (tr/m², tham chiếu batdongsan.com T6/2026)]
+const INV={
+  KDH:{tot:29126,note:'Tồn kho 29.126 tỷ (BCTC Q1/2026). Giá TT theo khu vực: Bình Trưng Đông/Cát Lái ~80, Tân Tạo/Bình Tân ~55, Bình Chánh ~50.',rows:[
+    ['Khang Phúc – Tân Tạo (Bình Tân)',8925,60],['An Lập – Bình Trưng Đông (Cát Lái)',5445,85],['Bình Trưng – Bình Trưng Đông',4887,85],
+    ['Đoàn Nguyên – Bình Trưng Đông',3446,85],['Khang Phúc – Bình Hưng 11A (Bình Chánh)',2067,58],['Khang Phúc – Phong Phú 2 (Bình Chánh)',1918,55],
+    ['Bình Trưng Mới (Thủ Đức)',969,85],['Dự án khác',1469,55]]},
+  NLG:{tot:8400,note:'Tồn kho ~8.400 tỷ. Giá TT: Waterpoint/Long An ~28, Izumi/Đồng Nai ~40, Akari/Mizuki HCM ~52-55, Cần Thơ ~28.',rows:[
+    ['Waterpoint (Long An)',4500,32],['Izumi City (Đồng Nai)',1800,50],['Central Lake – Cần Thơ',700,32],
+    ['Akari City (Bình Tân)',600,58],['Mizuki Park (Bình Chánh)',500,60],['Dự án khác',300,45]]},
+  NVL:{tot:155000,note:'Tồn kho ~155.000 tỷ. Giá TT: Phan Thiết ~32, Aqua/Đồng Nai ~42, Hồ Tràm ~38, Grand Manhattan Q1 ~180.',rows:[
+    ['NovaWorld Phan Thiết',48000,38],['Aqua City (Đồng Nai)',42000,50],['NovaWorld Hồ Tràm',32000,45],
+    ['The Grand Manhattan (Q1 HCM)',13000,200],['Sunrise Riverside + khác',20000,55]]},
+  VHM:{tot:125608,note:'Tồn kho 125.608 tỷ (Q1/2026) là số THẬT; chia 12 đại dự án ƯỚC TÍNH. Giá TT = giá SƠ CẤP/mở bán (gồm thấp tầng premium), KHÔNG phải giá căn hộ rẻ thứ cấp.',rows:[
+    ['Green Paradise (Cần Giờ)',28000,110],['Ocean Park 2&3 (Hưng Yên)',22000,75],['Royal Island (Vũ Yên, Hải Phòng)',18000,110],
+    ['Smart City (Nam Từ Liêm, HN)',10000,85],['Grand Park (Thủ Đức)',9000,80],['Cổ Loa / Global Gate (Đông Anh, HN)',9000,100],
+    ['Wonder City (Đan Phượng, HN)',8000,80],['Đại An / Dream City (Hưng Yên)',7000,65],['Phước Vĩnh Tây (Long An)',6000,45],
+    ['Golden Avenue (Móng Cái, QN)',3000,60],['Hải Vân Bay (Đà Nẵng)',3000,80],['Dự án khác',2608,65]]},
+  VIC:{tot:150000,note:'Tồn kho hợp nhất ~Vinhomes + BĐS khác (VinFast ở TSCĐ, không phải tồn kho). Giá TT như VHM.',rows:[
+    ['Vinhomes – Green Paradise (Cần Giờ)',35000,110],['Vinhomes – Ocean Park 2&3 (Hưng Yên)',30000,75],['Vinhomes – Royal Island (Hải Phòng)',25000,110],
+    ['Vinhomes – Grand Park + khác',35000,80],['BĐS khác (Vinpearl…)',25000,60]]},
+  DXG:{tot:13400,note:'Tồn kho ~13.400 tỷ. Giá TT: Gem Sky World/Long Thành ~32, Gem Riverside/Thủ Đức ~65, Opal/Bình Dương ~45.',rows:[
+    ['Gem Sky World (Long Thành, Đồng Nai)',4500,38],['Gem Riverside (Thủ Đức)',2300,70],['Opal Boulevard / Skyline (Bình Dương)',1800,48],
+    ['DXH Park City',1500,45],['Dự án khác',3300,48]]},
+  PDR:{tot:12854,note:'Tồn kho ~12.854 tỷ. Giá TT: Bình Dương ~42-45, Quy Nhơn/Bình Định ~32, Nha Trang ~48.',rows:[
+    ['Bình Dương Tower',3500,48],['Bắc Hà Thanh – Quy Nhơn Iconic',2600,38],['Astral City (Bình Dương)',2000,48],
+    ['Phước Hải (Nha Trang)',1500,55],['Dự án khác',3254,45]]},
+  HDC:{tot:1481,note:'Tồn kho ~1.481 tỷ, phần lớn The Light City. Giá TT Vũng Tàu ~38-45.',rows:[
+    ['The Light City (Vũng Tàu)',976,48],['Ngọc Tước 2 (Vũng Tàu)',230,52],['Khu nhà ở West 3/2',150,42],['Khác',125,45]]},
+  IDC:{tot:8200,note:'KCN — "quỹ đất" ở dở dang. Giá đất KCN/dân cư khu vực thấp: Hựu Thạnh/Long An ~18-22, Phú Mỹ 2/BR-VT ~25, Cầu Nghìn/Thái Bình ~16.',rows:[
+    ['KCN Hựu Thạnh (XDCB, Long An)',3061,22],['KDC nhà ở CN Hựu Thạnh',847,18],['KCN Phú Mỹ 2 mở rộng (BR-VT)',545,25],
+    ['KCN Cầu Nghìn (Thái Bình)',457,16],['Dở dang / tồn kho khác',3290,20]]}
+};
+// Năm BÀN GIAO (book lợi nhuận) từng dự án — khớp thứ tự rows của INV. BĐS ghi nhận LN khi bàn giao.
+const TIMELINE={
+  KDH:['Q2/2027','Q4/2027','Q3/2027','Q4/2027','Q2/2027','Q4/2026','Q2/2028','Q4/2028'],
+  NLG:['Q4/2027','Q2/2026','Q3/2027','Q1/2026','Q3/2026','Q2/2028'],
+  NVL:['Q4/2028','Q3/2027','Q4/2028','Q2/2026','Q4/2027'],
+  VHM:['Q4/2028','Q3/2026','Q2/2027','Q2/2026','Q1/2026','Q4/2027','Q3/2027','Q2/2028','Q4/2028','Q4/2027','Q2/2029','Q2/2027'],
+  VIC:['Q4/2028','Q3/2026','Q2/2027','Q2/2026','Q3/2027'],
+  DXG:['Q4/2026','Q3/2028','Q4/2027','Q2/2027','Q4/2028'],
+  PDR:['Q3/2027','Q2/2026','Q4/2027','Q3/2027','Q2/2028'],
+  HDC:['Q3/2026','Q4/2026','Q3/2027','Q2/2028'],
+  IDC:['Q4/2027','Q3/2026','Q4/2028','Q4/2027','Q2/2027']
+};
+// Quý MỞ BÁN từng dự án (khớp thứ tự rows) — để hiện tiến độ mở bán → bàn giao
+const LAUNCH={
+  KDH:['Q3/2025','Q3/2026','Q4/2025','Q1/2026','Q4/2025','Q1/2025','Q2/2027','Q4/2027'],
+  NLG:['Q1/2025','Q3/2024','Q1/2025','Q2/2024','Q4/2024','Q4/2027'],
+  NVL:['Q2/2026','Q2/2025','Q3/2026','Q1/2024','Q1/2025'],
+  VHM:['Q2/2026','Q1/2024','Q3/2025','Q1/2024','Q2/2024','Q2/2025','Q3/2025','Q1/2026','Q3/2026','Q2/2025','Q4/2027','Q1/2025'],
+  VIC:['Q2/2026','Q1/2024','Q3/2025','Q1/2024','Q1/2025'],
+  DXG:['Q2/2025','Q2/2026','Q3/2025','Q1/2025','Q3/2026'],
+  PDR:['Q1/2025','Q2/2024','Q2/2025','Q3/2025','Q1/2026'],
+  HDC:['Q1/2024','Q3/2024','Q1/2025','Q2/2026'],
+  IDC:['Q1/2025','Q2/2024','Q1/2026','Q2/2025','Q1/2025']
+};
+// Dự án để tính lãi — KDH: Gladia thật; mã khác: để trống cho người dùng nhập
+const PROJ={
+  KDH:{title:'Gladia Heights (KDH × Keppel)', own:51,  price:83, nsa:41000,  cogs:47},
+  VHM:{title:'Vinhomes Ocean Park (phân khu)', own:100, price:55, nsa:150000, cogs:35},
+  VIC:{title:'Vinhomes (đại diện)',            own:100, price:55, nsa:150000, cogs:35},
+  NVL:{title:'Aqua City (phân khu)',           own:100, price:60, nsa:120000, cogs:42},
+  NLG:{title:'Waterpoint (phân khu)',          own:100, price:42, nsa:90000,  cogs:27},
+  DXG:{title:'Gem Sky World (phân khu)',       own:100, price:45, nsa:80000,  cogs:30},
+  PDR:{title:'Quy Nhơn Iconic (Bắc Hà Thanh)', own:100, price:35, nsa:70000,  cogs:22},
+  HDC:{title:'The Light City (Vũng Tàu)',      own:100, price:38, nsa:60000,  cogs:25},
+  IDC:{title:'KDC Hựu Thạnh (đại diện)',       own:100, price:25, nsa:40000,  cogs:16},
+  def:{title:null, own:100, price:'', nsa:'', cogs:''}
+};
+function renderInv(tk){
+  const el=document.getElementById('invTable'), tkl=document.getElementById('invTk'), note=document.getElementById('invNote');
+  if(!el)return; if(tkl)tkl.textContent=tk;
+  const d=INV[tk];
+  if(!d){el.innerHTML='';window.sotpSurplus=null;if(note)note.textContent='Chưa có dữ liệu tồn kho chi tiết cho '+tk+' — gửi BCTC mã này để nạp số thật.';return;}
+  const COST=40; // tr/m² giả định (giá vốn all-in) để suy diện tích từ sổ sách
+  const tl=TIMELINE[tk]||[];
+  const inS='width:74px;background:#0c142b;border:1px solid var(--line);border-radius:6px;color:var(--txt);padding:4px 6px;text-align:right;font-family:inherit;font-size:12px';
+  const yS='width:74px;background:#0c142b;border:1px solid var(--line);border-radius:6px;color:var(--txt);padding:4px 6px;text-align:center;font-family:inherit;font-size:12px';
+  let h='<thead><tr><th>Dự án (khu vực)</th><th>Sổ sách (tỷ)</th><th>Diện tích (m²)</th><th>Giá TT (tr/m²)</th><th>Giá TT (tỷ)</th><th>Thặng dư</th><th>Bàn giao</th></tr></thead><tbody>';
+  d.rows.forEach((r,i)=>{const book=r[1], regP=r[2]||COST, yr=tl[i]||'';
+    const area=Math.round(book*1000/COST);
+    h+=`<tr data-book="${book}"><td>${r[0]}</td><td>${fmt(book)}</td>`+
+       `<td><input class="areainp" value="${area}" style="${inS}"></td>`+
+       `<td><input class="priceinp" value="${regP}" style="${inS}"></td>`+
+       `<td class="mktv" id="mktv-${i}"></td><td class="srpl" id="srpl-${i}"></td>`+
+       `<td><input class="yearinp" value="${yr}" style="${yS}"></td></tr>`;});
+  h+=`<tr style="font-weight:700"><td>TỔNG</td><td>${fmt(d.tot)}</td><td></td><td></td><td id="invMktTot"></td><td id="invSrplTot"></td><td></td></tr></tbody>`;
+  el.innerHTML=h;
+  if(note)note.textContent=d.note+' — Giá TT theo khu vực (batdongsan); cột "Bàn giao" = năm ghi nhận LN. Sửa được → RNAV + lịch book LN tự cập nhật.';
+  recomputeSOTP(false);
+}
+function recomputeSOTP(doRecalc){
+  const rows=document.querySelectorAll('#invTable tbody tr[data-book]');
+  const sc=document.getElementById('sotpSched');
+  if(!rows.length){window.sotpSurplus=null;if(sc)sc.innerHTML='';return;}
+  const tax=N('tax')/100, own=N('ownEff')/100, shares=N('shares');
+  let surplus=0,mktTot=0; const items=[];
+  rows.forEach((tr,i)=>{
+    const book=parseFloat(tr.dataset.book)||0;
+    const area=parseFloat((tr.querySelector('.areainp').value+'').replace(/[^0-9.\-]/g,''))||0;
+    const price=parseFloat((tr.querySelector('.priceinp').value+'').replace(/[^0-9.\-]/g,''))||0;
+    const mkt=area*price/1000;
+    const s=mkt-book; surplus+=s; mktTot+=mkt;
+    const bgStr=(tr.querySelector('.yearinp').value+'').trim();
+    const ym=bgStr.match(/(20\d{2})/); const yr=ym?parseInt(ym[1]):0;
+    const qm=bgStr.match(/Q\s*([1-4])/i); const q=qm?+qm[1]:2;
+    const name=tr.cells[0]?tr.cells[0].textContent:('Dự án '+(i+1));
+    const launch=(LAUNCH[window.curTk]||[])[i]||'';
+    if(yr&&s>0)items.push({yr,q,bg:bgStr,name,launch,profit:s*(1-tax)*own});  // LN sau thuế × sở hữu, book ở quý bàn giao
+    const mv=document.getElementById('mktv-'+i); if(mv)mv.textContent=fmt(mkt);
+    const c=document.getElementById('srpl-'+i); if(c){c.textContent=(s>=0?'+':'')+fmt(s);c.className='srpl '+(s>0?'up':(s<0?'down':''));}
+  });
+  window.sotpSurplus=surplus;
+  const mt=document.getElementById('invMktTot'); if(mt)mt.textContent=fmt(mktTot);
+  const st=document.getElementById('invSrplTot'); if(st){st.textContent=(surplus>=0?'+':'')+fmt(surplus);st.className=surplus>0?'up':(surplus<0?'down':'');}
+  if(sc){
+    const byYear={}; items.forEach(it=>{(byYear[it.yr]=byYear[it.yr]||[]).push(it);});
+    const yrs=Object.keys(byYear).map(Number).sort((a,b)=>a-b);
+    if(!yrs.length)sc.innerHTML='';
+    else{
+      let grand=0;
+      let hh='<div class="mini" style="color:#9cbcff;margin:6px 0 6px;font-weight:700">📅 Lịch bàn giao & book lợi nhuận — bóc tách từng dự án (LN sau thuế × sở hữu)</div>';
+      hh+='<table style="font-size:12.5px"><thead><tr><th>Bàn giao</th><th>Dự án</th><th>Mở bán</th><th>Tiến độ</th><th>LN dự kiến (tỷ)</th><th>EPS (đ)</th></tr></thead><tbody>';
+      yrs.forEach(y=>{
+        const list=byYear[y].sort((a,b)=>(a.q-b.q)||(b.profit-a.profit)); let yTot=0;
+        list.forEach(it=>{yTot+=it.profit;
+          const prog=(it.launch?it.launch:'?')+' → '+(it.bg||y);
+          hh+=`<tr><td style="font-weight:700;color:#9cbcff">${it.bg||y}</td><td>${it.name}</td><td>${it.launch||'—'}</td><td class="mini">${prog}</td><td>${fmt(it.profit)}</td><td>${fmt(shares?it.profit/shares*1000:0)}</td></tr>`;});
+        grand+=yTot;
+        hh+=`<tr style="font-weight:700;background:#10182e"><td colspan="4">↳ Tổng bàn giao năm ${y}</td><td class="up">${fmt(yTot)}</td><td class="up">${fmt(shares?yTot/shares*1000:0)}</td></tr>`;
+      });
+      hh+=`<tr style="font-weight:800"><td colspan="4">TỔNG TIỀM NĂNG</td><td>${fmt(grand)}</td><td>${fmt(shares?grand/shares*1000:0)}</td></tr>`;
+      hh+='</tbody></table>';
+      hh+='<div class="note" style="margin-top:6px">⚠ Mỗi dự án dồn toàn bộ thặng dư vào năm bàn giao → con số năm đỉnh bị thổi cao (thực tế bàn giao rải nhiều quý). Đọc là thứ tự/độ lớn tương đối.</div>';
+      sc.innerHTML=hh;
+    }
+  }
+  if(doRecalc)recalc();
+}
+document.getElementById('invTable').addEventListener('input',e=>{const cl=e.target.classList;if(cl.contains('areainp')||cl.contains('priceinp')||cl.contains('yearinp'))recomputeSOTP(true);});
+// Đổi slider "% đánh giá lại" → tạo lại giá thị trường mặc định từng dự án rồi định giá lại
+document.getElementById('uplift').addEventListener('input',()=>{if(window.curTk&&INV[window.curTk]){renderInv(window.curTk);recalc();}});
+
+// ===== Biểu đồ giá NẾN (TradingView lightweight-charts) + đường mục tiêu =====
+let lwChart=null, lwSeries=null, lwLines=[];
+async function loadPriceChart(tk){
+  const tkl=document.getElementById('pcTk'), st=document.getElementById('pcStatus');
+  if(tkl)tkl.textContent=tk; if(st)st.textContent='⏳ đang tải biểu đồ…';
+  if(typeof LightweightCharts==='undefined'){if(st)st.textContent='⚠ chưa tải được thư viện biểu đồ';return;}
+  const to=Math.floor(Date.now()/1000), from=to-400*86400;
+  const url=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${tk}&from=${from}&to=${to}`;
+  const prox=u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`;
+  let j=null;
+  for(const u of [url, prox(url)]){
+    try{const r=await fetch(u,{cache:'no-store'});if(r.ok){const d=await r.json();if(d&&d.s==='ok'&&d.c&&d.c.length){j=d;break;}}}catch(e){}
+  }
+  if(!j){if(st)st.textContent='⚠ không tải được biểu đồ (CORS/mạng)';return;}
+  const toV=v=>v<1000?Math.round(v*1000):Math.round(v);
+  const data=j.t.map((t,k)=>({time:new Date(t*1000).toISOString().slice(0,10),
+    open:toV(j.o[k]),high:toV(j.h[k]),low:toV(j.l[k]),close:toV(j.c[k])}))
+    .filter(d=>d.open&&d.close).sort((a,b)=>a.time<b.time?-1:1);
+  // khử trùng ngày
+  const seen={},clean=[]; data.forEach(d=>{if(!seen[d.time]){seen[d.time]=1;clean.push(d);}});
+  const last=clean[clean.length-1];
+  if(st)st.textContent='● '+clean.length+' phiên · gần nhất '+fmt(last.close)+'đ';
+  const cont=document.getElementById('priceChart');
+  if(!lwChart){
+    lwChart=LightweightCharts.createChart(cont,{autoSize:true,
+      layout:{background:{type:'solid',color:'transparent'},textColor:'#93a0bd',fontFamily:'Segoe UI'},
+      grid:{vertLines:{color:'#1c2740'},horzLines:{color:'#1c2740'}},
+      rightPriceScale:{borderColor:'#26324f'},timeScale:{borderColor:'#26324f',timeVisible:false},
+      crosshair:{mode:1,vertLine:{color:'#4f8cff',labelBackgroundColor:'#1b2647'},horzLine:{color:'#4f8cff',labelBackgroundColor:'#1b2647'}}});
+    lwSeries=lwChart.addCandlestickSeries({upColor:'#3ba776',downColor:'#e25c5c',
+      borderUpColor:'#3ba776',borderDownColor:'#e25c5c',wickUpColor:'#6fe3ab',wickDownColor:'#f59595'});
+  }
+  lwSeries.setData(clean);
+  lwLines.forEach(pl=>{try{lwSeries.removePriceLine(pl);}catch(e){}}); lwLines=[];
+  const refs=[];
+  const tgt=window.lastTarget, rnav=window.lastRnav, cons=(DATA[tk]&&DATA[tk].cons)||0, fv=(typeof FV!=='undefined'&&FV[tk])||0;
+  if(isFinite(rnav)&&rnav>0)refs.push({v:rnav,c:'#4f8cff',t:'RNAV'});
+  if(isFinite(tgt)&&tgt>0) refs.push({v:tgt, c:'#6fe3ab',t:'MT mô hình'});
+  if(fv>0)               refs.push({v:fv,  c:'#f0c26b',t:'FV của tôi'});
+  if(cons>0)             refs.push({v:cons, c:'#e2823b',t:'CTCK'});
+  refs.forEach(r=>{lwLines.push(lwSeries.createPriceLine({price:r.v,color:r.c,lineWidth:1,
+    lineStyle:2,axisLabelVisible:true,title:r.t+' '+fmt(r.v)}));});
+  lwChart.timeScale().fitContent();
+}
+
+// ===== Lịch sử tài chính (tỷ đồng) =====
+const HIST={
+  KDH:{years:['2022','2023','2024','2025','2026F'],
+    rev:[2912,2088,3279,4651,5243],
+    gross:[1325,1582,1754,2767,3598],
+    npat:[1082,716,810,1045,1489],
+    eps:[1513,860,820,885,1260],
+    assets:[21632,26481,30758,34074,39862],
+    equity:[11140,15523,19453,21164,21524],
+    inv:[12000,16208,18787,23260,29126],
+    note:'2022–2025: số THỰC (báo cáo năm). 2026F: dự phóng ACBS — LNST mẹ 1.489 gồm ~285 tỷ lãi mua rẻ An Lập (một lần). Tổng TS & VCSH & tồn kho 2026 = số THỰC Q1/2026 (39.862 / 21.524 / 29.126).'}
+};
+let histChart=null;
+function renderHist(tk){
+  const d=HIST[tk], wrap=document.getElementById('histWrap');
+  if(!wrap)return;
+  if(!d){wrap.style.display='none';return;}
+  wrap.style.display='';
+  document.getElementById('histTk').textContent=tk;
+  if(histChart)histChart.destroy();
+  histChart=new Chart(document.getElementById('histChart'),{type:'bar',data:{labels:d.years,datasets:[
+    {type:'bar',label:'Doanh thu',data:d.rev,backgroundColor:'#4f8cff'},
+    {type:'bar',label:'LNST công ty mẹ',data:d.npat,backgroundColor:'#3ba776'},
+    {type:'line',label:'Tổng tài sản',data:d.assets,borderColor:'#e2823b',backgroundColor:'#e2823b',tension:.2,pointRadius:3,borderWidth:2}
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#cdd6ea',boxWidth:12}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt(c.parsed.y)+' tỷ'}}},
+    scales:{x:{ticks:{color:'#93a0bd'},grid:{color:'#1c2740'}},y:{ticks:{color:'#93a0bd',callback:v=>fmt(v)},grid:{color:'#1c2740'}}}}});
+  const rd=[['Doanh thu thuần',d.rev,1],['Lợi nhuận gộp',d.gross,0],['LNST công ty mẹ',d.npat,1],['EPS (đ)',d.eps,0],['Tổng tài sản',d.assets,1],['Vốn chủ sở hữu',d.equity,0],['Hàng tồn kho',d.inv,1]];
+  const yoy=arr=>arr.map((v,i)=>i===0?null:(arr[i-1]?(v-arr[i-1])/arr[i-1]*100:null));
+  let hh='<thead><tr><th>Tỷ đồng (EPS: đồng)</th>'+d.years.map(y=>`<th>${y}</th>`).join('')+'</tr></thead><tbody>';
+  rd.forEach(([lbl,arr,g])=>{
+    hh+=`<tr><td style="font-weight:600">${lbl}</td>`+arr.map(v=>`<td>${fmt(v)}</td>`).join('')+'</tr>';
+    if(g){const gg=yoy(arr);hh+=`<tr><td class="mini">↳ %YoY</td>`+gg.map(x=>x==null?'<td class="mini">—</td>':`<td class="mini ${x>0?'up':(x<0?'down':'')}">${(x>=0?'+':'')+x.toFixed(0)}%</td>`).join('')+'</tr>';}
+  });
+  // CAGR 2022→2025 (3 năm thực)
+  const cagr=(a,b,n)=>a>0?((Math.pow(b/a,1/n)-1)*100):NaN;
+  const cR=cagr(d.rev[0],d.rev[3],3), cP=cagr(d.npat[0],d.npat[3],3), cA=cagr(d.assets[0],d.assets[3],3);
+  hh+=`<tr style="border-top:2px solid var(--line)"><td style="font-weight:700">CAGR 2022–2025</td><td colspan="${d.years.length}" class="mini">Doanh thu <b class="${cR>0?'up':'down'}">${(cR>=0?'+':'')+cR.toFixed(1)}%/năm</b> · LNST mẹ <b class="${cP>0?'up':'down'}">${(cP>=0?'+':'')+cP.toFixed(1)}%/năm</b> · Tổng tài sản <b class="${cA>0?'up':'down'}">${(cA>=0?'+':'')+cA.toFixed(1)}%/năm</b></td></tr>`;
+  hh+='</tbody>';document.getElementById('histTable').innerHTML=hh;
+  document.getElementById('histNote').textContent=d.note;
+}
+
+// ===== Vốn hóa vs Tồn kho vs Tổng tài sản =====
+let sizeChart=null;
+function renderSize(tk){
+  const d=DATA[tk]; if(!d)return;
+  const el=document.getElementById('sizeChart'); if(!el)return;
+  const tkl=document.getElementById('szTk'); if(tkl)tkl.textContent=tk;
+  const mc=N('price')*N('shares')/1000;          // vốn hóa (tỷ)
+  const inv=N('landBook')||d.landBook||0;
+  const assets=d.assets||0;
+  if(sizeChart)sizeChart.destroy();
+  sizeChart=new Chart(el,{type:'bar',data:{
+    labels:['Vốn hóa','Hàng tồn kho','Tổng tài sản'],
+    datasets:[{data:[mc,inv,assets],backgroundColor:['#4f8cff','#3ba776','#5b6788'],borderRadius:5}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.parsed.x)+' tỷ'}}},
+      scales:{x:{ticks:{color:'#93a0bd',callback:v=>fmt(v)},grid:{color:'#1c2740'}},
+        y:{ticks:{color:'#cdd6ea',font:{weight:'700'}},grid:{display:false}}}}});
+  const r1=inv?mc/inv:NaN, r2=assets?mc/assets:NaN;
+  document.getElementById('szRatios').innerHTML=
+    chip('Vốn hóa',fmt(mc)+' tỷ')+
+    chip('Tồn kho (quỹ đất)',fmt(inv)+' tỷ')+
+    chip('Tổng tài sản',fmt(assets)+' tỷ')+
+    chip('Vốn hóa / Tồn kho',(isFinite(r1)?r1.toFixed(2):'—')+'×',true)+
+    chip('Vốn hóa / Tổng TS',(isFinite(r2)?r2.toFixed(2):'—')+'×',true);
+}
+
+(function(){
+  function setV(id,v){const el=document.getElementById(id);if(el&&v!=null)el.value=v;}
+  function loadTicker(tk){
+    const st=document.getElementById('pxStatus');
+    const _ti=document.getElementById('ticker');if(_ti)_ti.value=tk;   // luôn đồng bộ ô mã → "Lấy giá" đúng mã
+    const d=DATA[tk];
+    if(!d){
+      document.getElementById('ticker').value=tk;
+      ['bookEq','landBook','eps','bvps','ebitda','rev0','netDebt'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+      window.curTk=tk;window.curProjTk=tk;
+      if(typeof renderInv==='function')renderInv(tk);
+      if(typeof loadPriceChart==='function')loadPriceChart(tk);
+      if(typeof fetchPrice==='function')fetchPrice();
+      recalc();
+      if(typeof renderSize==='function')renderSize(tk);
+      if(typeof renderHist==='function')renderHist(tk);
+      st.innerHTML='● <b>'+tk+'</b> — chưa có dữ liệu nền tảng. Đã tải <b>giá & biểu đồ</b>; nhập VCSH/quỹ đất/EPS… ở cột trái để định giá RNAV.';
+      st.style.color='#f0c26b';
+      return;
+    }
+    setV('price',d.price);setV('shares',d.shares);setV('netDebt',d.netDebt);
+    setV('bookEq',d.bookEq);setV('landBook',d.landBook);setV('uplift',d.uplift);setV('ownEff',d.ownEff);
+    setV('eps',d.eps);setV('bvps',d.bvps);setV('pe',d.tpe);setV('pb',d.tpb);
+    setV('wRNAV',d.wRNAV);setV('wPB',d.wPB);setV('wPE',d.wPE);setV('wDCF',0);setV('wEV',0);
+    window.curProjTk=tk;
+    const pj=PROJ[tk]||PROJ.def;
+    document.getElementById('pjTitle').textContent=pj.title||(tk+' — nhập dữ liệu dự án');
+    setV('pj_own',pj.own);setV('pj_price',pj.price);setV('pj_nsa',pj.nsa);setV('pj_cogs',pj.cogs);
+    window.curTk=tk;
+    renderInv(tk);recalc();
+    if(typeof renderSize==='function')renderSize(tk);
+    if(typeof renderHist==='function')renderHist(tk);
+    if(typeof loadPriceChart==='function')loadPriceChart(tk);
+    const ce=document.getElementById('oCons');
+    if(ce){if(d.cons&&d.cons>0){const u=(d.cons-d.price)/d.price*100;ce.textContent='🎯 CTCK đồng thuận: '+fmt(d.cons)+'đ ('+(u>=0?'+':'')+u.toFixed(0)+'%)';}
+      else ce.textContent='🎯 CTCK: định giá đặc thù (SOTP)';}
+    const fe=document.getElementById('oFV'), fvv=(FV[tk]||0);
+    if(fe){if(fvv>0){const u=(fvv-d.price)/d.price*100;fe.textContent='💡 FV của tôi: '+fmt(fvv)+'đ ('+(u>=0?'+':'')+u.toFixed(0)+'%)';}else fe.textContent='💡 FV: đặc thù';}
+    st.textContent='● Đã nạp '+tk+' (13/06/2026) — '+(d.landBook>0?'RNAV quỹ đất + P/B':'P/B + P/E')+' · đang phân tích';
+    st.style.color='#6fe3ab';
+  }
+  window.loadTicker=loadTicker;
+  const tkEl=document.getElementById('ticker');
+  document.getElementById('analyzeBtn').addEventListener('click',()=>loadTicker((tkEl.value||'').trim().toUpperCase()));
+  tkEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();loadTicker((tkEl.value||'').trim().toUpperCase());}});
+})();
+if(typeof window.loadTicker==='function'){const _h=(location.hash||'').replace('#','').trim().toUpperCase();window.loadTicker(_h||'KDH');}
+</script>
+</body>
+</html>

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Định giá Ngành Chứng khoán — Nhập mã → Định giá</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+  :root{--bg:#080b13;--card:#0e1525;--card2:#141d31;--line:#1c2740;--txt:#e8edf7;
+    --muted:#7e8db0;--accent:#e2b33b;--accent2:#4f8cff;--warn:#e2a33b;--danger:#e25c5c;--good:#3ba776;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1200px 700px at 50% -260px,#0c1730,#080b13);color:var(--txt);font-family:"Segoe UI",system-ui,Roboto,Arial,sans-serif;line-height:1.5;padding:0 0 60px}
+  .wrap{max-width:1340px;margin:0 auto;padding:0 18px}
+  header{padding:26px 0 16px;border-bottom:1px solid var(--line);margin-bottom:20px}
+  .tag{display:inline-block;background:var(--accent);color:#0e0a26;font-weight:700;font-size:11px;letter-spacing:1px;padding:4px 10px;border-radius:20px;text-transform:uppercase}
+  h1{font-size:25px;margin:11px 0 3px}
+  .sub{color:var(--muted);font-size:13.5px}
+  .navsheets{display:flex;gap:8px;margin-bottom:12px}
+  .ns{text-decoration:none;font-size:13px;font-weight:700;padding:7px 15px;border-radius:9px;border:1px solid var(--line);color:var(--muted);background:var(--card)}
+  .ns.active{background:var(--accent);color:#0e0a26;border-color:var(--accent)}
+  .ns:hover{border-color:var(--accent2)}
+  .tickbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}
+  .tickbar input.tk{font-size:22px;font-weight:800;letter-spacing:1px;text-transform:uppercase;width:130px;background:#0c142b;border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:8px 12px}
+  button{background:var(--card2);color:var(--txt);border:1px solid var(--line);font-size:13px;font-weight:600;padding:9px 14px;border-radius:9px;cursor:pointer}
+  button:hover{border-color:var(--accent2)}
+  .btn-acc{background:var(--accent2);color:#04122b;border-color:var(--accent2)}
+  .layout{display:grid;grid-template-columns:330px 1fr;gap:18px}
+  @media(max-width:980px){.layout{grid-template-columns:1fr}}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:14px 16px}
+  .panel h3{font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:14px 0 8px;border-bottom:1px solid var(--line);padding-bottom:5px}
+  .panel h3:first-child{margin-top:2px}
+  .fld{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:5px 0}
+  .fld label{font-size:12.5px;color:#c7d0e4;flex:1}
+  .fld input{width:96px;background:#0c142b;border:1px solid var(--line);border-radius:7px;color:var(--txt);padding:5px 7px;text-align:right;font-size:13px;font-family:inherit}
+  .fld input:focus{border-color:var(--accent2);outline:none}
+  .fld .u{font-size:11px;color:var(--muted);width:34px;text-align:left}
+  .out{display:grid;gap:14px}
+  .gridc{display:grid;gap:13px;grid-template-columns:repeat(4,1fr)}
+  @media(max-width:760px){.gridc{grid-template-columns:1fr 1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:15px 16px}
+  .card .label{color:var(--muted);font-size:12px}
+  .card .val{font-size:23px;font-weight:700;margin-top:3px}
+  .up{color:var(--good)}.down{color:var(--danger)}.flat{color:var(--warn)}
+  .mini{font-size:11px;color:var(--muted)}
+  .reco{display:inline-block;font-size:22px;font-weight:800;padding:6px 18px;border-radius:11px}
+  .r-buy{background:var(--good);color:#04110a}.r-hold{background:var(--warn);color:#1a1405}.r-sell{background:var(--danger);color:#fff}
+  .chartbox{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:16px 18px;height:300px;position:relative}
+  .pres{display:flex;flex-wrap:wrap;gap:12px}
+  .chip{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:9px 15px;flex:1;min-width:120px}
+  .chip .l{font-size:11px;color:var(--muted)}.chip .v{font-size:19px;font-weight:700;margin-top:2px}
+  .chip.hl{border-color:#4a4080}.chip.hl .v{color:#b9adff}
+  h2.sec{font-size:17px;margin:6px 0 2px;display:flex;align-items:center;gap:9px}
+  h2.sec .bar{width:5px;height:18px;background:var(--accent);border-radius:3px}
+  .wacc{background:var(--card2);border-radius:8px;padding:8px 10px;margin-top:8px;font-size:12.5px}
+  .wacc b{color:#b9adff}
+  .note{color:var(--muted);font-size:12px;margin-top:6px}
+</style>
+</head>
+<body>
+<script>if(window.top!==window.self)document.documentElement.classList.add('embed');</script>
+<style>html.embed header,html.embed .logout,html.embed .loginGate{display:none!important}html.embed body{padding-top:6px}html.embed .layout{margin-top:6px!important}</style>
+<header><div class="wrap">
+  <div class="navsheets">
+    <a class="ns" href="index.html">⭐ Tổng quan</a>
+    <a class="ns active" href="phan-tich-co-ban.html">🧮 Phân tích cơ bản</a>
+    <a class="ns" href="phan-tich-ky-thuat.html">📊 Phân tích kỹ thuật</a>
+  </div>
+  <span class="tag">Tài chính · Ngân hàng &amp; Chứng khoán · P/B theo ROE</span>
+  <h1>Định giá Tài chính (NH·CK) — Nhập mã → P/B & P/E</h1>
+  <div class="sub">P/B (neo chính, justified theo ROE) · P/E · ROE/đòn bẩy · Football field · Nến · FV của tôi + CTCK. <b>Ngân hàng & CTCK định giá theo vốn chủ & ROE, KHÔNG dùng DCF.</b> Giá mục tiêu = đồng thuận CTCK T4–T6/2026.</div>
+  <div class="tickbar">
+    <input class="tk" id="ticker" value="SSI">
+    <button class="btn-acc" id="analyzeBtn">🔍 Phân tích mã</button>
+    <button id="fetchPx">↻ Lấy giá</button>
+    <span class="mini" id="pxStatus">NH: VCB·CTG·BID·TCB·MBB·ACB·HDB·VPB · CK: SSI·VND·VCI·HCM·VIX·SHS·MBS·FTS</span>
+  </div>
+</div></header>
+
+<div class="wrap layout">
+  <div class="panel">
+    <h3>Dữ liệu thị trường</h3>
+    <div class="fld"><label>Giá hiện tại</label><input id="price" value="26150"><span class="u">đ</span></div>
+    <div class="fld"><label>Số cổ phiếu</label><input id="shares" value="2491"><span class="u">tr</span></div>
+    <div class="fld"><label>Vốn chủ sở hữu</label><input id="bookEq" value="39480"><span class="u">tỷ</span></div>
+    <div class="fld"><label>BVPS (sổ sách/cp)</label><input id="bvps" value="15848"><span class="u">đ</span></div>
+    <div class="fld"><label>EPS (lãi/cp, TTM)</label><input id="eps" value="1822"><span class="u">đ</span></div>
+
+    <h3>Chất lượng & hiệu quả</h3>
+    <div class="fld"><label>ROE</label><input id="roe" value="11.4"><span class="u">%</span></div>
+    <div class="fld"><label>Đòn bẩy (Tài sản/VCSH)</label><input id="lev" value="2.2"><span class="u">x</span></div>
+    <div class="fld"><label>Dư nợ margin / VCSH</label><input id="marg" value="1.1"><span class="u">x</span></div>
+
+    <h3>Justified P/B (theo ROE)</h3>
+    <div class="fld"><label>Lãi suất phi rủi ro</label><input id="rf" value="5"><span class="u">%</span></div>
+    <div class="fld"><label>Beta</label><input id="beta" value="1.3"><span class="u"></span></div>
+    <div class="fld"><label>Phần bù VCP (ERP)</label><input id="erp" value="8"><span class="u">%</span></div>
+    <div class="fld"><label>Tăng trưởng dài hạn (g)</label><input id="g" value="7"><span class="u">%</span></div>
+    <div class="wacc" id="jpbBox"></div>
+
+    <h3>Bội số mục tiêu</h3>
+    <div class="fld"><label>P/B mục tiêu</label><input id="tpb" value="1.8"><span class="u">x</span></div>
+    <div class="fld"><label>P/E mục tiêu</label><input id="tpe" value="14"><span class="u">x</span></div>
+
+    <h3>Trọng số (%) <span class="mini">— P/B làm neo</span></h3>
+    <div class="fld"><label>P/B</label><input id="wPB" value="65"><span class="u">%</span></div>
+    <div class="fld"><label>P/E</label><input id="wPE" value="35"><span class="u">%</span></div>
+  </div>
+
+  <div class="out">
+    <div class="gridc">
+      <div class="card"><div class="label">Giá mục tiêu (blended)</div><div class="val" id="oTarget">—</div><div class="mini" id="oRange"></div><div class="mini" id="oCons" style="color:#9cbcff;margin-top:2px"></div><div class="mini" id="oFV" style="color:#f0c26b;margin-top:2px;font-weight:700"></div></div>
+      <div class="card"><div class="label">Giá hiện tại</div><div class="val" id="oPrice">—</div></div>
+      <div class="card"><div class="label">Upside / Downside</div><div class="val" id="oUpside">—</div></div>
+      <div class="card"><div class="label">Khuyến nghị</div><div style="margin-top:6px"><span class="reco" id="oReco">—</span></div></div>
+    </div>
+
+    <h2 class="sec"><span class="bar"></span>Biểu đồ giá (nến) — <span id="pcTk">SSI</span> <span class="mini" id="pcStatus" style="margin-left:8px;font-weight:400"></span></h2>
+    <div class="chartbox" style="padding:6px"><div id="priceChart" style="width:100%;height:288px"></div></div>
+
+    <h2 class="sec"><span class="bar"></span>Hiệu quả & đặc thù công ty chứng khoán</h2>
+    <div class="card"><div class="pres" id="opsResults"></div></div>
+
+    <h2 class="sec"><span class="bar"></span>Football field — P/B · P/E · Justified P/B</h2>
+    <div class="chartbox"><canvas id="cField"></canvas></div>
+
+    <div class="note">Brokers (CTCK) định giá theo <b>P/B</b> (vốn chủ + ROE) là chính, P/E phụ — KHÔNG dùng DCF (dòng tiền tài chính phức tạp). <b>Justified P/B = (ROE−g)/(COE−g)</b>: nếu ROE &gt; COE → P/B hợp lý &gt; 1. ⚠ Lợi nhuận môi giới/tự doanh rất biến động theo thị trường — dùng ROE chuẩn hóa, cẩn trọng với P/E khi tự doanh lãi đột biến (vd VIX). Số liệu thị trường thật (simplize 14/06/2026); FV/CTCK là ước tính. Không phải khuyến nghị đầu tư.</div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const N=id=>{const v=parseFloat(($(id).value+'').replace(',','.'));return isFinite(v)?v:0;};
+const fmt=n=>isFinite(n)?Math.round(n).toLocaleString('vi-VN'):'—';
+const pct=p=>isFinite(p)?((p>=0?'+':'')+p.toFixed(1)+'%'):'—';
+const chip=(l,v,hl)=>`<div class="chip${hl?' hl':''}"><div class="l">${l}</div><div class="v">${v}</div></div>`;
+let fieldChart=null;
+
+function recalc(){
+  const price=N('price'),bvps=N('bvps'),eps=N('eps'),roe=N('roe')/100,g=N('g')/100;
+  const coe=(N('rf')+N('beta')*N('erp'))/100;
+  const jpb=(coe>g)?(roe-g)/(coe-g):NaN;            // justified P/B
+  const jpbPx=isFinite(jpb)?jpb*bvps:NaN;
+  $('jpbBox').innerHTML=`COE = ${N('rf')}+${N('beta')}×${N('erp')} = <b>${(coe*100).toFixed(1)}%</b> · Justified P/B = (${(roe*100).toFixed(1)}−${N('g')})/(${(coe*100).toFixed(1)}−${N('g')}) = <b style="color:#b9adff">${isFinite(jpb)?jpb.toFixed(2):'—'}×</b> → <b>${fmt(jpbPx)}đ</b>`;
+
+  const pbPx=bvps*N('tpb'), pePx=eps*N('tpe');
+  // football field
+  const methods=[
+    {n:'P/B mục tiêu',lo:pbPx*0.92,hi:pbPx*1.08,mid:pbPx},
+    {n:'P/E mục tiêu',lo:pePx*0.92,hi:pePx*1.08,mid:pePx},
+    {n:'Justified P/B',lo:(jpbPx||0)*0.9,hi:(jpbPx||0)*1.1,mid:jpbPx||0}
+  ];
+  drawField(methods,price);
+
+  const w=[N('wPB'),N('wPE')], mids=[pbPx,pePx];
+  let ws=0,tw=0;for(let i=0;i<2;i++){if(isFinite(mids[i])&&mids[i]>0){ws+=mids[i]*w[i];tw+=w[i];}}
+  const target=tw?ws/tw:NaN; window.lastTarget=target;
+  const allMid=mids.filter(x=>isFinite(x)&&x>0);
+  $('oPrice').textContent=fmt(price)+'đ';
+  if(!allMid.length){
+    window.lastTarget=NaN;
+    $('oTarget').textContent='—';
+    $('oRange').textContent='Nhập BVPS / EPS / ROE… để định giá';
+    $('oUpside').textContent='—';$('oUpside').className='val flat';
+    const re=$('oReco');re.textContent='CHƯA ĐỦ DỮ LIỆU';re.className='reco r-hold';
+  }else{
+    $('oTarget').textContent=fmt(target)+'đ';
+    $('oRange').textContent='P/B '+fmt(pbPx)+' · P/E '+fmt(pePx)+' · jP/B '+fmt(jpbPx);
+    const up=price>0?(target-price)/price*100:NaN;
+    const ue=$('oUpside');ue.textContent=pct(up);ue.className='val '+(up>0?'up':(up<0?'down':'flat'));
+    const re=$('oReco');
+    if(!isFinite(up)){re.textContent='—';re.className='reco';}
+    else if(up>=15){re.textContent='MUA';re.className='reco r-buy';}
+    else if(up>=-10){re.textContent='NẮM GIỮ';re.className='reco r-hold';}
+    else{re.textContent='BÁN';re.className='reco r-sell';}
+  }
+
+  // ops
+  const lev=N('lev'),roa=lev?roe/lev*100:0,pbNow=bvps?price/bvps:0,peNow=eps?price/eps:0;
+  $('opsResults').innerHTML=
+    chip('ROE',(roe*100).toFixed(1)+'%',true)+
+    chip('ROA',roa.toFixed(1)+'%')+
+    chip('Đòn bẩy (TS/VCSH)',lev.toFixed(1)+'x')+
+    chip('Dư nợ margin/VCSH',N('marg').toFixed(2)+'x')+
+    chip('P/B hiện tại',pbNow.toFixed(2)+'x')+
+    chip('P/E hiện tại',peNow.toFixed(1)+'x')+
+    chip('Justified P/B',(isFinite(jpb)?jpb.toFixed(2):'—')+'x',true);
+}
+function drawField(methods,price){
+  methods.forEach(m=>{m.lo=Math.max(0,m.lo);m.hi=Math.max(0,m.hi);});
+  const labels=methods.map(m=>m.n),base=methods.map(m=>m.lo),span=methods.map(m=>Math.max(0,m.hi-m.lo));
+  if(fieldChart)fieldChart.destroy();
+  fieldChart=new Chart($('cField'),{type:'bar',data:{labels,datasets:[
+    {label:'min',data:base,backgroundColor:'rgba(0,0,0,0)',stack:'s'},
+    {label:'Vùng',data:span,backgroundColor:'#8b7cf6',stack:'s',borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const m=methods[c.dataIndex];return ` ${fmt(m.lo)} – ${fmt(m.hi)} đ (giữa ${fmt(m.mid)})`;}}}},
+      scales:{x:{ticks:{color:'#93a0bd',callback:v=>fmt(v)},grid:{color:'#26324f'}},y:{ticks:{color:'#cdd6ea',font:{weight:'700'}},grid:{display:false},stacked:true}}},
+    plugins:[{afterDraw:ch=>{const xa=ch.scales.x,ya=ch.scales.y,c=ch.ctx,px=xa.getPixelForValue(price);
+      c.save();c.strokeStyle='#e25c5c';c.lineWidth=2;c.setLineDash([5,4]);c.beginPath();c.moveTo(px,ya.top);c.lineTo(px,ya.bottom);c.stroke();
+      c.setLineDash([]);c.fillStyle='#f59595';c.font='bold 11px Segoe UI';c.textAlign='center';c.fillText('Giá HT '+fmt(price),px,ya.top-4);c.restore();}}]});
+}
+document.querySelectorAll('input').forEach(el=>el.addEventListener('input',()=>{if(el.id!=='ticker')recalc();}));
+
+// DATA (simplize 14/06/2026). cons/fv = ước tính.
+const DATA={
+  SSI:{price:26150,shares:2491,bookEq:39480,bvps:15848,eps:2154,roe:13.86,lev:2.2,marg:1.1,beta:1.3,tpb:1.9,tpe:15,cons:34000,fv:34000},
+  VND:{price:17100,shares:1522,bookEq:21514,bvps:14132,eps:1436,roe:10.59, lev:2.0,marg:1.0,beta:1.4,tpb:1.3,tpe:12,cons:18500,fv:19000},
+  VCI:{price:23600,shares:1148,bookEq:17362,bvps:15128,eps:1315,roe:8.7, lev:1.9,marg:1.0,beta:1.3,tpb:1.6,tpe:16,cons:25000,fv:26000},
+  HCM:{price:27000,shares:1080,bookEq:14435,bvps:13366,eps:1383,roe:9.4, lev:2.3,marg:1.4,beta:1.3,tpb:1.8,tpe:16,cons:27000,fv:28000},
+  VIX:{price:17050,shares:2450,bookEq:21646,bvps:13312, eps:3063,roe:28.9,lev:1.7,marg:0.8,beta:1.5,tpb:1.7,tpe:9, cons:18000,fv:18000},
+  SHS:{price:18200,shares:900, bookEq:12698,bvps:14109,eps:1460,roe:11.3,lev:1.5,marg:0.7,beta:1.4,tpb:1.3,tpe:11,cons:19500,fv:20000},
+  MBS:{price:19200,shares:1001,bookEq:8356, bvps:11698, eps:1783,roe:15.2,lev:2.5,marg:1.8,beta:1.3,tpb:2.0,tpe:14,cons:21000,fv:21000},
+  FTS:{price:23000,shares:381, bookEq:4518, bvps:11856,eps:1059,roe:9.3, lev:1.6,marg:0.9,beta:1.3,tpb:1.7,tpe:18,cons:24000,fv:24000},
+  // ===== NGÂN HÀNG — SỐ THẬT Q1/2026 (24hmoney: EPS TTM, ROE thực; BVPS = EPS×P/E÷P/B). cons = giá mục tiêu CTCK T4–T6/2026 =====
+  VCB:{price:61800,shares:8340,bookEq:233200,bvps:27960,eps:4301,roe:16.1,lev:11,marg:0,beta:0.9,tpb:2.0,tpe:16,cons:70500,fv:70000}, // VCB/Yuanta/ACBS top pick
+  CTG:{price:33700,shares:5370,bookEq:129300,bvps:24070,eps:4906,roe:21.7,lev:13,marg:0,beta:1.0,tpb:1.6,tpe:9, cons:40200,fv:40000}, // NHSV 40.2k; ACBS ưu tiên
+  BID:{price:41900,shares:6900,bookEq:175300,bvps:25400,eps:4393,roe:17.8,lev:14,marg:0,beta:1.0,tpb:1.9,tpe:11,cons:48000,fv:47000},
+  TCB:{price:31800,shares:7065,bookEq:176600,bvps:25000,eps:3676,roe:14.7,lev:7, marg:0,beta:1.1,tpb:1.4,tpe:10,cons:46000,fv:44000}, // HSC nâng Mua, ĐT 46.0k
+  MBB:{price:25100,shares:6102,bookEq:108600,bvps:17800,eps:3442,roe:20.1,lev:9, marg:0,beta:1.1,tpb:1.4,tpe:8, cons:30400,fv:29000}, // HSC nâng Mua, ĐT 30.4k
+  ACB:{price:22300,shares:4467,bookEq:76100, bvps:17030,eps:2802,roe:17.5,lev:8, marg:0,beta:1.0,tpb:1.5,tpe:8, cons:32600,fv:31000}, // Yuanta ưu tiên
+  HDB:{price:28300,shares:3503,bookEq:63100, bvps:16050,eps:3545,roe:23.17,lev:11,marg:0,beta:1.1,tpb:1.6,tpe:8, cons:32200,fv:31000}, // NHSV 32.2k; ROE cao nhất nhóm
+  VPB:{price:26350,shares:7934,bookEq:174300,bvps:21960,eps:3314,roe:15.5,lev:8, marg:0,beta:1.2,tpb:1.3,tpe:9, cons:34000,fv:33000}, // NHSV 34.0k
+  SHB:{price:13900,shares:4070,bookEq:62150, bvps:15270,eps:2617,roe:18.1,lev:13,marg:0,beta:1.2,tpb:1.1,tpe:6, cons:16000,fv:15500}, // P/B 0.91x — rẻ nhất nhóm
+  // ===== Ngân hàng bổ sung — EPS TTM thật (LNST/cp Q1/26); BVPS/ROE ước tính =====
+  LPB:{price:48800,shares:2998,bookEq:39000, bvps:16561,eps:3738,roe:24.7,lev:9, marg:0,beta:1.1,tpb:3.0,tpe:13,cons:45000,fv:45000}, // LNST TTM 11.168 tỷ, ROE ~28%, P/B 3.8x (chạy nóng)
+  VIB:{price:16050,shares:2980,bookEq:38000, bvps:14437,eps:2231,roe:16.42,lev:9, marg:0,beta:1.1,tpb:1.4,tpe:7, cons:22000,fv:22000}, // bán lẻ thuần; EPS TTM 2.547, P/E 6.3x
+  TPB:{price:16250,shares:2642,bookEq:32000, bvps:15989,eps:2652,roe:17.13,lev:10,marg:0,beta:1.1,tpb:1.4,tpe:7, cons:19000,fv:19000}, // NH số; EPS TTM 2.794, ROE 23%
+  SSB:{price:14850,shares:2904,bookEq:30000, bvps:12098,eps:912,roe:7.74,lev:9, marg:0,beta:1.1,tpb:1.5,tpe:13,cons:19000,fv:19000}, // SeABank; EPS TTM 1.077
+  EIB:{price:20850,shares:1836,bookEq:25000, bvps:13617,eps:407, roe:3.0, lev:8, marg:0,beta:1.0,tpb:1.3,tpe:18,cons:18000,fv:18000}, // Eximbank; LN yếu (Q4/25 lỗ), ROE 3% → đắt
+  OCB:{price:12350,shares:2467,bookEq:31000, bvps:13106,eps:1611,roe:12.7,lev:9, marg:0,beta:1.1,tpb:1.0,tpe:7, cons:13000,fv:13000}, // OCB; EPS TTM 1.732, P/B ~1.0x
+  NAB:{price:12750,shares:1530,bookEq:18000, bvps:11895,eps:2192,roe:19.72,lev:9, marg:0,beta:1.1,tpb:1.2,tpe:6, cons:18000,fv:18000}, // Nam A Bank; EPS TTM 2.952, ROE 25%, P/E 4.3x — rẻ
+  MSB:{price:15600,shares:3000,bookEq:33000, bvps:14095,eps:1884,roe:14.14,lev:9, marg:0,beta:1.1,tpb:1.3,tpe:8, cons:16000,fv:16000}, // MSB; EPS TTM 1.959, P/E 8x
+  // ===== Bảo hiểm & CK bổ sung =====
+  BSI:{price:34650,shares:234, bookEq:4000,  bvps:20810,eps:1858,roe:9.2,lev:2.0,marg:1.0,beta:1.3,tpb:2.0,tpe:16,cons:38000,fv:38000}, // CK BIDV (đối tác Hana); EPS TTM 2.035
+  CTS:{price:25850,shares:232, bookEq:4000,  bvps:10677,eps:2000,roe:19.39,lev:2.5,marg:1.2,beta:1.4,tpb:1.5,tpe:14,cons:30000,fv:30000}, // CK VietinBank; EPS lõi ~2.000 (Q3 đột biến tự doanh)
+  BVH:{price:66200,shares:742, bookEq:25000, bvps:33693,eps:3860,roe:11.5,lev:5.0,marg:0,beta:1.0,tpb:1.8,tpe:16,cons:60000,fv:60000}, // Bảo Việt; EPS TTM 3.860, hưởng lợi lãi suất & TTCK
+  PVI:{price:76900,shares:234, bookEq:9000,  bvps:38462,eps:5634,roe:14.6,lev:4.0,marg:0,beta:0.9,tpb:1.9,tpe:14,cons:80000,fv:80000}, // PVI bảo hiểm phi nhân thọ; EPS TTM ~5.634, cổ tức cao
+  VDS:{price:14700,shares:272, bookEq:3500,  bvps:10917,eps:872, roe:6.7, lev:2.0,marg:0.8,beta:1.5,tpb:1.2,tpe:12,cons:16000,fv:16000}, // CK Rồng Việt nhỏ, biến động mạnh (Q1 lỗ)
+  BMI:{price:14400,shares:180, bookEq:3500,  bvps:19444,eps:1400,roe:8.0, lev:4.0,marg:0,beta:1.0,tpb:1.0,tpe:12,cons:18000,fv:18000}, // Bảo Minh; EPS ~1.400, catalyst SCIC thoái vốn
+  EVF:{price:13600,shares:790, bookEq:8000,  bvps:13336,eps:1269,roe:9.4,lev:6.0,marg:0,beta:1.2,tpb:1.3,tpe:11,cons:16000,fv:16000}  // Tài chính EVN; EPS TTM 1.269, hưởng đầu tư ngành điện
+};
+const FV={SSI:34000,VND:19000,VCI:26000,HCM:28000,VIX:18000,SHS:20000,MBS:21000,FTS:24000,
+  VCB:70000,CTG:40000,BID:47000,TCB:44000,MBB:29000,ACB:31000,HDB:31000,VPB:33000,SHB:15500,
+  LPB:45000,VIB:22000,TPB:19000,SSB:19000,EIB:18000,OCB:13000,
+  NAB:18000,MSB:16000,BSI:38000,CTS:30000,BVH:60000,PVI:80000,
+  VDS:16000,BMI:18000,EVF:16000};
+function setV(id,v){const el=document.getElementById(id);if(el&&v!=null)el.value=v;}
+function loadTicker(tk){
+  const d=DATA[tk], st=$('pxStatus');
+  $('ticker').value=tk;   // đồng bộ ô mã → "Lấy giá" đúng mã
+  if(!d){
+    ['bvps','eps','bookEq'].forEach(id=>{const e=$(id);if(e)e.value='';});
+    if(typeof loadPriceChart==='function')loadPriceChart(tk);
+    try{$('fetchPx').click();}catch(e){}
+    const ce=$('oCons');if(ce)ce.textContent='';const fe=$('oFV');if(fe)fe.textContent='';
+    recalc();
+    st.innerHTML='● <b>'+tk+'</b> — chưa có dữ liệu nền tảng. Đã tải <b>giá & biểu đồ</b>; nhập BVPS/EPS/ROE… để định giá P/B.';st.style.color='#f0c26b';
+    return;
+  }
+  ['price','shares','bookEq','bvps','eps','roe','lev','marg','beta','tpb','tpe'].forEach(k=>setV(k,d[k]));
+  recalc();
+  const ce=$('oCons');if(ce){const u=(d.cons-d.price)/d.price*100;ce.textContent=d.cons>0?('🎯 CTCK: '+fmt(d.cons)+'đ ('+(u>=0?'+':'')+u.toFixed(0)+'%)'):'';}
+  const fe=$('oFV'),fvv=FV[tk]||0;if(fe){const u=(fvv-d.price)/d.price*100;fe.textContent=fvv>0?('💡 FV của tôi: '+fmt(fvv)+'đ ('+(u>=0?'+':'')+u.toFixed(0)+'%)'):'';}
+  if(typeof loadPriceChart==='function')loadPriceChart(tk);
+  st.textContent='● Đã nạp '+tk+' (14/06/2026) — P/B + P/E';st.style.color='#6fe3ab';
+}
+$('analyzeBtn').addEventListener('click',()=>loadTicker(($('ticker').value||'').trim().toUpperCase()));
+$('ticker').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();loadTicker(($('ticker').value||'').trim().toUpperCase());}});
+
+// price fetch (just latest, optional)
+async function getJSON(u){const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw 0;return r.json();}
+$('fetchPx').onclick=async()=>{
+  const t=($('ticker').value||'').trim().toUpperCase();if(!t)return;$('pxStatus').textContent='⏳ lấy giá '+t+'…';
+  const to=Math.floor(Date.now()/1000)+86400,from=to-25*86400;
+  const vnd=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${t}&from=${from}&to=${to}`;
+  const px=u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`;
+  for(const u of [vnd,px(vnd)]){try{const j=await getJSON(u);if(j.s==='ok'&&j.c&&j.c.length){let n=j.c[j.c.length-1];n=n<1000?n*1000:n;$('price').value=Math.round(n);recalc();$('pxStatus').textContent='● '+t+': '+fmt(n)+'đ';return;}}catch(e){}}
+  $('pxStatus').textContent='⚠ Không lấy được giá (CORS/mạng)';
+};
+
+// ===== Nến =====
+let lwChart=null,lwSeries=null,lwLines=[];
+async function loadPriceChart(tk){
+  const tkl=$('pcTk'),st=$('pcStatus');if(tkl)tkl.textContent=tk;if(st)st.textContent='⏳ đang tải…';
+  if(typeof LightweightCharts==='undefined'){if(st)st.textContent='⚠ chưa tải thư viện';return;}
+  const to=Math.floor(Date.now()/1000),from=to-400*86400;
+  const url=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${tk}&from=${from}&to=${to}`;
+  const prox=u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`;
+  let j=null;for(const u of [url,prox(url)]){try{const r=await fetch(u,{cache:'no-store'});if(r.ok){const dd=await r.json();if(dd&&dd.s==='ok'&&dd.c&&dd.c.length){j=dd;break;}}}catch(e){}}
+  if(!j){if(st)st.textContent='⚠ không tải được (CORS/mạng)';return;}
+  const toV=v=>v<1000?Math.round(v*1000):Math.round(v);
+  const seen={},clean=[];
+  j.t.map((t,k)=>({time:new Date(t*1000).toISOString().slice(0,10),open:toV(j.o[k]),high:toV(j.h[k]),low:toV(j.l[k]),close:toV(j.c[k])}))
+    .filter(d=>d.open&&d.close).sort((a,b)=>a.time<b.time?-1:1).forEach(d=>{if(!seen[d.time]){seen[d.time]=1;clean.push(d);}});
+  if(st)st.textContent='● '+clean.length+' phiên · '+fmt(clean[clean.length-1].close)+'đ';
+  const cont=$('priceChart');
+  if(!lwChart){
+    lwChart=LightweightCharts.createChart(cont,{autoSize:true,
+      layout:{background:{type:'solid',color:'transparent'},textColor:'#93a0bd',fontFamily:'Segoe UI'},
+      grid:{vertLines:{color:'#1c2740'},horzLines:{color:'#1c2740'}},
+      rightPriceScale:{borderColor:'#26324f'},timeScale:{borderColor:'#26324f'},
+      crosshair:{mode:1,vertLine:{color:'#8b7cf6',labelBackgroundColor:'#1b2647'},horzLine:{color:'#8b7cf6',labelBackgroundColor:'#1b2647'}}});
+    lwSeries=lwChart.addCandlestickSeries({upColor:'#3ba776',downColor:'#e25c5c',borderUpColor:'#3ba776',borderDownColor:'#e25c5c',wickUpColor:'#6fe3ab',wickDownColor:'#f59595'});
+  }
+  lwSeries.setData(clean);
+  lwLines.forEach(pl=>{try{lwSeries.removePriceLine(pl);}catch(e){}});lwLines=[];
+  const refs=[];const tgt=window.lastTarget,cons=(DATA[tk]&&DATA[tk].cons)||0,fv=FV[tk]||0;
+  if(isFinite(tgt)&&tgt>0)refs.push({v:tgt,c:'#6fe3ab',t:'MT mô hình'});
+  if(fv>0)refs.push({v:fv,c:'#f0c26b',t:'FV của tôi'});
+  if(cons>0)refs.push({v:cons,c:'#e2823b',t:'CTCK'});
+  refs.forEach(r=>{lwLines.push(lwSeries.createPriceLine({price:r.v,color:r.c,lineWidth:1,lineStyle:2,axisLabelVisible:true,title:r.t+' '+fmt(r.v)}));});
+  lwChart.timeScale().fitContent();
+}
+
+{const _h=(location.hash||'').replace('#','').trim().toUpperCase();loadTicker(_h||'SSI');}
+</script>
+</body>
+</html>
