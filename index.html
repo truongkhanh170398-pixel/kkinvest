@@ -235,9 +235,10 @@ const VALUED={};['KDH','DXG','NVL','NLG','VHM','VIC','PDR','HDC','IDC','HPG','HS
 async function tryFetch(u,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);
   try{const r=await fetch(u,{cache:'no-store',signal:c.signal});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json();}finally{clearTimeout(t);}}
 const PROXIES=[x=>x,
-  x=>'https://corsproxy.io/?url='+encodeURIComponent(x),
+  x=>'/api/proxy?url='+encodeURIComponent(x),
+  x=>'https://api.allorigins.win/raw?url='+encodeURIComponent(x),
   x=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(x),
-  x=>'https://api.allorigins.win/raw?url='+encodeURIComponent(x)];
+  x=>'https://corsproxy.io/?url='+encodeURIComponent(x)];
 async function getJSONp(u){let last;for(const p of PROXIES){try{return await tryFetch(p(u),9000);}catch(e){last=e;}}throw last||new Error('fail');}
 
 // ===== VNDirect dchart (giá VN, đã ở nghìn đồng) =====
