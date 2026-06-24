@@ -329,11 +329,12 @@ async function refreshDeriv(){
 
 // ===== GLOBAL MARKETS (Yahoo) =====
 const GLOBAL=[
-  {grp:'Asia',items:[['^N225','Nikkei 225'],['^HSI','Hang Seng'],['^KS11','KOSPI'],['000001.SS','SSE Composite']]},
-  {grp:'Europe',items:[['^FTSE','FTSE 100'],['^FCHI','CAC 40'],['^GDAXI','DAX'],['^N100','Euronext 100'],['^STOXX50E','EURO STOXX 50']]},
-  {grp:'Crypto',items:[['BTC-USD','Bitcoin'],['ETH-USD','Ethereum'],['BNB-USD','BNB']]},
-  {grp:'Rates',items:[['^TNX','US 10-Yr Bond'],['^FVX','US 5-Yr Bond']]},
-  {grp:'Commodities',items:[['CL=F','Crude Oil'],['GC=F','Gold'],['BZ=F','Brent Crude']]}
+  {grp:'Mỹ',items:[['^DJI','Dow Jones'],['^GSPC','S&P 500'],['^IXIC','Nasdaq'],['^RUT','Russell 2000'],['^VIX','VIX']]},
+  {grp:'Châu Á',items:[['^N225','Nikkei 225'],['^HSI','Hang Seng'],['^KS11','KOSPI'],['000001.SS','Shanghai'],['000300.SS','CSI 300'],['^TWII','Taiwan'],['^NSEI','NIFTY 50'],['^AXJO','ASX 200'],['^STI','Straits Times']]},
+  {grp:'Châu Âu',items:[['^FTSE','FTSE 100'],['^FCHI','CAC 40'],['^GDAXI','DAX'],['^N100','Euronext 100'],['^STOXX50E','EURO STOXX 50']]},
+  {grp:'Hàng hoá',items:[['CL=F','Crude Oil'],['BZ=F','Brent'],['NG=F','Natural Gas'],['GC=F','Gold'],['SI=F','Silver'],['HG=F','Copper'],['PL=F','Platinum']]},
+  {grp:'Crypto',items:[['BTC-USD','Bitcoin'],['ETH-USD','Ethereum'],['BNB-USD','BNB'],['SOL-USD','Solana']]},
+  {grp:'Lãi suất',items:[['^TNX','US 10-Yr Bond'],['^FVX','US 5-Yr Bond']]}
 ];
 async function yahoo(sym){
   const u=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?range=1d&interval=15m`;
@@ -359,13 +360,13 @@ function renderGM(){
 async function refreshGM(){
   $i('gUpd').textContent='Source · Yahoo Finance · ⏳';
   const all=[];GLOBAL.forEach(g=>g.items.forEach(it=>all.push(it[0])));
-  const CONC=6;
+  const CONC=8;
   for(let i=0;i<all.length;i+=CONC){
     const part=all.slice(i,i+CONC);
     const res=await Promise.all(part.map(s=>yahoo(s).then(d=>[s,d]).catch(()=>[s,null])));
     res.forEach(([s,d])=>{if(d)gmData[s]=d;});
-    renderGM();
   }
+  renderGM();   // render 1 lần khi đủ data → marquee không bị giật/reset giữa chừng
   $i('gUpd').textContent='Source · Yahoo Finance · '+new Date().toLocaleTimeString('vi-VN');
 }
 
