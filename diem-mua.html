@@ -26,9 +26,10 @@
   .stat{color:var(--muted);font-size:12.5px;margin-left:auto}
   select{background:var(--card);border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:7px 10px;font-size:12.5px;font-family:inherit}
   .tablebox{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:auto;margin-top:14px}
-  table{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:940px}
   th,td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
-  th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+  th:first-child,td:first-child{text-align:center;color:var(--muted)}
+  th:nth-child(2),td:nth-child(2),th:nth-child(3),td:nth-child(3){text-align:left}
   thead th{background:#0e1525;color:var(--muted);font-size:11px;text-transform:uppercase;cursor:pointer;position:sticky;top:0}
   tbody tr{cursor:pointer}tbody tr:hover{background:#18203c}
   .up{color:var(--up)}.dn{color:var(--dn)}.muted{color:var(--muted)}
@@ -66,10 +67,12 @@
     <div class="bar"><div id="prog"></div></div>
   </header>
   <div class="tablebox"><table><thead><tr>
-    <th data-s="t">Mã</th><th data-s="sec">Ngành</th><th data-s="px">Giá</th><th data-s="pct">%TĐ</th>
-    <th data-s="sig">Tín hiệu</th><th data-s="ago">Khi nào</th><th data-s="vol">KL đột biến</th><th data-s="up">Upside FV</th><th>KN</th>
+    <th>STT</th><th data-s="t">Mã CP</th><th data-s="sec">Tên Ngành</th>
+    <th data-s="date">Ngày Vào Top</th><th data-s="days">Số Ngày Top</th>
+    <th data-s="sms">SM Ngắn Hạn</th><th data-s="smm">SM Trung Hạn</th>
+    <th data-s="ein">Giá Vào Top</th><th data-s="pxnow">Giá Hiện Tại</th><th data-s="chg">Tăng/Giảm</th>
   </tr></thead><tbody id="body"></tbody></table></div>
-  <div class="note">Điểm MUA = đóng cửa ≥ đỉnh cao nhất của 4 phiên liền trước (breakout). "Khi nào" = tín hiệu cách đây bao nhiêu phiên (0 = phiên gần nhất). "KL đột biến" = khối lượng phiên tín hiệu vs TB50. Tín hiệu xen kẽ (ExRem) — mã chỉ vào danh mục khi trạng thái hiện tại là loại đang chọn. Giá VNDirect (cần localhost). Tham khảo, không phải khuyến nghị.</div>
+  <div class="note"><b>Ngày Vào Top</b> = phiên xuất hiện tín hiệu MUA (đóng cửa ≥ đỉnh 4 phiên liền trước). <b>Số Ngày Top</b> = số ngày kể từ ngày vào top. <b>SM Ngắn/Trung Hạn</b> = điểm sức mạnh giá 20 phiên / 60 phiên (0–100, ≥80 rất mạnh). <b>Tăng/Giảm</b> = biến động giá từ lúc vào top đến hiện tại. Đã lọc thanh khoản ≥100k cp/phiên. Bấm mã → mở chart kỹ thuật. Giá VNDirect. Tham khảo, không phải khuyến nghị.</div>
 </div>
 
 <script>
@@ -108,7 +111,7 @@ EXTRA.forEach(r=>{if(!SECMAP[r[0]])SECMAP[r[0]]=r[1];});
 // nạp ngành vào select
 (function(){const secs=[...new Set([...Object.values(SECMAP),'HOSE','HNX','UPCOM'])].sort();$('secSel').innerHTML='<option value="">Tất cả ngành / sàn</option>'+secs.map(s=>`<option>${s}</option>`).join('');})();
 
-let sigType='MUA', fresh=5, results=[], sortKey='ago', sortDir=1, minVol=true;
+let sigType='MUA', fresh=5, results=[], sortKey='date', sortDir=-1, minVol=true;
 const MINVOL=100000;   // lọc ẩn: chỉ giữ mã thanh khoản ≥ 100k cp/phiên
 
 async function tryFetch(u,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);
@@ -128,8 +131,11 @@ async function loadUniverse(){
   const s={},u=[];VN100.forEach(r=>{if(!s[r[0]]){s[r[0]]=1;u.push(r);}});EXTRA.forEach(r=>{if(!s[r[0]]){s[r[0]]=1;u.push([r[0],r[1],0]);}});return u;
 }
 function sma(a,n){const o=Array(a.length).fill(null);let s=0;for(let i=0;i<a.length;i++){s+=a[i];if(i>=n)s-=a[i-n];if(i>=n-1)o[i]=s/n;}return o;}
+// Điểm sức mạnh giá 0–100 theo momentum W phiên (logistic) — càng tăng mạnh càng cao
+function stren(C,n,W,scale){const j=n-1-W;if(j<0)return null;const past=C[j];if(!(past>0))return null;const ret=C[n-1]/past-1;return Math.round(100/(1+Math.exp(-ret*scale)));}
+function fmtDate(ts){const d=new Date(ts*1000),p=x=>String(x).padStart(2,'0');return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear();}
 function scan(j){
-  const H=j.h,L=j.l,C=j.c,V=j.v||[],n=C.length;
+  const H=j.h,L=j.l,C=j.c,V=j.v||[],T=j.t||[],n=C.length;
   let inBuy=false,inSell=false,last=null;
   for(let i=8;i<n;i++){
     const mua=C[i]>=H[i-1]&&C[i]>=H[i-2]&&C[i]>=H[i-3]&&C[i]>=H[i-4];
@@ -141,32 +147,43 @@ function scan(j){
   const px=C[n-1], prev=C[n-2]||px, pct=prev?(px-prev)/prev*100:0;
   const vma=sma(V,50)[last.i], vsp=(vma&&V[last.i])?Math.round((V[last.i]-vma)/vma*100):0;
   const vol20=sma(V,20)[n-1]||0;   // KL TB 20 phiên (cp/ngày) — lọc thanh khoản
-  return {sig:last.t, ago:n-1-last.i, px, pct, vsp, vol20};
+  const entryPx=C[last.i], entryTs=T[last.i]||null;
+  const chg=entryPx?(px-entryPx)/entryPx*100:0;
+  const daysTop=entryTs?Math.max(0,Math.round((Date.now()/1000-entryTs)/86400)):null;
+  const sms=stren(C,n,20,12), smm=stren(C,n,60,6);   // sức mạnh ngắn / trung hạn
+  return {sig:last.t, ago:n-1-last.i, px, pct, vsp, vol20, entryPx, entryTs, chg, daysTop, sms, smm};
 }
 function classCl(v){return v>0?'up':(v<0?'dn':'muted');}
 function render(){
   const sec=$('secSel').value;
   let rows=results.filter(r=>r.d && r.d.sig===sigType && r.d.ago<=fresh && (!sec||r.sec===sec) && (!minVol||r.d.vol20>=MINVOL));
   rows.sort((a,b)=>{const k=sortKey; let va,vb;
-    if(k==='t'){va=a.tk;vb=b.tk;return sortDir*(va<vb?-1:va>vb?1:0);}
-    if(k==='sec'){return sortDir*((a.sec<b.sec)?-1:1);}
-    if(k==='px')[va,vb]=[a.d.px,b.d.px]; else if(k==='pct')[va,vb]=[a.d.pct,b.d.pct];
-    else if(k==='vol')[va,vb]=[a.d.vsp,b.d.vsp]; else if(k==='kl')[va,vb]=[a.d.vol20,b.d.vol20];
-    else if(k==='up')[va,vb]=[a.up,b.up];
-    else if(k==='sig')[va,vb]=[a.d.sig,b.d.sig]; else [va,vb]=[a.d.ago,b.d.ago];
+    if(k==='t')return sortDir*((a.tk<b.tk)?-1:(a.tk>b.tk?1:0));
+    if(k==='sec')return sortDir*((a.sec<b.sec)?-1:(a.sec>b.sec?1:0));
+    if(k==='date')[va,vb]=[a.d.entryTs||0,b.d.entryTs||0];
+    else if(k==='days')[va,vb]=[a.d.daysTop||0,b.d.daysTop||0];
+    else if(k==='sms')[va,vb]=[a.d.sms||0,b.d.sms||0];
+    else if(k==='smm')[va,vb]=[a.d.smm||0,b.d.smm||0];
+    else if(k==='ein')[va,vb]=[a.d.entryPx,b.d.entryPx];
+    else if(k==='pxnow')[va,vb]=[a.d.px,b.d.px];
+    else if(k==='chg')[va,vb]=[a.d.chg,b.d.chg];
+    else [va,vb]=[a.d.entryTs||0,b.d.entryTs||0];
     return sortDir*((va||0)-(vb||0));});
-  $('body').innerHTML=rows.map(r=>{
-    const d=r.d, sigCls=d.sig==='MUA'?'b-mua':'b-ban', kn=d.sig==='MUA'?(r.up>=10?'MUA':'THEO DÕI'):'CHỐT/TRÁNH';
-    const knCls=d.sig==='MUA'?'up':'dn';
+  const smCls=v=>!isFinite(v)?'muted':(v>=80?'up':(v>=60?'vspike':'muted'));
+  $('body').innerHTML=rows.map((r,i)=>{
+    const d=r.d;
     return `<tr onclick="location.href='phan-tich-ky-thuat.html#${r.tk}'">
-      <td style="font-weight:800">${r.tk}</td><td class="mini">${r.sec}</td>
-      <td>${fpx(d.px)}</td><td class="${classCl(d.pct)}">${(d.pct>=0?'+':'')+d.pct.toFixed(2)}%</td>
-      <td><span class="sigb ${sigCls}">${d.sig}</span>${d.ago<=2?'<span class="fresh">MỚI</span>':''}</td>
-      <td>${d.ago===0?'phiên này':(d.ago+' phiên trước')}</td>
-      <td class="${d.vsp>=30?'vspike':'muted'}">${d.vsp>0?'+'+d.vsp+'%':'—'}</td>
-      <td class="${classCl(r.up)}">${isFinite(r.up)?(r.up>=0?'+':'')+r.up.toFixed(0)+'%':'—'}</td>
-      <td class="${knCls}" style="font-weight:700">${kn}</td></tr>`;}).join('')
-    || `<tr><td colspan="9" class="mini" style="padding:18px;text-align:center">Không có mã nào ở điểm ${sigType} (${fresh===999?'đang giữ':'≤'+fresh+' phiên'})${sec?' · ngành '+sec:''}.</td></tr>`;
+      <td>${i+1}</td>
+      <td style="font-weight:800">${r.tk}${d.ago<=2?'<span class="fresh">MỚI</span>':''}</td>
+      <td class="mini">${r.sec}</td>
+      <td>${d.entryTs?fmtDate(d.entryTs):'—'}</td>
+      <td>${d.daysTop!=null?d.daysTop:'—'}</td>
+      <td class="${smCls(d.sms)}" style="font-weight:700">${isFinite(d.sms)?d.sms:'—'}</td>
+      <td class="${smCls(d.smm)}" style="font-weight:700">${isFinite(d.smm)?d.smm:'—'}</td>
+      <td>${fpx(d.entryPx)}</td>
+      <td>${fpx(d.px)}</td>
+      <td class="${classCl(d.chg)}" style="font-weight:700">${(d.chg>=0?'+':'')+d.chg.toFixed(1)}%</td></tr>`;}).join('')
+    || `<tr><td colspan="10" class="mini" style="padding:18px;text-align:center">Không có mã nào ở điểm ${sigType} (${fresh===999?'đang giữ':'≤'+fresh+' phiên'})${sec?' · ngành '+sec:''}.</td></tr>`;
   $('stat').textContent=`${rows.length} mã ở điểm ${sigType}`;
 }
 async function runScan(){
@@ -195,7 +212,7 @@ $('segType').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('segType').q
 $('segFresh').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('segFresh').querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');fresh=+b.dataset.f;render();});
 $('secSel').onchange=render;
 $('scanBtn').onclick=runScan;
-document.querySelectorAll('thead th[data-s]').forEach(th=>th.onclick=()=>{const k=th.dataset.s;if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=(k==='ago'||k==='t'||k==='sec')?1:-1;}render();});
+document.querySelectorAll('thead th[data-s]').forEach(th=>th.onclick=()=>{const k=th.dataset.s;if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=(k==='t'||k==='sec'||k==='days')?1:-1;}render();});
 runScan();
 </script>
 </body>
