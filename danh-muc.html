@@ -41,6 +41,14 @@
   .panel h3 .c{font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0;margin-left:auto;font-size:11px}
   .chartbox{position:relative;height:280px}
   #equity{width:100%;height:100%}
+  .allocrow{display:grid;grid-template-columns:330px 1fr;gap:14px;margin-top:14px}
+  @media(max-width:1000px){.allocrow{grid-template-columns:1fr}}
+  .donutbox{position:relative;height:230px}
+  .legend{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+  .lg-item{display:flex;align-items:center;gap:10px;font-size:13.5px}
+  .lg-dot{width:13px;height:13px;border-radius:3px;flex:none}
+  .lg-name{font-weight:800;letter-spacing:.3px}
+  .lg-pct{margin-left:auto;color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums}
   .tablebox{overflow:auto;max-height:420px}
   table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:680px}
   th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
@@ -94,8 +102,14 @@
   <div class="panel"><h3>Đường NAV danh mục <span class="c" id="navRange"></span></h3><div class="chartbox"><canvas id="equity"></canvas></div>
     <div class="mini" style="margin-top:6px">● Chấm trên đường NAV = điểm <b style="color:#22c55e">chốt lời/bán lãi</b> hoặc <b style="color:#ef4757">cắt lỗ</b> — rê chuột xem mã & lợi nhuận lệnh.</div></div>
 
-  <div class="panel"><h3>Đang nắm giữ (mở) <span class="c" id="openSum"></span></h3>
-    <div class="tablebox"><table><thead><tr><th>Mã</th><th>Ngày mua</th><th>Giá mua</th><th>Giá HT</th><th>SL</th><th>Giá trị (tr)</th><th>Tỷ trọng</th><th>P/L %</th><th>Số ngày</th></tr></thead><tbody id="openBody"></tbody></table></div>
+  <div class="allocrow">
+    <div class="panel"><h3>Tỷ trọng danh mục <span class="c" id="allocSum"></span></h3>
+      <div class="donutbox"><canvas id="alloc"></canvas></div>
+      <div class="legend" id="allocLegend"></div>
+    </div>
+    <div class="panel"><h3>Đang nắm giữ (mở) <span class="c" id="openSum"></span></h3>
+      <div class="tablebox"><table><thead><tr><th>Mã</th><th>Ngày mua</th><th>Giá mua</th><th>Giá HT</th><th>SL</th><th>Giá trị (tr)</th><th>Tỷ trọng</th><th>P/L %</th><th>Số ngày</th></tr></thead><tbody id="openBody"></tbody></table></div>
+    </div>
   </div>
 
   <div class="two">
@@ -122,7 +136,10 @@ async function dchart(sym){const to=Math.floor(Date.now()/1000),from=to-380*8640
 const toV=v=>v<1000?v*1000:v;
 function sma(a,n){const o=Array(a.length).fill(null);let s=0;for(let i=0;i<a.length;i++){s+=a[i];if(i>=n)s-=a[i-n];if(i>=n-1)o[i]=s/n;}return o;}
 
-let SYM={}; let AXIS=[]; let equityChart=null; let startMode='today';
+let SYM={}; let AXIS=[]; let equityChart=null; let allocChart=null; let startMode='today';
+const PAL=['#4f8cff','#26c281','#e2b33b','#ef4757','#a78bfa','#ec6a9c','#34d399','#f5b301','#fb7185','#22c55e','#38bdf8','#f97316','#c084fc','#2dd4bf'];
+const CASH_COL='#5a6b8c';
+const pct2=n=>n.toLocaleString('vi-VN',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
 async function fetchAll(){
   SYM={}; const dateset={};
   const CONC=6; let done=0;
@@ -225,6 +242,17 @@ function render(R){
   ob.innerHTML=opens.map(o=>{const days=Math.round((Date.parse(eq[eq.length-1].d)-Date.parse(o.p.entryD))/864e5);
     return `<tr><td style="font-weight:800">${o.tk}</td><td class="mini">${o.p.entryD}</td><td>${fmt(o.p.entry)}</td><td>${fmt(o.px)}</td><td>${fmt(o.p.qty)}</td><td>${trM(o.val)}</td><td>${(o.val/navEnd*100).toFixed(1)}%</td><td class="${o.pct>=0?'up':'dn'}">${(o.pct>=0?'+':'')+o.pct.toFixed(1)}%</td><td class="mini">${days}</td></tr>`;}).join('')||'<tr><td colspan="9" class="mini" style="padding:14px;text-align:center">Hiện không nắm mã nào (đang giữ tiền mặt).</td></tr>';
   $('openSum').textContent=opens.length+' mã · '+trM(mv)+' tr ('+(navEnd?mv/navEnd*100:0).toFixed(0)+'% NAV)';
+  // ── Tỷ trọng danh mục (donut) — theo giá trị hiện tại, gồm cả tiền mặt ──
+  const slices=opens.map((o,i)=>({name:o.tk,val:o.val,col:PAL[i%PAL.length]}));
+  if(R.cash>0)slices.push({name:'Tiền mặt',val:R.cash,col:CASH_COL});
+  const totAll=slices.reduce((s,x)=>s+x.val,0)||1;
+  if(allocChart)allocChart.destroy();
+  allocChart=new Chart($('alloc'),{type:'doughnut',data:{labels:slices.map(s=>s.name),
+    datasets:[{data:slices.map(s=>s.val),backgroundColor:slices.map(s=>s.col),borderColor:'#0e1525',borderWidth:2,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:c=>c.label+': '+trM(c.parsed)+' tr ('+pct2(c.parsed/totAll*100)+')'}}}}});
+  $('allocLegend').innerHTML=slices.map(s=>`<div class="lg-item"><span class="lg-dot" style="background:${s.col}"></span><span class="lg-name" style="color:${s.col}">${s.name}</span><span class="lg-pct">${pct2(s.val/totAll*100)}</span></div>`).join('');
+  $('allocSum').textContent=opens.length+' mã'+(R.cash>0?' + tiền mặt':'');
   // closed trades
   const cl=R.closed.slice().reverse();
   $('closedBody').innerHTML=cl.map(c=>{const rc=c.reason==='Chốt lời'?'chot':(c.reason==='Cắt lỗ'?'lo':'sig');
