@@ -68,11 +68,11 @@
   </header>
   <div class="tablebox"><table><thead><tr>
     <th>STT</th><th data-s="t">Mã CP</th><th data-s="sec">Tên Ngành</th>
-    <th data-s="date">Ngày Vào Top</th><th data-s="days">Số Ngày Top</th>
+    <th data-s="date"><span id="hDate">Ngày Vào Top</span></th><th data-s="days"><span id="hDays">Số Ngày Top</span></th>
     <th data-s="sms">SM Ngắn Hạn</th><th data-s="smm">SM Trung Hạn</th>
-    <th data-s="ein">Giá Vào Top</th><th data-s="pxnow">Giá Hiện Tại</th><th data-s="chg">Tăng/Giảm</th>
+    <th data-s="ein"><span id="hEin">Giá Vào Top</span></th><th data-s="pxnow">Giá Hiện Tại</th><th data-s="chg"><span id="hChg">Tăng/Giảm</span></th>
   </tr></thead><tbody id="body"></tbody></table></div>
-  <div class="note"><b>Ngày Vào Top</b> = phiên xuất hiện tín hiệu MUA (đóng cửa ≥ đỉnh 4 phiên liền trước). <b>Số Ngày Top</b> = số ngày kể từ ngày vào top. <b>SM Ngắn/Trung Hạn</b> = điểm sức mạnh giá 20 phiên / 60 phiên (0–100, ≥80 rất mạnh). <b>Tăng/Giảm</b> = biến động giá từ lúc vào top đến hiện tại. Đã lọc thanh khoản ≥100k cp/phiên. Bấm mã → mở chart kỹ thuật. Giá VNDirect. Tham khảo, không phải khuyến nghị.</div>
+  <div class="note"><b>Điểm MUA:</b> Ngày/Giá Vào Top = phiên đóng cửa vượt đỉnh 4 phiên (breakout); "Tăng/Giảm" = giá đã chạy bao nhiêu % từ lúc vào top. <b>Điểm BÁN:</b> Ngày/Giá Vào Bán = phiên thủng đáy 8 phiên (tín hiệu bán); "Từ Ngày Bán" = giá đã <b>giảm/tăng</b> bao nhiêu % kể từ ngày bán — để đánh giá khách quan tín hiệu bán đúng/sai. <b>SM Ngắn/Trung Hạn</b> = điểm sức mạnh giá 20 phiên / 60 phiên (0–100, ≥80 rất mạnh). Đã lọc thanh khoản ≥100k cp/phiên. Bấm mã → mở chart kỹ thuật. Giá VNDirect. Tham khảo, không phải khuyến nghị.</div>
 </div>
 
 <script>
@@ -156,6 +156,12 @@ function scan(j){
 function classCl(v){return v>0?'up':(v<0?'dn':'muted');}
 function render(){
   const sec=$('secSel').value;
+  const isSell=sigType==='BÁN';
+  // đổi nhãn cột theo loại tín hiệu — điểm bán tính % từ ngày bán để khách quan
+  $('hDate').textContent=isSell?'Ngày Vào Bán':'Ngày Vào Top';
+  $('hDays').textContent=isSell?'Số Ngày Từ Bán':'Số Ngày Top';
+  $('hEin').textContent=isSell?'Giá Vào Bán':'Giá Vào Top';
+  $('hChg').textContent=isSell?'Từ Ngày Bán':'Tăng/Giảm';
   let rows=results.filter(r=>r.d && r.d.sig===sigType && r.d.ago<=fresh && (!sec||r.sec===sec) && (!minVol||r.d.vol20>=MINVOL));
   rows.sort((a,b)=>{const k=sortKey; let va,vb;
     if(k==='t')return sortDir*((a.tk<b.tk)?-1:(a.tk>b.tk?1:0));
