@@ -447,6 +447,8 @@ function ensureCharts(){
   mainChart.timeScale().subscribeVisibleLogicalRangeChange(r=>{if(r)rsChart.timeScale().setVisibleLogicalRange(r);});
 }
 function ln(RAW,vals){return RAW.map((d,i)=>vals[i]==null?null:({time:d.time,value:vals[i]})).filter(Boolean);}
+// như ln() nhưng GIỮ điểm whitespace cho null — để chuỗi có đủ số bar khớp index với chart giá (đồng bộ trục thời gian)
+function lnW(RAW,vals){return RAW.map((d,i)=>vals[i]==null?({time:d.time}):({time:d.time,value:vals[i]}));}
 function draw(){
   if(!RAW.length)return; ensureCharts();
   const closes=RAW.map(d=>d.close);
@@ -461,7 +463,7 @@ function draw(){
     bb.l.setData(RAW.map((d,i)=>m20[i]==null?null:({time:d.time,value:m20[i]-2*sd[i]})).filter(Boolean));}
   else{bb.u.setData([]);bb.l.setData([]);}
   const rs=relStrength(closes);
-  rsS.setData(ln(RAW,rs));
+  rsS.setData(lnW(RAW,rs));   // whitespace-aligned: RS chart có đủ bar như chart giá → trục thời gian khớp
   const rsLast=[...rs].reverse().find(x=>x!=null); $('rsVal').textContent=rsLast!=null?rsLast:'—';
   const r=rsi(closes,14);
   const lastT=RAW[RAW.length-1].time,fromIdx=Math.max(0,RAW.length-TF);
