@@ -454,23 +454,23 @@ document.querySelectorAll('input,select').forEach(el=>el.addEventListener('input
 // price fetch (multi-source)
 function normNghin(v){v=Number(v);if(!isFinite(v)||v<=0)return 0;return v>1000?v/1000:v;}
 async function getJSON(u){const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw 0;return r.json();}
-async function fetchPrice(){
+async function fetchPrice(silent){
   const t=($('ticker').value||'').trim().toUpperCase();if(!t)return;
-  $('pxStatus').textContent='⏳ Đang lấy giá '+t+'…';
+  if(!silent)$('pxStatus').textContent='⏳ Đang lấy giá '+t+'…';
   const to=Math.floor(Date.now()/1000)+86400,from=to-25*86400;
   const vnd=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${t}&from=${from}&to=${to}`;
   const tcbs=`https://apipubaws.tcbs.com.vn/stock-insight/v1/stock/bars-long-term?ticker=${t}&type=stock&resolution=D&to=${to}&countBack=1`;
-  const px=u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`;
-  const tries=[
-    async()=>{const j=await getJSON(vnd);if(j.s==='ok'&&j.c&&j.c.length)return j.c[j.c.length-1];throw 0;},
-    async()=>{const j=await getJSON(px(vnd));if(j.s==='ok'&&j.c&&j.c.length)return j.c[j.c.length-1];throw 0;},
-    async()=>{const j=await getJSON(px(tcbs));const d=j.data&&j.data[j.data.length-1];if(d&&d.close!=null)return d.close;throw 0;}
-  ];
-  for(const fn of tries){try{const n=normNghin(await fn());if(n>0){$('price').value=Math.round(n*1000);recalc();
-    $('pxStatus').textContent=`● ${t}: ${fmt(n*1000)} đ · ${new Date().toLocaleTimeString('vi-VN')}`;return;}}catch(e){}}
-  $('pxStatus').textContent='⚠ Không lấy được giá (CORS/mạng) — nhập tay ô "Giá hiện tại"';
+  // ưu tiên trực tiếp → /api/proxy (same-origin, ổn định) → proxy công cộng (hay chết)
+  const PX=[u=>u,u=>'/api/proxy?url='+encodeURIComponent(u),u=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(u),u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u)];
+  const grab=async(url,pick)=>{for(const p of PX){try{const v=pick(await getJSON(p(url)));if(v>0)return v;}catch(e){}}return 0;};
+  let n=await grab(vnd,j=>(j&&j.s==='ok'&&j.c&&j.c.length)?j.c[j.c.length-1]:0);
+  if(!(n>0))n=await grab(tcbs,j=>{const d=j&&j.data&&j.data[j.data.length-1];return d&&d.close!=null?d.close:0;});
+  const nn=normNghin(n);
+  if(nn>0){$('price').value=Math.round(nn*1000);recalc();if(window.refreshUpside)window.refreshUpside();
+    $('pxStatus').textContent=`● ${t}: ${fmt(nn*1000)} đ · ${new Date().toLocaleTimeString('vi-VN')} · tự động`;return;}
+  if(!silent)$('pxStatus').textContent='⚠ Không lấy được giá (CORS/mạng) — nhập tay ô "Giá hiện tại"';
 }
-$('fetchPx').onclick=fetchPrice;
+$('fetchPx').onclick=()=>fetchPrice();
 
 recalc();
 </script>
@@ -772,6 +772,17 @@ function renderSize(tk){
 
 (function(){
   function setV(id,v){const el=document.getElementById(id);if(el&&v!=null)el.value=v;}
+  // cập nhật upside CTCK / FV theo GIÁ HIỆN TẠI đang hiển thị (để khớp khi giá tự chạy)
+  function refreshUpside(){
+    const tk=window.curTk, d=DATA[tk];
+    const price=parseFloat((document.getElementById('price').value+'').replace(/[^0-9.\-]/g,''))||0;
+    const ce=document.getElementById('oCons'), fe=document.getElementById('oFV');
+    if(ce){ if(d&&d.cons>0&&price>0){const u=(d.cons-price)/price*100;ce.textContent='🎯 CTCK đồng thuận: '+fmt(d.cons)+'đ ('+(u>=0?'+':'')+u.toFixed(0)+'%)';}
+      else if(d&&!(d.cons>0)) ce.textContent='🎯 CTCK: định giá đặc thù (SOTP)'; }
+    if(fe){ const fvv=(FV[tk]||0); if(fvv>0&&price>0){const u=(fvv-price)/price*100;fe.textContent='💡 FV của tôi: '+fmt(fvv)+'đ ('+(u>=0?'+':'')+u.toFixed(0)+'%)';}
+      else if(!(fvv>0)) fe.textContent='💡 FV: đặc thù'; }
+  }
+  window.refreshUpside=refreshUpside;
   function loadTicker(tk){
     const st=document.getElementById('pxStatus');
     const _ti=document.getElementById('ticker');if(_ti)_ti.value=tk;   // luôn đồng bộ ô mã → "Lấy giá" đúng mã
@@ -803,13 +814,10 @@ function renderSize(tk){
     if(typeof renderSize==='function')renderSize(tk);
     if(typeof renderHist==='function')renderHist(tk);
     if(typeof loadPriceChart==='function')loadPriceChart(tk);
-    const ce=document.getElementById('oCons');
-    if(ce){if(d.cons&&d.cons>0){const u=(d.cons-d.price)/d.price*100;ce.textContent='🎯 CTCK đồng thuận: '+fmt(d.cons)+'đ ('+(u>=0?'+':'')+u.toFixed(0)+'%)';}
-      else ce.textContent='🎯 CTCK: định giá đặc thù (SOTP)';}
-    const fe=document.getElementById('oFV'), fvv=(FV[tk]||0);
-    if(fe){if(fvv>0){const u=(fvv-d.price)/d.price*100;fe.textContent='💡 FV của tôi: '+fmt(fvv)+'đ ('+(u>=0?'+':'')+u.toFixed(0)+'%)';}else fe.textContent='💡 FV: đặc thù';}
+    refreshUpside();
     st.textContent='● Đã nạp '+tk+' (13/06/2026) — '+(d.landBook>0?'RNAV quỹ đất + P/B':'P/B + P/E')+' · đang phân tích';
     st.style.color='#6fe3ab';
+    if(typeof fetchPrice==='function')fetchPrice();   // ghi đè giá cứng bằng GIÁ THỊ TRƯỜNG thật (tự động)
   }
   window.loadTicker=loadTicker;
   const tkEl=document.getElementById('ticker');
@@ -817,6 +825,8 @@ function renderSize(tk){
   tkEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();loadTicker((tkEl.value||'').trim().toUpperCase());}});
 })();
 if(typeof window.loadTicker==='function'){const _h=(location.hash||'').replace('#','').trim().toUpperCase();window.loadTicker(_h||'KDH');}
+// Giá hiện tại tự chạy theo thị trường: làm mới ngầm mỗi 45s cho mã đang xem
+setInterval(()=>{const el=document.getElementById('ticker');if(el&&el.value.trim()&&typeof fetchPrice==='function')fetchPrice(true);},45000);
 </script>
 </body>
 </html>
