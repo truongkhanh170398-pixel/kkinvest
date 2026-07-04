@@ -470,7 +470,11 @@ $i('fvRefresh').onclick=loadFVPrices;
 // ===== BẢNG TIN TÀI CHÍNH (RSS realtime) =====
 async function tryFetchText(u,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);
   try{const r=await fetch(u,{cache:'no-store',signal:c.signal});if(!r.ok)throw new Error('HTTP '+r.status);return await r.text();}finally{clearTimeout(t);}}
-async function getTextP(u){let last;for(const p of PROXIES){try{const t=await tryFetchText(p(u),9000);if(t&&t.length>80)return t;}catch(e){last=e;}}throw last||new Error('fail');}
+async function getTextP(u){let last;
+  for(const p of PROXIES){try{const t=await tryFetchText(p(u),9000);if(t&&t.length>80)return t;}catch(e){last=e;}}
+  // proxy công cộng phần lớn đã chết → thử lại /api/proxy (proxy nhà) cho nguồn chậm/timeout tạm thời (vd TNCK)
+  for(let i=0;i<2;i++){try{await new Promise(r=>setTimeout(r,600));const t=await tryFetchText('/api/proxy?url='+encodeURIComponent(u),13000);if(t&&t.length>80)return t;}catch(e){last=e;}}
+  throw last||new Error('fail');}
 const NEWS_SRC=[
   {k:'cafef',    name:'CafeF',    color:'#e0282e',url:'https://cafef.vn/thi-truong-chung-khoan.rss'},
   {k:'vietstock',name:'Vietstock',color:'#1f6fb2',url:'https://vietstock.vn/145/chung-khoan.rss'},
