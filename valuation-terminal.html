@@ -356,7 +356,7 @@ function recalc(){
   const mids=[rnavPx,C.pbPx,C.pePx,C.evPx,D.px];
   let ws=0,tw=0;for(let i=0;i<mids.length;i++){if(isFinite(mids[i])&&mids[i]>0){ws+=mids[i]*w[i];tw+=w[i];}}
   const target=tw?ws/tw:NaN; window.lastTarget=target;
-  const allMid=mids.filter(x=>isFinite(x)&&x>0);
+  const allMid=mids.filter((x,i)=>isFinite(x)&&x>0&&w[i]>0);   // vùng chỉ gồm phương pháp CÓ trọng số (>0) — bỏ DCF/EV khi không dùng
   $('oPrice').textContent=fmt(price)+' đ';
   if(!allMid.length){
     window.lastTarget=NaN;
@@ -497,7 +497,7 @@ const DATA={
   SIP:{price:51200,shares:262, netDebt:-3000, bookEq:6000,  landBook:5000,  eps:5106, bvps:22901,tpb:1.8,tpe:11,uplift:40,ownEff:95,wRNAV:35,wPB:25,wPE:40,cons:65000, assets:20000}, // KCN + điện nước; EPS TTM 5.106, dòng tiền tiện ích mạnh, P/E ~10x
   VRE:{price:30100,shares:2272,netDebt:-5000, bookEq:40000, landBook:10000, eps:3026, bvps:21993,tpb:1.4,tpe:11,uplift:10,ownEff:100,wRNAV:15,wPB:30,wPE:55,cons:32000, assets:50000}, // TTTM cho thuê; EPS TTM 3.026, P/E ~10x
   SJS:{price:48500,shares:114, netDebt:2000,  bookEq:5000,  landBook:4000,  eps:1580, bvps:12133,tpb:1.2,tpe:12,uplift:40,ownEff:90,wRNAV:45,wPB:25,wPE:30,cons:60000, assets:9000}, // Sudico Nam An Khánh; EPS TTM ~4.074, quỹ đất giá trị
-  BCM:{price:53300,shares:1035,netDebt:15000, bookEq:20000, landBook:15000, eps:3232, bvps:21135,tpb:2.5,tpe:16,uplift:50,ownEff:95,wRNAV:50,wPB:25,wPE:25,cons:70000, assets:55000}, // Becamex KCN (VSIP); EPS TTM 3.232, quỹ đất khổng lồ
+  BCM:{price:53300,shares:1035,netDebt:15000, bookEq:20000, landBook:35000, eps:3232, bvps:21135,tpb:2.5,tpe:16,uplift:210,ownEff:95,wRNAV:70,wPB:20,wPE:10,cons:70000, assets:55000}, // ASSET PLAY: RNAV neo (70%) — quỹ đất 950ha KCN+1.200ha đô thị + 49% VSIP (~11.000ha) mua giá vốn rẻ; landBook 35k×uplift 210% → RNAV/cp ~73k khớp GMT CTCK 73.6k-85k. P/E ít ý nghĩa (LN JV lumpy) nên hạ weight
   TCH:{price:14850,shares:1006,netDebt:-2000, bookEq:10000, landBook:5000,  eps:193,  bvps:12603,tpb:1.3,tpe:18,uplift:40,ownEff:90,wRNAV:50,wPB:30,wPE:20,cons:18000, assets:15000}, // Hoàng Huy; EPS TTM thấp 193 (dự án chưa ghi nhận) → RNAV neo
   CII:{price:17500,shares:960, netDebt:20000, bookEq:12000, landBook:3000,  eps:205,  bvps:14003,tpb:1.2,tpe:20,uplift:20,ownEff:90,wRNAV:30,wPB:40,wPE:30,cons:18000, assets:35000}, // hạ tầng BOT, đòn bẩy cao; EPS TTM 205, định giá theo book
   VCG:{price:19800,shares:600, netDebt:8000,  bookEq:12000, landBook:3000,  eps:1935, bvps:20000,tpb:1.2,tpe:12,uplift:30,ownEff:90,wRNAV:30,wPB:30,wPE:40,cons:24000, assets:35000}, // Vinaconex; EPS lõi ~1.935 (loại 3.186 tỷ thu nhập TC bất thường Q3)
