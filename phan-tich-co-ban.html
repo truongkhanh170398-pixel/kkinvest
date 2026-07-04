@@ -283,7 +283,7 @@ const CTCK={
   TLG:[49500,55000,60500],HAG:[14400,16000,17600],DHC:[40500,45000,49500],KDC:[54000,60000,66000],PLX:[37800,42000,46200],
   POW:[14400,16000,17600],PVT:[25200,28000,30800],GEX:[25200,28000,30800]
 };
-const PXPROX=[x=>x,x=>'https://corsproxy.io/?url='+encodeURIComponent(x),x=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(x)];
+const PXPROX=[x=>x,x=>'/api/proxy?url='+encodeURIComponent(x),x=>'https://corsproxy.io/?url='+encodeURIComponent(x),x=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(x)];
 async function livePx(tk){
   const to=Math.floor(Date.now()/1000),from=to-20*86400;
   const url=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${tk}&from=${from}&to=${to}`;

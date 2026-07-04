@@ -390,7 +390,7 @@ function buySellNotice(rows,techScore){
 let RAW=[],TF=370,curTk='MWG',liveTimer=null;
 let mainChart,candle,volS,maS={},bb={},rsChart,rsS,radarChart;
 
-const _OPROX=[x=>x,x=>'https://corsproxy.io/?url='+encodeURIComponent(x),x=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(x),x=>'https://api.allorigins.win/raw?url='+encodeURIComponent(x)];
+const _OPROX=[x=>x,x=>'/api/proxy?url='+encodeURIComponent(x),x=>'https://corsproxy.io/?url='+encodeURIComponent(x),x=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(x),x=>'https://api.allorigins.win/raw?url='+encodeURIComponent(x)];
 async function fetchOHLCV(tk){
   const to=Math.floor(Date.now()/1000),from=to-1150*86400;
   const url=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${tk}&from=${from}&to=${to}`;

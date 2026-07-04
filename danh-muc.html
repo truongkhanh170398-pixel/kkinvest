@@ -131,7 +131,7 @@ const START_DATE='2026-06-22';   // danh mục bắt đầu từ hôm nay, khôn
 const fmt=n=>isFinite(n)?Math.round(n).toLocaleString('vi-VN'):'—';
 const trM=n=>isFinite(n)?(n/1e6).toLocaleString('vi-VN',{maximumFractionDigits:1}):'—';
 const UNIV=['HPG','SSI','MWG','FPT','VND','VIX','SHB','STB','MBB','VPB','TCB','ACB','CTG','VCB','HDB','DIG','DXG','KDH','NLG','PDR','GEX','DGC','HSG','NKG','GVR','POW','VRE','KBC','VHM','HAG','DBC','PVD','PVS','GMD','VCI','HCM','BSR','DCM','FRT','PNJ'];
-const PROX=[x=>x,x=>'https://corsproxy.io/?url='+encodeURIComponent(x),x=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(x),x=>'https://api.allorigins.win/raw?url='+encodeURIComponent(x)];
+const PROX=[x=>x,x=>'/api/proxy?url='+encodeURIComponent(x),x=>'https://corsproxy.io/?url='+encodeURIComponent(x),x=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(x),x=>'https://api.allorigins.win/raw?url='+encodeURIComponent(x)];
 async function tf(u,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(u,{cache:'no-store',signal:c.signal});if(!r.ok)throw 0;return await r.json();}finally{clearTimeout(t);}}
 async function dchart(sym){const to=Math.floor(Date.now()/1000),from=to-380*86400;const u=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${sym}&from=${from}&to=${to}`;for(const p of PROX){try{const j=await tf(p(u),9000);if(j&&j.s==='ok'&&j.c&&j.c.length>60)return j;}catch(e){}}return null;}
 const toV=v=>v<1000?v*1000:v;

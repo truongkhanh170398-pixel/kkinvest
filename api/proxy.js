@@ -8,8 +8,7 @@ export default async function handler(req, res) {
   }
   // chỉ cho phép vài host dữ liệu cần thiết (tránh bị lạm dụng làm open proxy)
   const ALLOW = [
-    'dchart-api.vndirect.com.vn',
-    'finfo-api.vndirect.com.vn',
+    'vndirect.com.vn',                 // dchart-api / finfo-api / api-finfo … (mọi subdomain VNDirect)
     'query1.finance.yahoo.com',
     'query2.finance.yahoo.com',
     'cafef.vn', 'vietstock.vn', 'vneconomy.vn', 'tinnhanhchungkhoan.vn',
