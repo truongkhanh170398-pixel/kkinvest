@@ -391,14 +391,14 @@ function buildSensitivity(wacc,termG,price){
 document.querySelectorAll('input').forEach(el=>el.addEventListener('input',()=>{if(el.id!=='ticker')recalc();}));
 
 function normNghin(v){v=Number(v);if(!isFinite(v)||v<=0)return 0;return v>1000?v/1000:v;}
-async function getJSON(u){const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw 0;return r.json();}
+async function getJSON(u){const c=new AbortController(),t=setTimeout(()=>c.abort(),8000);try{const r=await fetch(u,{cache:'no-store',signal:c.signal});if(!r.ok)throw 0;return await r.json();}finally{clearTimeout(t);}}
 async function fetchPrice(){
   const t=($('ticker').value||'').trim().toUpperCase();if(!t)return;
   $('pxStatus').textContent='⏳ Đang lấy giá '+t+'…';
   const to=Math.floor(Date.now()/1000)+86400,from=to-25*86400;
   const vnd=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${t}&from=${from}&to=${to}`;
   const tcbs=`https://apipubaws.tcbs.com.vn/stock-insight/v1/stock/bars-long-term?ticker=${t}&type=stock&resolution=D&to=${to}&countBack=1`;
-  const px=u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`;
+  const px=u=>'/api/proxy?url='+encodeURIComponent(u);
   const tries=[
     async()=>{const j=await getJSON(vnd);if(j.s==='ok'&&j.c&&j.c.length)return j.c[j.c.length-1];throw 0;},
     async()=>{const j=await getJSON(px(vnd));if(j.s==='ok'&&j.c&&j.c.length)return j.c[j.c.length-1];throw 0;},
@@ -513,9 +513,9 @@ async function loadPriceChart(tk){
   if(typeof LightweightCharts==='undefined'){if(st)st.textContent='⚠ chưa tải thư viện';return;}
   const to=Math.floor(Date.now()/1000),from=to-400*86400;
   const url=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${tk}&from=${from}&to=${to}`;
-  const prox=u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`;
+  const PX=[u=>u,u=>'/api/proxy?url='+encodeURIComponent(u),u=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(u)];
   let j=null;
-  for(const u of [url,prox(url)]){try{const r=await fetch(u,{cache:'no-store'});if(r.ok){const dd=await r.json();if(dd&&dd.s==='ok'&&dd.c&&dd.c.length){j=dd;break;}}}catch(e){}}
+  for(const mk of PX){try{const c=new AbortController(),tm=setTimeout(()=>c.abort(),8000);const r=await fetch(mk(url),{cache:'no-store',signal:c.signal});clearTimeout(tm);if(r.ok){const dd=await r.json();if(dd&&dd.s==='ok'&&dd.c&&dd.c.length){j=dd;break;}}}catch(e){}}
   if(!j){if(st)st.textContent='⚠ không tải được (CORS/mạng)';return;}
   const toV=v=>v<1000?Math.round(v*1000):Math.round(v);
   const seen={},clean=[];

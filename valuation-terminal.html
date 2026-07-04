@@ -453,7 +453,7 @@ document.querySelectorAll('input,select').forEach(el=>el.addEventListener('input
 
 // price fetch (multi-source)
 function normNghin(v){v=Number(v);if(!isFinite(v)||v<=0)return 0;return v>1000?v/1000:v;}
-async function getJSON(u){const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw 0;return r.json();}
+async function getJSON(u){const c=new AbortController(),t=setTimeout(()=>c.abort(),8000);try{const r=await fetch(u,{cache:'no-store',signal:c.signal});if(!r.ok)throw 0;return await r.json();}finally{clearTimeout(t);}}
 async function fetchPrice(silent){
   const t=($('ticker').value||'').trim().toUpperCase();if(!t)return;
   if(!silent)$('pxStatus').textContent='⏳ Đang lấy giá '+t+'…';
@@ -665,10 +665,12 @@ async function loadPriceChart(tk){
   if(typeof LightweightCharts==='undefined'){if(st)st.textContent='⚠ chưa tải được thư viện biểu đồ';return;}
   const to=Math.floor(Date.now()/1000), from=to-400*86400;
   const url=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${tk}&from=${from}&to=${to}`;
-  const prox=u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`;
+  const PX=[u=>u,u=>'/api/proxy?url='+encodeURIComponent(u),u=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(u)];
   let j=null;
-  for(const u of [url, prox(url)]){
-    try{const r=await fetch(u,{cache:'no-store'});if(r.ok){const d=await r.json();if(d&&d.s==='ok'&&d.c&&d.c.length){j=d;break;}}}catch(e){}
+  for(const mk of PX){
+    try{const c=new AbortController(),tm=setTimeout(()=>c.abort(),8000);
+      const r=await fetch(mk(url),{cache:'no-store',signal:c.signal});clearTimeout(tm);
+      if(r.ok){const d=await r.json();if(d&&d.s==='ok'&&d.c&&d.c.length){j=d;break;}}}catch(e){}
   }
   if(!j){if(st)st.textContent='⚠ không tải được biểu đồ (CORS/mạng)';return;}
   const toV=v=>v<1000?Math.round(v*1000):Math.round(v);

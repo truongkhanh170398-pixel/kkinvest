@@ -273,13 +273,13 @@ $('analyzeBtn').addEventListener('click',()=>loadTicker(($('ticker').value||'').
 $('ticker').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();loadTicker(($('ticker').value||'').trim().toUpperCase());}});
 
 // price fetch (just latest, optional)
-async function getJSON(u){const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw 0;return r.json();}
+async function getJSON(u){const c=new AbortController(),t=setTimeout(()=>c.abort(),8000);try{const r=await fetch(u,{cache:'no-store',signal:c.signal});if(!r.ok)throw 0;return await r.json();}finally{clearTimeout(t);}}
 $('fetchPx').onclick=async()=>{
   const t=($('ticker').value||'').trim().toUpperCase();if(!t)return;$('pxStatus').textContent='⏳ lấy giá '+t+'…';
   const to=Math.floor(Date.now()/1000)+86400,from=to-25*86400;
   const vnd=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${t}&from=${from}&to=${to}`;
-  const px=u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`;
-  for(const u of [vnd,px(vnd)]){try{const j=await getJSON(u);if(j.s==='ok'&&j.c&&j.c.length){let n=j.c[j.c.length-1];n=n<1000?n*1000:n;$('price').value=Math.round(n);recalc();$('pxStatus').textContent='● '+t+': '+fmt(n)+'đ';return;}}catch(e){}}
+  const PX=[u=>u,u=>'/api/proxy?url='+encodeURIComponent(u),u=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(u)];
+  for(const mk of PX){try{const j=await getJSON(mk(vnd));if(j.s==='ok'&&j.c&&j.c.length){let n=j.c[j.c.length-1];n=n<1000?n*1000:n;$('price').value=Math.round(n);recalc();$('pxStatus').textContent='● '+t+': '+fmt(n)+'đ';return;}}catch(e){}}
   $('pxStatus').textContent='⚠ Không lấy được giá (CORS/mạng)';
 };
 
@@ -290,8 +290,8 @@ async function loadPriceChart(tk){
   if(typeof LightweightCharts==='undefined'){if(st)st.textContent='⚠ chưa tải thư viện';return;}
   const to=Math.floor(Date.now()/1000),from=to-400*86400;
   const url=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${tk}&from=${from}&to=${to}`;
-  const prox=u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`;
-  let j=null;for(const u of [url,prox(url)]){try{const r=await fetch(u,{cache:'no-store'});if(r.ok){const dd=await r.json();if(dd&&dd.s==='ok'&&dd.c&&dd.c.length){j=dd;break;}}}catch(e){}}
+  const PX=[u=>u,u=>'/api/proxy?url='+encodeURIComponent(u),u=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(u)];
+  let j=null;for(const mk of PX){try{const c=new AbortController(),tm=setTimeout(()=>c.abort(),8000);const r=await fetch(mk(url),{cache:'no-store',signal:c.signal});clearTimeout(tm);if(r.ok){const dd=await r.json();if(dd&&dd.s==='ok'&&dd.c&&dd.c.length){j=dd;break;}}}catch(e){}}
   if(!j){if(st)st.textContent='⚠ không tải được (CORS/mạng)';return;}
   const toV=v=>v<1000?Math.round(v*1000):Math.round(v);
   const seen={},clean=[];
