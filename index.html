@@ -255,16 +255,19 @@ async function dchartLast2(symbol){
 // ===== 24hMoney batch (bảng giá NHANH: toàn bộ mã trong 1 request, CORS trực tiếp ~0.2-0.5s) =====
 async function board24h(list){
   if(!list||!list.length)return null;
-  const url='https://api-finance-t19.24hmoney.vn/v2/web/stock/details?symbols='+list.join(',');
-  const j=await getJSONp(url);              // PROXIES: thử trực tiếp trước (24hMoney cho phép CORS *) → tươi, không cache
-  if(!j||!Array.isArray(j.data)||!j.data.length)return null;
+  const CH=50, chunks=[];                    // chia lô → danh mục bao nhiêu mã cũng chạy (không kẹt 30)
+  for(let i=0;i<list.length;i+=CH)chunks.push(list.slice(i,i+CH));
   const m={};
-  j.data.forEach(r=>{const tk=r.symbol||r.code; if(!tk)return;
-    const close=(r.match_price>0)?r.match_price:(r.price||r.close_price||r.basic_price||0);
-    const ref=(r.basic_price!=null)?r.basic_price:close;
-    const change=(r.change!=null)?r.change:(close-ref);
-    const pct=(r.change_percent!=null)?r.change_percent:(ref?(close-ref)/ref*100:0);
-    if(close>0)m[tk]={close,change,pctChange:pct};
+  const parts=await Promise.all(chunks.map(ch=>   // các lô chạy song song; trực tiếp (24hMoney CORS *) → tươi, không cache
+    getJSONp('https://api-finance-t19.24hmoney.vn/v2/web/stock/details?symbols='+ch.join(',')).catch(()=>null)));
+  parts.forEach(j=>{ if(!j||!Array.isArray(j.data))return;
+    j.data.forEach(r=>{const tk=r.symbol||r.code; if(!tk)return;
+      const close=(r.match_price>0)?r.match_price:(r.price||r.close_price||r.basic_price||0);
+      const ref=(r.basic_price!=null)?r.basic_price:close;
+      const change=(r.change!=null)?r.change:(close-ref);
+      const pct=(r.change_percent!=null)?r.change_percent:(ref?(close-ref)/ref*100:0);
+      if(close>0)m[tk]={close,change,pctChange:pct};
+    });
   });
   return Object.keys(m).length?m:null;
 }
@@ -284,7 +287,7 @@ function renderWL(){
     if(d){cl=pxClass(d.pctChange);px=fpx(d.close);
       ch=(d.change>=0?'+':'')+fpx(d.change);pct=(d.pctChange>=0?'+':'')+d.pctChange.toFixed(2)+'%';}
     const fb=`<div class="logo fb" style="display:none">${tk.slice(0,3)}</div>`;
-    return `<div class="wcard" data-tk="${tk}">
+    return `<div class="wcard" data-tk="${tk}" title="Bấm → phân tích kỹ thuật ${tk}">
       <button class="rm" data-rm="${tk}">✕</button>
       <img class="logo" src="${logoURL(tk)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">${fb}
       <div class="wc-tk">${tk}</div>
@@ -330,7 +333,7 @@ $i('wGrid').addEventListener('click',e=>{
   if(rm){const wl=getWL().filter(x=>x!==rm.dataset.rm);setWL(wl);renderWL();return;}
   if(document.body.classList.contains('edit'))return;
   const card=e.target.closest('.wcard');if(!card)return;
-  const tk=card.dataset.tk;if(VALUED[tk])location.href='phan-tich-co-ban.html#'+tk;
+  const tk=card.dataset.tk;if(tk)location.href='phan-tich-ky-thuat.html#'+tk;   // mã bất kỳ (kể cả mới thêm) → phân tích kỹ thuật
 });
 $i('editBtn').addEventListener('click',()=>document.body.classList.toggle('edit'));
 function addTk(){const v=($i('addInp').value||'').trim().toUpperCase();if(!v)return;
