@@ -252,6 +252,23 @@ async function dchartLast2(symbol){
   return null;
 }
 
+// ===== 24hMoney batch (bảng giá NHANH: toàn bộ mã trong 1 request, CORS trực tiếp ~0.2-0.5s) =====
+async function board24h(list){
+  if(!list||!list.length)return null;
+  const url='https://api-finance-t19.24hmoney.vn/v2/web/stock/details?symbols='+list.join(',');
+  const j=await getJSONp(url);              // PROXIES: thử trực tiếp trước (24hMoney cho phép CORS *) → tươi, không cache
+  if(!j||!Array.isArray(j.data)||!j.data.length)return null;
+  const m={};
+  j.data.forEach(r=>{const tk=r.symbol||r.code; if(!tk)return;
+    const close=(r.match_price>0)?r.match_price:(r.price||r.close_price||r.basic_price||0);
+    const ref=(r.basic_price!=null)?r.basic_price:close;
+    const change=(r.change!=null)?r.change:(close-ref);
+    const pct=(r.change_percent!=null)?r.change_percent:(ref?(close-ref)/ref*100:0);
+    if(close>0)m[tk]={close,change,pctChange:pct};
+  });
+  return Object.keys(m).length?m:null;
+}
+
 // ===== WATCHLIST =====
 const DEFAULT_WL=['VIC','VHM','VCB','BID','CTG','TCB','MBB','ACB','VPB','STB','HPG','HSG','GAS','MSN','MWG','FPT','VNM','SSI','VND','VCI','SHS','KDH','NVL','PDR','DXG','KBC','GEX','BSR','OCB','HAG'];
 function getWL(){try{const a=JSON.parse(localStorage.getItem('bd_watchlist'));if(Array.isArray(a)&&a.length)return a;}catch(e){}return DEFAULT_WL.slice();}
@@ -283,16 +300,24 @@ async function refreshWL(){
   if(window._wlBusy)return;window._wlBusy=true;
   try{
     const wl=getWL();$i('wUpd').textContent='⏳ cập nhật…';
-    const CONC=4;                                   // nhịp nhẹ → tránh VNDirect chặn burst
-    for(let i=0;i<wl.length;i+=CONC){
-      const part=wl.slice(i,i+CONC);
-      const res=await Promise.all(part.map(c=>dchartLast2(c).then(d=>[c,d]).catch(()=>[c,null])));
-      res.forEach(([c,d])=>{if(d){const close=d.close,prev=d.prev;     // chỉ ghi đè khi lấy được → mã lỗi giữ giá cũ
-        wlData[c]={close,change:close-prev,pctChange:prev?(close-prev)/prev*100:0};}});
-      renderWL();
+    let src='24hMoney';
+    // NHANH: 24hMoney batch — toàn bộ WL trong 1 request (~0.3s, tươi mỗi lần)
+    const m=await board24h(wl).catch(()=>null);
+    if(m){wl.forEach(tk=>{if(m[tk])wlData[tk]=m[tk];}); renderWL();}
+    // Bù mã 24hMoney thiếu bằng dchart (per-symbol, nhịp nhẹ)
+    const miss=wl.filter(tk=>!m||!m[tk]);
+    if(miss.length){src=m?'24hMoney + VNDirect':'VNDirect';
+      const CONC=4;
+      for(let i=0;i<miss.length;i+=CONC){
+        const part=miss.slice(i,i+CONC);
+        const res=await Promise.all(part.map(c=>dchartLast2(c).then(d=>[c,d]).catch(()=>[c,null])));
+        res.forEach(([c,d])=>{if(d){const close=d.close,prev=d.prev;
+          wlData[c]={close,change:close-prev,pctChange:prev?(close-prev)/prev*100:0};}});
+        renderWL();
+      }
     }
     const got=getWL().filter(c=>wlData[c]).length, total=getWL().length;
-    $i('wUpd').textContent=got?('● '+new Date().toLocaleTimeString('vi-VN')+(got<total?` (${got}/${total})`:'')):'⚠ chưa lấy được giá (mở qua localhost)';
+    $i('wUpd').textContent=got?('● '+new Date().toLocaleTimeString('vi-VN')+(got<total?` (${got}/${total})`:'')+' · '+src):'⚠ chưa lấy được giá (mở qua localhost)';
   }catch(e){
     $i('wUpd').textContent='⚠ lỗi cập nhật — thử lại…';
   }finally{
@@ -633,7 +658,8 @@ $i('rtDisc').onclick=dnseDisconnect;
 // ===== khởi động =====
 renderWL();renderGM();
 refreshWL();refreshDeriv();refreshIndices();refreshGM();
-setInterval(()=>{refreshWL();refreshDeriv();},8000);   // giá VN ~8s (nhịp an toàn, không bị chặn)
+setInterval(refreshWL,2000);                            // bảng giá 24hMoney (batch, CORS trực tiếp) — tươi ~2s
+setInterval(refreshDeriv,8000);                          // phái sinh giữ nhịp 8s (dchart)
 setInterval(refreshIndices,30000);                      // chỉ số 30s
 setInterval(refreshGM,60000);                            // global 60s
 fetchNews(); setInterval(fetchNews,90000);               // bảng tin RSS 90s
