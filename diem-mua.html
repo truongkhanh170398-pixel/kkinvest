@@ -57,7 +57,7 @@
   <header>
     <span class="tag">Quét CANSLIM · breakout đỉnh 4 phiên</span>
     <h1>Danh mục theo dõi điểm mua — quét toàn bộ VN100</h1>
-    <div class="sub">Tự động quét <b>toàn thị trường</b> (HOSE·HNX·UPCOM, lấy danh sách động từ VNDirect ~1.500 mã), lọc mã đang ở <b>điểm MUA</b> (đóng cửa vượt đỉnh 4 phiên) / <b>điểm BÁN</b> (thủng đáy 8 phiên) theo HungCanslim. Đã lọc ngầm <b>thanh khoản ≥ 100k cp/phiên</b> (bỏ mã thanh khoản kém). Bấm mã → mở chart kỹ thuật. Quét cả thị trường mất ~1–2 phút.</div>
+    <div class="sub">Tự động quét <b>toàn thị trường</b> (HOSE·HNX·UPCOM, lấy danh sách động từ VNDirect ~1.500 mã), lọc mã đang ở <b>điểm MUA</b> (đóng cửa vượt đỉnh 4 phiên) / <b>điểm BÁN</b> (thủng đáy 8 phiên) theo HungCanslim. Đã lọc ngầm <b>thanh khoản TB 6 tháng ≥ 100k cp/phiên VÀ ≥ 1 tỷ đồng/phiên</b> (loại mã thanh khoản kém). Bấm mã → mở chart kỹ thuật. Quét cả thị trường mất ~1–2 phút.</div>
     <div class="ctrl">
       <div class="seg" id="segType"><button class="on" data-t="MUA">🎯 Điểm MUA</button><button data-t="BÁN">🔻 Điểm BÁN</button></div>
       <div class="seg" id="segFresh"><button data-f="3">≤3 phiên</button><button class="on" data-f="5">≤5 phiên</button><button data-f="10">≤10 phiên</button><button data-f="999">Tất cả đang giữ</button></div>
@@ -73,7 +73,7 @@
     <th data-s="sms">SM Ngắn Hạn</th><th data-s="smm">SM Trung Hạn</th>
     <th data-s="ein"><span id="hEin">Giá Vào Top</span></th><th data-s="pxnow">Giá Hiện Tại</th><th data-s="chg"><span id="hChg">Tăng/Giảm</span></th>
   </tr></thead><tbody id="body"></tbody></table></div>
-  <div class="note"><b>Điểm MUA:</b> Ngày/Giá Vào Top = phiên đóng cửa vượt đỉnh 4 phiên (breakout); "Tăng/Giảm" = giá đã chạy bao nhiêu % từ lúc vào top. <b>Điểm BÁN:</b> Ngày/Giá Vào Bán = phiên thủng đáy 8 phiên (tín hiệu bán); "Từ Ngày Bán" = giá đã <b>giảm/tăng</b> bao nhiêu % kể từ ngày bán — để đánh giá khách quan tín hiệu bán đúng/sai. <b>SM Ngắn/Trung Hạn</b> = điểm sức mạnh giá 20 phiên / 60 phiên (0–100, ≥80 rất mạnh). Đã lọc thanh khoản ≥100k cp/phiên. Bấm mã → mở chart kỹ thuật. Giá VNDirect. Tham khảo, không phải khuyến nghị.</div>
+  <div class="note"><b>Điểm MUA:</b> Ngày/Giá Vào Top = phiên đóng cửa vượt đỉnh 4 phiên (breakout); "Tăng/Giảm" = giá đã chạy bao nhiêu % từ lúc vào top. <b>Điểm BÁN:</b> Ngày/Giá Vào Bán = phiên thủng đáy 8 phiên (tín hiệu bán); "Từ Ngày Bán" = giá đã <b>giảm/tăng</b> bao nhiêu % kể từ ngày bán — để đánh giá khách quan tín hiệu bán đúng/sai. <b>SM Ngắn/Trung Hạn</b> = điểm sức mạnh giá 20 phiên / 60 phiên (0–100, ≥80 rất mạnh). Đã lọc thanh khoản TB 6 tháng (≥100k cp/phiên <b>và</b> ≥1 tỷ đồng/phiên). Bấm mã → mở chart kỹ thuật. Giá VNDirect. Tham khảo, không phải khuyến nghị.</div>
 </div>
 
 <script>
@@ -113,13 +113,14 @@ EXTRA.forEach(r=>{if(!SECMAP[r[0]])SECMAP[r[0]]=r[1];});
 (function(){const secs=[...new Set([...Object.values(SECMAP),'HOSE','HNX','UPCOM'])].sort();$('secSel').innerHTML='<option value="">Tất cả ngành / sàn</option>'+secs.map(s=>`<option>${s}</option>`).join('');})();
 
 let sigType='MUA', fresh=5, results=[], sortKey='date', sortDir=-1, minVol=true;
-const MINVOL=100000;   // lọc ẩn: chỉ giữ mã thanh khoản ≥ 100k cp/phiên
+const MINVOL=100000;   // KL trung bình 6 tháng tối thiểu (cp/phiên)
+const MINVAL=1e9;      // giá trị giao dịch trung bình 6 tháng tối thiểu = 1 tỷ đồng/phiên
 
 async function tryFetch(u,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);
   try{const r=await fetch(u,{cache:'no-store',signal:c.signal});if(!r.ok)throw 0;return await r.json();}finally{clearTimeout(t);}}
 const PROX=[x=>x,x=>'/api/proxy?url='+encodeURIComponent(x),x=>'https://corsproxy.io/?url='+encodeURIComponent(x),x=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(x),x=>'https://api.allorigins.win/raw?url='+encodeURIComponent(x)];
 async function dchart(sym){
-  const to=Math.floor(Date.now()/1000),from=to-180*86400;
+  const to=Math.floor(Date.now()/1000),from=to-220*86400;   // ~7 tháng dương lịch để đủ 126 phiên (6 tháng) tính thanh khoản
   const u=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${sym}&from=${from}&to=${to}`;
   for(const p of PROX){try{const j=await tryFetch(p(u),9000);if(j&&j.s==='ok'&&j.c&&j.c.length>20)return j;}catch(e){}}
   return null;
@@ -147,12 +148,15 @@ function scan(j){
   if(!last)return null;
   const px=C[n-1], prev=C[n-2]||px, pct=prev?(px-prev)/prev*100:0;
   const vma=sma(V,50)[last.i], vsp=(vma&&V[last.i])?Math.round((V[last.i]-vma)/vma*100):0;
-  const vol20=sma(V,20)[n-1]||0;   // KL TB 20 phiên (cp/ngày) — lọc thanh khoản
+  // Thanh khoản TB ~6 tháng (126 phiên): KL bình quân & giá trị giao dịch bình quân (VND/phiên)
+  const W6=Math.min(126,n); let sV=0,sVal=0;
+  for(let i=n-W6;i<n;i++){const v=V[i]||0;sV+=v;sVal+=v*(C[i]||0)*1000;}   // C tính bằng nghìn đồng → ×1000 ra VND
+  const vol6m=W6?sV/W6:0, val6m=W6?sVal/W6:0;
   const entryPx=C[last.i], entryTs=T[last.i]||null;
   const chg=entryPx?(px-entryPx)/entryPx*100:0;
   const daysTop=entryTs?Math.max(0,Math.round((Date.now()/1000-entryTs)/86400)):null;
   const sms=stren(C,n,20,12), smm=stren(C,n,60,6);   // sức mạnh ngắn / trung hạn
-  return {sig:last.t, ago:n-1-last.i, px, pct, vsp, vol20, entryPx, entryTs, chg, daysTop, sms, smm};
+  return {sig:last.t, ago:n-1-last.i, px, pct, vsp, vol6m, val6m, entryPx, entryTs, chg, daysTop, sms, smm};
 }
 function classCl(v){return v>0?'up':(v<0?'dn':'muted');}
 function render(){
@@ -163,7 +167,7 @@ function render(){
   $('hDays').textContent=isSell?'Số Ngày Từ Bán':'Số Ngày Top';
   $('hEin').textContent=isSell?'Giá Vào Bán':'Giá Vào Top';
   $('hChg').textContent=isSell?'Từ Ngày Bán':'Tăng/Giảm';
-  let rows=results.filter(r=>r.d && r.d.sig===sigType && r.d.ago<=fresh && (!sec||r.sec===sec) && (!minVol||r.d.vol20>=MINVOL));
+  let rows=results.filter(r=>r.d && r.d.sig===sigType && r.d.ago<=fresh && (!sec||r.sec===sec) && (!minVol||(r.d.vol6m>=MINVOL && r.d.val6m>=MINVAL)));
   rows.sort((a,b)=>{const k=sortKey; let va,vb;
     if(k==='t')return sortDir*((a.tk<b.tk)?-1:(a.tk>b.tk?1:0));
     if(k==='sec')return sortDir*((a.sec<b.sec)?-1:(a.sec>b.sec?1:0));
