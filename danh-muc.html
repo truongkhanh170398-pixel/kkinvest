@@ -57,7 +57,13 @@
   tbody tr:hover{background:#161f37}
   .sb{font-weight:800;padding:1px 8px;border-radius:5px;font-size:11px}.b-mua{background:rgba(34,197,94,.18);color:#7fe3a5}.b-ban{background:rgba(239,71,87,.18);color:#f5a3ac}
   .rs{font-size:11px;padding:1px 7px;border-radius:5px;background:var(--card2);color:var(--muted)}
-  .rs.chot{background:rgba(226,179,59,.16);color:#f0c26b}.rs.lo{background:rgba(239,71,87,.16);color:#f5a3ac}.rs.sig{background:rgba(79,140,255,.16);color:#9cc0ff}
+  .rs.chot{background:rgba(226,179,59,.16);color:#f0c26b}.rs.lo{background:rgba(239,71,87,.16);color:#f5a3ac}.rs.sig{background:rgba(79,140,255,.16);color:#9cc0ff}.rs.man{background:rgba(162,132,255,.18);color:#c9b8ff}
+  .rec{font-weight:800;padding:2px 8px;border-radius:6px;font-size:11px;white-space:nowrap;cursor:help}
+  .rec.sell{background:rgba(239,71,87,.20);color:#f5a3ac}.rec.take{background:rgba(34,197,94,.20);color:#7fe3a5}
+  .rec.warn{background:rgba(226,179,59,.18);color:#f0c26b}.rec.watch{background:rgba(79,140,255,.16);color:#9cc0ff}.rec.hold{background:var(--card2);color:var(--muted)}
+  .sellbtn{background:rgba(239,71,87,.14);color:#f5a3ac;border:1px solid rgba(239,71,87,.4);font-size:11px;font-weight:800;padding:3px 11px;border-radius:7px;cursor:pointer}
+  .sellbtn:hover{background:var(--dn);color:#fff}
+  .undobtn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0 2px}.undobtn:hover{color:var(--accent2)}
   .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:1000px){.two{grid-template-columns:1fr}}
   .note{color:var(--muted);font-size:11.5px;margin-top:10px;line-height:1.6}
   .bar{height:5px;background:var(--card2);border-radius:3px;margin-top:10px;overflow:hidden}.bar>div{height:5px;background:var(--accent);width:0;transition:width .2s}
@@ -109,7 +115,8 @@
       <div class="legend" id="allocLegend"></div>
     </div>
     <div class="panel"><h3>Đang nắm giữ (mở) <span class="c" id="openSum"></span></h3>
-      <div class="tablebox"><table><thead><tr><th>Mã</th><th>Ngày mua</th><th>Giá mua</th><th>Giá HT</th><th>SL</th><th>Giá trị (tr)</th><th>Tỷ trọng</th><th>P/L %</th><th>Số ngày</th></tr></thead><tbody id="openBody"></tbody></table></div>
+      <div class="tablebox"><table><thead><tr><th>Mã</th><th>Ngày mua</th><th>Giá mua</th><th>Giá HT</th><th>SL</th><th>Giá trị (tr)</th><th>Tỷ trọng</th><th>P/L %</th><th>Số ngày</th><th>Khuyến nghị (AI)</th><th>Bán</th></tr></thead><tbody id="openBody"></tbody></table></div>
+      <div class="mini" style="margin-top:6px">🤖 <b>AI cảnh báo bán</b> theo skill (cắt lỗ · chốt lời · thủng đáy 8 phiên · dưới MA20) — rê chuột xem lý do. Bấm <b style="color:#f5a3ac">Bán</b> để chốt tay tại giá hiện tại (ghi vào lịch sử, có thể hoàn tác). Đường NAV mô phỏng vẫn theo chiến lược tín hiệu thuần.</div>
     </div>
   </div>
 
@@ -208,7 +215,37 @@ function backtest(){
   }
   return {cash,pos,trades,closed,equity};
 }
+// ===== Bán tay + AI khuyến nghị bán (lưu localStorage, overlay lên danh mục mô phỏng) =====
+const SOLD_KEY='dm_manual_sold_v1';
+function getSold(){try{return JSON.parse(localStorage.getItem(SOLD_KEY))||{};}catch(e){return{};}}
+function setSold(o){try{localStorage.setItem(SOLD_KEY,JSON.stringify(o));}catch(e){}}
+function ma20At(tk){const px=SYM[tk]&&SYM[tk].pxAxis;if(!px||px.length<20)return null;let s=0;for(let i=px.length-20;i<px.length;i++)s+=px[i];return s/20;}
+// AI khuyến nghị theo skill (HungCanslim) — chỉ CẢNH BÁO, người dùng bấm Bán để xác nhận
+function recFor(o){
+  const stop=+$('pStop').value||8, tgt=+$('pTgt').value||25, pnl=o.pct;
+  const ma20=ma20At(o.tk), below=ma20!=null&&o.px<ma20;
+  const bar=SYM[o.tk]&&SYM[o.tk].bd[AXIS[AXIS.length-1]], sig=bar&&bar.sell;
+  if(pnl<=-stop)  return {t:'🔴 BÁN',r:'Chạm cắt lỗ −'+stop+'%',c:'sell'};
+  if(pnl>=tgt)    return {t:'🟢 BÁN',r:'Đạt chốt lời +'+tgt+'%',c:'take'};
+  if(sig)         return {t:'🔴 BÁN',r:'Tín hiệu bán — thủng đáy 8 phiên',c:'sell'};
+  if(below)       return {t:'🟠 CÂN NHẮC',r:'Giá dưới MA20 — xu hướng yếu đi',c:'warn'};
+  if(pnl+stop<=2) return {t:'🟠 CÂN NHẮC',r:'Sát cắt lỗ (còn '+(pnl+stop).toFixed(1)+'% là cắt)',c:'warn'};
+  if(tgt-pnl<=3)  return {t:'🔵 THEO DÕI',r:'Sắp chốt lời (còn '+(tgt-pnl).toFixed(1)+'%)',c:'watch'};
+  return {t:'✅ GIỮ',r:'Xu hướng ổn, chưa chạm quy tắc bán',c:'hold'};
+}
+function sellManual(tk,entryD){
+  const R=window.LASTR; if(!R||!R.pos[tk])return;
+  const p=R.pos[tk], px=SYM[tk]?SYM[tk].lastClose:p.entry;
+  const pnl=(px-p.entry)*p.qty, pct=(px/p.entry-1)*100, sellD=AXIS[AXIS.length-1];
+  if(!confirm('Bán '+tk+' tại '+fmt(px)+'đ — P/L '+(pct>=0?'+':'')+pct.toFixed(1)+'%?'))return;
+  const s=getSold(); s[tk+'|'+entryD]={tk,buyD:p.entryD,sellD,buyPx:p.entry,sellPx:px,qty:p.qty,pnl,pct,reason:'Bán tay'}; setSold(s);
+  render(R);
+}
+function undoManual(key){const s=getSold();delete s[key];setSold(s);if(window.LASTR)render(window.LASTR);}
+window.sellManual=sellManual; window.undoManual=undoManual;
+
 function render(R){
+  window.LASTR=R;
   const eq=R.equity, navEnd=eq.length?eq[eq.length-1].nav:NAV0;
   const ret=(navEnd-NAV0)/NAV0*100;
   // cash now
@@ -237,15 +274,20 @@ function render(R){
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
       tooltip:{callbacks:{label:c=>c.datasetIndex===1?(mInfo[c.dataIndex]||''):('NAV '+c.parsed.y.toLocaleString('vi-VN',{maximumFractionDigits:0})+' tr')}}},
       scales:{x:{ticks:{color:'#8595b5',maxTicksLimit:8},grid:{color:'#172238'}},y:{ticks:{color:'#8595b5',callback:v=>v.toLocaleString('vi-VN')+'tr'},grid:{color:'#172238'}}}}});
-  // open positions
-  const ob=$('openBody'); const opens=Object.keys(R.pos).map(tk=>{const p=R.pos[tk],px=SYM[tk]?SYM[tk].lastClose:p.entry;return {tk,p,px,val:p.qty*px,pct:(px/p.entry-1)*100};});
+  // open positions (loại mã đã BÁN TAY)
+  const sold=getSold();
+  const isSold=tk=>R.pos[tk]&&sold[tk+'|'+R.pos[tk].entryD];
+  const ob=$('openBody'); const opens=Object.keys(R.pos).filter(tk=>!isSold(tk)).map(tk=>{const p=R.pos[tk],px=SYM[tk]?SYM[tk].lastClose:p.entry;return {tk,p,px,val:p.qty*px,pct:(px/p.entry-1)*100};});
   opens.sort((a,b)=>b.val-a.val);
-  ob.innerHTML=opens.map(o=>{const days=Math.round((Date.parse(eq[eq.length-1].d)-Date.parse(o.p.entryD))/864e5);
-    return `<tr><td style="font-weight:800">${o.tk}</td><td class="mini">${o.p.entryD}</td><td>${fmt(o.p.entry)}</td><td>${fmt(o.px)}</td><td>${fmt(o.p.qty)}</td><td>${trM(o.val)}</td><td>${(o.val/navEnd*100).toFixed(1)}%</td><td class="${o.pct>=0?'up':'dn'}">${(o.pct>=0?'+':'')+o.pct.toFixed(1)}%</td><td class="mini">${days}</td></tr>`;}).join('')||'<tr><td colspan="9" class="mini" style="padding:14px;text-align:center">Hiện không nắm mã nào (đang giữ tiền mặt).</td></tr>';
-  $('openSum').textContent=opens.length+' mã · '+trM(mv)+' tr ('+(navEnd?mv/navEnd*100:0).toFixed(0)+'% NAV)';
+  const mvOpen=opens.reduce((s,o)=>s+o.val,0);
+  ob.innerHTML=opens.map(o=>{const days=Math.round((Date.parse(eq[eq.length-1].d)-Date.parse(o.p.entryD))/864e5);const rec=recFor(o);
+    return `<tr><td style="font-weight:800">${o.tk}</td><td class="mini">${o.p.entryD}</td><td>${fmt(o.p.entry)}</td><td>${fmt(o.px)}</td><td>${fmt(o.p.qty)}</td><td>${trM(o.val)}</td><td>${(o.val/navEnd*100).toFixed(1)}%</td><td class="${o.pct>=0?'up':'dn'}">${(o.pct>=0?'+':'')+o.pct.toFixed(1)}%</td><td class="mini">${days}</td><td><span class="rec ${rec.c}" title="${rec.r}">${rec.t}</span></td><td><button class="sellbtn" onclick="sellManual('${o.tk}','${o.p.entryD}')">Bán</button></td></tr>`;}).join('')||'<tr><td colspan="11" class="mini" style="padding:14px;text-align:center">Hiện không nắm mã nào (đang giữ tiền mặt).</td></tr>';
+  $('openSum').textContent=opens.length+' mã · '+trM(mvOpen)+' tr ('+(navEnd?mvOpen/navEnd*100:0).toFixed(0)+'% NAV)';
   // ── Tỷ trọng danh mục (donut) — theo giá trị hiện tại, gồm cả tiền mặt ──
+  const soldProceeds=Object.keys(R.pos).filter(isSold).reduce((s,tk)=>{const e=sold[tk+'|'+R.pos[tk].entryD];return s+e.sellPx*e.qty;},0);
+  const cashNow=R.cash+soldProceeds;
   const slices=opens.map((o,i)=>({name:o.tk,val:o.val,col:PAL[i%PAL.length]}));
-  if(R.cash>0)slices.push({name:'Tiền mặt',val:R.cash,col:CASH_COL});
+  if(cashNow>0)slices.push({name:'Tiền mặt',val:cashNow,col:CASH_COL});
   const totAll=slices.reduce((s,x)=>s+x.val,0)||1;
   if(allocChart)allocChart.destroy();
   allocChart=new Chart($('alloc'),{type:'doughnut',data:{labels:slices.map(s=>s.name),
@@ -254,12 +296,15 @@ function render(R){
       tooltip:{callbacks:{label:c=>c.label+': '+trM(c.parsed)+' tr ('+pct2(c.parsed/totAll*100)+')'}}}}});
   $('allocLegend').innerHTML=slices.map(s=>`<div class="lg-item"><span class="lg-dot" style="background:${s.col}"></span><span class="lg-name" style="color:${s.col}">${s.name}</span><span class="lg-pct">${pct2(s.val/totAll*100)}</span></div>`).join('');
   $('allocSum').textContent=opens.length+' mã'+(R.cash>0?' + tiền mặt':'');
-  // closed trades
-  const cl=R.closed.slice().reverse();
-  $('closedBody').innerHTML=cl.map(c=>{const rc=c.reason==='Chốt lời'?'chot':(c.reason==='Cắt lỗ'?'lo':'sig');
-    return `<tr><td style="font-weight:800">${c.tk}</td><td class="mini">${c.buyD} → ${c.sellD}</td><td>${fmt(c.buyPx)}</td><td>${fmt(c.sellPx)}</td><td class="${c.pct>=0?'up':'dn'}">${(c.pct>=0?'+':'')+c.pct.toFixed(1)}%</td><td class="${c.pnl>=0?'up':'dn'}">${(c.pnl>=0?'+':'')+trM(c.pnl)}</td><td><span class="rs ${rc}">${c.reason}</span></td></tr>`;}).join('')||'<tr><td colspan="7" class="mini" style="padding:14px;text-align:center">Chưa có lệnh chốt.</td></tr>';
-  const sumPnl=R.closed.reduce((s,c)=>s+c.pnl,0);
-  $('closedSum').textContent=nc+' lệnh · LN thực hiện '+(sumPnl>=0?'+':'')+trM(sumPnl)+' tr';
+  // closed trades (gồm lệnh BÁN TAY của các vị thế đang có)
+  const manual=Object.keys(R.pos).filter(isSold).map(tk=>({...sold[tk+'|'+R.pos[tk].entryD],_key:tk+'|'+R.pos[tk].entryD}));
+  const cl=R.closed.concat(manual).sort((a,b)=>a.sellD<b.sellD?1:-1);
+  $('closedBody').innerHTML=cl.map(c=>{const rc=c.reason==='Chốt lời'?'chot':(c.reason==='Cắt lỗ'?'lo':(c.reason==='Bán tay'?'man':'sig'));
+    const undo=c._key?` <button class="undobtn" title="Hoàn tác bán tay" onclick="undoManual('${c._key}')">↩</button>`:'';
+    return `<tr><td style="font-weight:800">${c.tk}</td><td class="mini">${c.buyD} → ${c.sellD}</td><td>${fmt(c.buyPx)}</td><td>${fmt(c.sellPx)}</td><td class="${c.pct>=0?'up':'dn'}">${(c.pct>=0?'+':'')+c.pct.toFixed(1)}%</td><td class="${c.pnl>=0?'up':'dn'}">${(c.pnl>=0?'+':'')+trM(c.pnl)}</td><td><span class="rs ${rc}">${c.reason}</span>${undo}</td></tr>`;}).join('')||'<tr><td colspan="7" class="mini" style="padding:14px;text-align:center">Chưa có lệnh chốt.</td></tr>';
+  const allClosed=R.closed.concat(manual);
+  const sumPnl=allClosed.reduce((s,c)=>s+c.pnl,0);
+  $('closedSum').textContent=allClosed.length+' lệnh · LN thực hiện '+(sumPnl>=0?'+':'')+trM(sumPnl)+' tr';
   // log
   const lg=R.trades.slice().reverse().slice(0,60);
   $('logBody').innerHTML=lg.map(t=>`<tr><td class="mini">${t.d}</td><td style="font-weight:800">${t.tk}</td><td><span class="sb ${t.side==='MUA'?'b-mua':'b-ban'}">${t.side}</span></td><td>${fmt(t.px)}</td><td>${fmt(t.qty)}</td><td>${trM(t.qty*t.px)}</td><td class="mini">${t.note}</td></tr>`).join('');
