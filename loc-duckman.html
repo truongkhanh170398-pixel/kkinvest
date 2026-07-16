@@ -53,7 +53,7 @@
   <header>
     <span class="tag">Duckman RS · sức mạnh tương đối đa khung</span>
     <h1>Lọc DuckMan RS — quét cổ phiếu mạnh hơn thị trường</h1>
-    <div class="sub">Chuyển từ AFL "Duckman's Relative Strength". Quét <b>toàn thị trường</b>, chấm điểm <b>0–10</b> theo 10 tiêu chí RS (ngày · tuần · tháng) so với <b>VNINDEX</b>: RS line đỉnh 52 tuần, đỉnh lịch sử, MA 5&gt;8&gt;10&gt;21, giảm ít hơn thị trường, ≥5 tuần xanh, 4 tuần chặt, phân kỳ RS, xanh khi thị trường đỏ, tăng &gt;50% theo tháng, MA tháng ngắn&gt;dài. Đã lọc <b>GT giao dịch TB 20 phiên ≥ 2 tỷ/phiên</b>. Bấm mã → chart kỹ thuật. Quét mất ~2–4 phút.</div>
+    <div class="sub">Chuyển từ AFL "Duckman's Relative Strength". Quét <b>toàn thị trường</b>, chấm điểm <b>0–10</b> theo 10 tiêu chí RS (ngày · tuần · tháng) so với <b>VNINDEX</b>: RS line đỉnh 52 tuần, đỉnh lịch sử, MA 5&gt;8&gt;10&gt;21, giảm ít hơn thị trường, ≥5 tuần xanh, 4 tuần chặt, phân kỳ RS, xanh khi thị trường đỏ, tăng &gt;50% theo tháng, MA tháng ngắn&gt;dài. Đã lọc <b>GT giao dịch TB 20 phiên ≥ 1 tỷ/phiên</b>. Bấm mã → chart kỹ thuật. Quét mất ~2–4 phút.</div>
     <div class="ctrl">
       <div class="seg" id="segScore"><button class="on" data-s="0">Tất cả đạt lọc</button><button data-s="3">≥ 3 điểm</button><button data-s="5">≥ 5 điểm</button><button data-s="7">≥ 7 điểm</button></div>
       <select id="floorSel"><option value="">Tất cả sàn</option><option>HOSE</option><option>HNX</option><option>UPCOM</option></select>
@@ -68,13 +68,13 @@
     <th data-k="wOutperform">T:Giảm&lt;TT</th><th data-k="wdiverg">T:Phân kỳ</th><th data-k="w5green">T:5 xanh</th><th data-k="wtight">T:4t chặt</th>
     <th data-k="bigMove">Th:&gt;50%</th><th data-k="mmaorder">Th:MA↑</th>
   </tr></thead><tbody id="body"></tbody></table></div>
-  <div class="note"><b>Điểm DuckMan</b> = tổng 10 tiêu chí RS (mỗi tiêu chí đạt +1). <b>ATH</b>=đỉnh cao nhất trong dữ liệu (~2 năm). <b>RS↑52T</b>=đường sức mạnh tương đối (Giá/VNINDEX) lập đỉnh 52 tuần. <b>T:</b>=khung tuần, <b>Th:</b>=khung tháng. <b>Giảm&lt;TT</b>=% giảm từ đỉnh 52 tuần ít hơn VNINDEX (mạnh hơn thị trường). <b>Phân kỳ</b>=đỉnh tuần cao hơn trong khi VNINDEX thủng đáy. Đã lọc thanh khoản GT giao dịch TB 20 phiên ≥ 2 tỷ đồng. Dữ liệu VNDirect. Tham khảo, không phải khuyến nghị.</div>
+  <div class="note"><b>Điểm DuckMan</b> = tổng 10 tiêu chí RS (mỗi tiêu chí đạt +1). <b>ATH</b>=đỉnh cao nhất trong dữ liệu (~2 năm). <b>RS↑52T</b>=đường sức mạnh tương đối (Giá/VNINDEX) lập đỉnh 52 tuần. <b>T:</b>=khung tuần, <b>Th:</b>=khung tháng. <b>Giảm&lt;TT</b>=% giảm từ đỉnh 52 tuần ít hơn VNINDEX (mạnh hơn thị trường). <b>Phân kỳ</b>=đỉnh tuần cao hơn trong khi VNINDEX thủng đáy. Đã lọc thanh khoản GT giao dịch TB 20 phiên ≥ 1 tỷ đồng. Dữ liệu VNDirect. Tham khảo, không phải khuyến nghị.</div>
 </div>
 
 <script>
 const $=id=>document.getElementById(id);
 const fpx=n=>isFinite(n)?(+n).toLocaleString('en-US',{maximumFractionDigits:2}):'—';
-const MINVAL=2e9;   // GT giao dịch TB 20 phiên tối thiểu = 2 tỷ đồng/phiên
+const MINVAL=1e9;   // GT giao dịch TB 20 phiên tối thiểu = 1 tỷ đồng/phiên
 const FALLBACK=[['HPG','HOSE'],['SSI','HOSE'],['MWG','HOSE'],['FPT','HOSE'],['VND','HOSE'],['VIX','HOSE'],['SHB','HOSE'],['STB','HOSE'],['MBB','HOSE'],['VPB','HOSE'],['TCB','HOSE'],['ACB','HOSE'],['CTG','HOSE'],['VCB','HOSE'],['HDB','HOSE'],['DIG','HOSE'],['DXG','HOSE'],['KDH','HOSE'],['NLG','HOSE'],['PDR','HOSE'],['GEX','HOSE'],['DGC','HOSE'],['HSG','HOSE'],['NKG','HOSE'],['GVR','HOSE'],['POW','HOSE'],['VRE','HOSE'],['KBC','HOSE'],['VHM','HOSE'],['HAG','HOSE'],['DBC','HOSE'],['PVD','HOSE'],['PVS','HNX'],['GMD','HOSE'],['VCI','HOSE'],['HCM','HOSE'],['BSR','HOSE'],['DCM','HOSE'],['FRT','HOSE'],['PNJ','HOSE'],['SHS','HNX'],['MBS','HNX'],['CEO','HNX'],['IDC','HNX']];
 
 async function tryFetch(u,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);
