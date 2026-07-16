@@ -83,14 +83,15 @@
     <a class="ns active" href="danh-muc.html">💼 Danh mục KH</a>
   </div>
   <header>
-    <span class="tag">Danh mục tín hiệu · tự động</span>
-    <h1>Danh mục mẫu — NAV 1 tỷ, tự giải ngân theo tín hiệu kỹ thuật</h1>
-    <div class="sub"><b>Bắt đầu 22/06/2026</b> với NAV 1 tỷ tiền mặt — hệ thống tự MUA khi có tín hiệu breakout, tự BÁN khi cắt lỗ / chốt lời / tín hiệu bán. Lịch sử mua-bán & đường NAV tích lũy dần từ mốc này trở đi (mỗi phiên mới cập nhật thêm).</div>
+    <span class="tag">Lọc sức mạnh RS → điểm mua · chuyên nghiệp</span>
+    <h1>Danh mục mẫu — NAV 1 tỷ, giải ngân "cổ phiếu mạnh + điểm mua"</h1>
+    <div class="sub"><b>Bắt đầu 22/06/2026</b> với NAV 1 tỷ tiền mặt. Quy trình 2 lớp: <b>① Lọc cổ phiếu mạnh</b> (RS/DuckMan: giá vượt trội VNINDEX, uptrend MA20&gt;MA50, thanh khoản ≥2 tỷ/phiên) → <b>② chỉ MUA khi có điểm mua breakout</b> (vượt đỉnh 4 phiên, trên MA20), ưu tiên mã RS mạnh nhất. Tự <b>BÁN</b> khi cắt lỗ / chốt lời / tín hiệu bán. Bỏ tick "Chỉ mua CP mạnh" để so sánh với chiến lược breakout thuần.</div>
     <div class="ctrl">
       <div class="seg" id="segMode"><button class="on" data-m="today">Thật · từ 22/6</button><button data-m="3m">MP 3 tháng</button><button data-m="6m">MP 6 tháng</button><button data-m="1y">MP 1 năm</button></div>
       <label>Số mã tối đa <input type="number" id="pMax" value="5" min="3" max="5"></label>
       <label>Cắt lỗ % <input type="number" id="pStop" value="8" min="3" max="20"></label>
       <label>Chốt lời % <input type="number" id="pTgt" value="25" min="10" max="60"></label>
+      <label style="gap:6px"><input type="checkbox" id="fStrength" checked style="width:auto;accent-color:var(--accent2)"> 🦆 Chỉ mua CP mạnh (RS/DuckMan)</label>
       <button class="btn" id="runBtn">▶ Chạy lại</button>
       <span class="stat" id="status"></span>
     </div>
@@ -129,7 +130,7 @@
       <div class="tablebox"><table><thead><tr><th>Ngày</th><th>Mã</th><th>Lệnh</th><th>Giá</th><th>SL</th><th>Giá trị (tr)</th><th>Ghi chú</th></tr></thead><tbody id="logBody"></tbody></table></div>
     </div>
   </div>
-  <div class="note">Quy tắc: <b>MUA</b> khi đóng cửa vượt đỉnh 4 phiên (breakout) + trên MA20, gói gọn <b>tối đa 5 mã</b> cùng lúc, mỗi vị thế ~ NAV/5 ≈ 20% (lô 100). <b>BÁN</b> khi: chạm cắt lỗ, đạt chốt lời, hoặc thủng đáy 8 phiên (tín hiệu bán) — ưu tiên điều kiện đến trước. Rổ: ~36 mã thanh khoản cao. Danh mục bắt đầu <b>22/06/2026</b> (toàn tiền mặt), giải ngân dần khi xuất hiện tín hiệu — những ngày đầu có thể chưa/ít vị thế là bình thường. Dữ liệu giá VNDirect. Đây là MÔ PHỎNG theo tín hiệu để tham khảo hiệu suất, không phải khuyến nghị/đảm bảo lợi nhuận.</div>
+  <div class="note">Quy tắc (chuyên nghiệp, 2 lớp): <b>① LỌC sức mạnh</b> — chỉ xét mã <b>giá/VNINDEX (RS line) đang ở đỉnh 60 phiên hoặc đi lên</b> (mạnh hơn thị trường), <b>uptrend</b> (giá &gt; MA20 &gt; MA50) và <b>GT giao dịch TB20 ≥ 2 tỷ/phiên</b>. <b>② ĐIỂM MUA</b> — trong nhóm mạnh đó, MUA khi đóng cửa vượt đỉnh 4 phiên (breakout) + trên MA20; nhiều tín hiệu cùng lúc thì <b>ưu tiên mã RS mạnh nhất</b>. Gói <b>tối đa 5 mã</b>, mỗi vị thế ~NAV/5 (lô 100). <b>BÁN</b> khi chạm cắt lỗ / chốt lời / thủng đáy 8 phiên (ưu tiên điều kiện đến trước) — hoặc bấm <b>Bán tay</b>. Rổ ~82 mã thanh khoản cao, chuẩn RS = VNINDEX. Bỏ tick lọc để về breakout thuần. Dữ liệu VNDirect. MÔ PHỎNG tham khảo, không phải khuyến nghị.</div>
 </div>
 
 <script>
@@ -138,37 +139,58 @@ const NAV0=1e9;
 const START_DATE='2026-06-22';   // danh mục bắt đầu từ hôm nay, không tính lịch sử trước đó
 const fmt=n=>isFinite(n)?Math.round(n).toLocaleString('vi-VN'):'—';
 const trM=n=>isFinite(n)?(n/1e6).toLocaleString('vi-VN',{maximumFractionDigits:1}):'—';
-const UNIV=['HPG','SSI','MWG','FPT','VND','VIX','SHB','STB','MBB','VPB','TCB','ACB','CTG','VCB','HDB','DIG','DXG','KDH','NLG','PDR','GEX','DGC','HSG','NKG','GVR','POW','VRE','KBC','VHM','HAG','DBC','PVD','PVS','GMD','VCI','HCM','BSR','DCM','FRT','PNJ'];
+const UNIV=['HPG','SSI','MWG','FPT','VND','VIX','SHB','STB','MBB','VPB','TCB','ACB','CTG','VCB','HDB','DIG','DXG','KDH','NLG','PDR','GEX','DGC','HSG','NKG','GVR','POW','VRE','KBC','VHM','HAG','DBC','PVD','PVS','GMD','VCI','HCM','BSR','DCM','FRT','PNJ',
+  'LPB','TPB','SSB','OCB','BID','SHS','MBS','FTS','BSI','CTS','CEO','CII','VCG','HHV','CTD','DPM','BMP','DRC','PHR','SIP','SZC','IDC','NT2','PC1','REE','SBT','ANV','VHC','DGW','CTR','CMG','MSN','VNM','SAB','VJC','HVN','ACV','GAS','PLX','DHC','BAF','TCH','VPI'];
 const PROX=[x=>x,x=>'/api/proxy?url='+encodeURIComponent(x),x=>'https://corsproxy.io/?url='+encodeURIComponent(x),x=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(x),x=>'https://api.allorigins.win/raw?url='+encodeURIComponent(x)];
 async function tf(u,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(u,{cache:'no-store',signal:c.signal});if(!r.ok)throw 0;return await r.json();}finally{clearTimeout(t);}}
 async function dchart(sym){const to=Math.floor(Date.now()/1000),from=to-380*86400;const u=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${sym}&from=${from}&to=${to}`;for(const p of PROX){try{const j=await tf(p(u),9000);if(j&&j.s==='ok'&&j.c&&j.c.length>60)return j;}catch(e){}}return null;}
 const toV=v=>v<1000?v*1000:v;
 function sma(a,n){const o=Array(a.length).fill(null);let s=0;for(let i=0;i<a.length;i++){s+=a[i];if(i>=n)s-=a[i-n];if(i>=n-1)o[i]=s/n;}return o;}
+// VNINDEX làm chuẩn RS (relative strength) — giá đóng cửa theo ngày, forward-fill
+async function loadIdx(){
+  const j=await dchart('VNINDEX'); if(!j)return null;
+  const seen={},dates=[],cm={};
+  j.t.map((t,k)=>({d:new Date(t*1000).toISOString().slice(0,10),c:j.c[k]})).filter(r=>r.c>0).sort((a,b)=>a.d<b.d?-1:1)
+    .forEach(r=>{if(!seen[r.d]){seen[r.d]=1;dates.push(r.d);cm[r.d]=r.c;}});
+  return {closeAt(d){if(cm[d]!=null)return cm[d];let lo=0,hi=dates.length-1,res=null;while(lo<=hi){const m=(lo+hi)>>1;if(dates[m]<=d){res=cm[dates[m]];lo=m+1;}else hi=m-1;}return res;}};
+}
 
-let SYM={}; let AXIS=[]; let equityChart=null; let allocChart=null; let startMode='today';
+let SYM={}; let AXIS=[]; let IDX=null; let equityChart=null; let allocChart=null; let startMode='today';
 const PAL=['#4f8cff','#26c281','#e2b33b','#ef4757','#a78bfa','#ec6a9c','#34d399','#f5b301','#fb7185','#22c55e','#38bdf8','#f97316','#c084fc','#2dd4bf'];
 const CASH_COL='#5a6b8c';
 const pct2=n=>n.toLocaleString('vi-VN',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
 async function fetchAll(){
   SYM={}; const dateset={};
-  const CONC=6; let done=0;
+  $('status').textContent='⏳ tải VNINDEX (chuẩn RS)…'; IDX=await loadIdx();
+  const CONC=8; let done=0;
   for(let i=0;i<UNIV.length;i+=CONC){
     const part=UNIV.slice(i,i+CONC);
     await Promise.all(part.map(async tk=>{
       const j=await dchart(tk); done++;
       $('prog').style.width=Math.round(done/UNIV.length*100)+'%'; $('status').textContent='⏳ tải giá '+done+'/'+UNIV.length+'…';
       if(!j)return;
-      const seen={},dates=[],C=[],H=[],L=[];
-      const rows=j.t.map((t,k)=>({d:new Date(t*1000).toISOString().slice(0,10),c:toV(j.c[k]),h:toV(j.h[k]),l:toV(j.l[k])})).filter(r=>r.c).sort((a,b)=>a.d<b.d?-1:1);
-      rows.forEach(r=>{if(!seen[r.d]){seen[r.d]=1;dates.push(r.d);C.push(r.c);H.push(r.h);L.push(r.l);}});
-      const ma20=sma(C,20),n=C.length, bd={};
+      const seen={},dates=[],C=[],H=[],L=[],Vv=[];
+      const rows=j.t.map((t,k)=>({d:new Date(t*1000).toISOString().slice(0,10),c:toV(j.c[k]),h:toV(j.h[k]),l:toV(j.l[k]),v:(j.v&&j.v[k])||0})).filter(r=>r.c).sort((a,b)=>a.d<b.d?-1:1);
+      rows.forEach(r=>{if(!seen[r.d]){seen[r.d]=1;dates.push(r.d);C.push(r.c);H.push(r.h);L.push(r.l);Vv.push(r.v);}});
+      const n=C.length, ma20=sma(C,20), ma50=sma(C,50), bd={};
+      // RS line (Giá/VNINDEX) + giá trị giao dịch (VND)
+      const RS=new Array(n), val=new Array(n);
+      for(let k=0;k<n;k++){const ic=IDX?IDX.closeAt(dates[k]):null;RS[k]=ic?C[k]/ic:null;val[k]=Vv[k]*C[k]*1000;}
+      const val20=sma(val,20);
       for(let k=0;k<n;k++){
         let buy=false,sell=false;
         if(k>=4){const bo=C[k]>=H[k-1]&&C[k]>=H[k-2]&&C[k]>=H[k-3]&&C[k]>=H[k-4]&&ma20[k]&&C[k]>ma20[k];
           const boPrev=k>=5&&C[k-1]>=H[k-2]&&C[k-1]>=H[k-3]&&C[k-1]>=H[k-4]&&C[k-1]>=H[k-5]&&ma20[k-1]&&C[k-1]>ma20[k-1];
           buy=bo&&!boPrev;}
         if(k>=8)sell=C[k]<=L[k-1]&&C[k]<=L[k-2]&&C[k]<=L[k-3]&&C[k]<=L[k-4]&&C[k]<=L[k-5]&&C[k]<=L[k-6]&&C[k]<=L[k-7]&&C[k]<=L[k-8];
-        bd[dates[k]]={c:C[k],buy,sell}; dateset[dates[k]]=1;
+        // ===== Bộ lọc SỨC MẠNH (DuckMan/RS-lite): uptrend + RS vượt trội + thanh khoản =====
+        const trendOk=ma20[k]!=null&&ma50[k]!=null&&C[k]>ma20[k]&&C[k]>ma50[k]&&ma20[k]>ma50[k];
+        let rsHi=false,rsUp=false;
+        if(RS[k]!=null){let mx=-1e18;for(let q=Math.max(0,k-59);q<=k;q++)if(RS[q]!=null&&RS[q]>mx)mx=RS[q];rsHi=RS[k]>=mx*0.999;
+          if(k>=20&&RS[k-20]!=null)rsUp=RS[k]>RS[k-20];}
+        const strong=trendOk&&(rsHi||rsUp)&&((val20[k]||0)>=2e9);
+        const str=(RS[k]!=null&&k>=60&&RS[k-60]>0)?(RS[k]/RS[k-60]-1):(k>=60&&C[k-60]>0?(C[k]/C[k-60]-1):0);
+        bd[dates[k]]={c:C[k],buy,sell,strong,str}; dateset[dates[k]]=1;
       }
       SYM[tk]={bd, lastClose:C[n-1]};
     }));
@@ -205,10 +227,12 @@ function backtest(){
     // ENTRIES
     let slots=maxPos-Object.keys(pos).length;
     if(slots>0){
-      const cands=UNIV.filter(tk=>!pos[tk]&&SYM[tk]&&SYM[tk].bd[d]&&SYM[tk].bd[d].buy);
+      const useStr=$('fStrength')?$('fStrength').checked:true;
+      const cands=UNIV.filter(tk=>!pos[tk]&&SYM[tk]&&SYM[tk].bd[d]&&SYM[tk].bd[d].buy&&(!useStr||SYM[tk].bd[d].strong));
+      cands.sort((a,b)=>((SYM[b].bd[d].str||0)-(SYM[a].bd[d].str||0)));   // ưu tiên mã RS mạnh nhất
       for(const tk of cands){ if(slots<=0)break;
         const px=SYM[tk].bd[d].c, size=Math.min(cash,eqNow/maxPos), qty=Math.floor(size/px/100)*100;
-        if(qty>0&&qty*px<=cash){cash-=qty*px;pos[tk]={qty,entry:px,entryD:d};trades.push({d,tk,side:'MUA',px,qty,note:'Breakout'});slots--;}
+        if(qty>0&&qty*px<=cash){cash-=qty*px;pos[tk]={qty,entry:px,entryD:d};trades.push({d,tk,side:'MUA',px,qty,note:useStr?'Breakout + RS mạnh':'Breakout'});slots--;}
       }
     }
     let mv2=0; for(const tk in pos){mv2+=pos[tk].qty*(SYM[tk].pxAxis[di]||pos[tk].entry);}
@@ -324,6 +348,7 @@ function setBanner(){const b=$('modeBanner');
   else{const lbl={'3m':'3 tháng','6m':'6 tháng','1y':'1 năm'}[startMode];b.className='banner sim';b.innerHTML='🧪 <b>Mô phỏng tham khảo '+lbl+' gần nhất</b> — xem chiến lược tín hiệu đã chạy thế nào trong quá khứ (KHÔNG phải danh mục thật).';}}
 $('segMode').querySelectorAll('button').forEach(bt=>bt.onclick=()=>{$('segMode').querySelectorAll('button').forEach(x=>x.classList.remove('on'));bt.classList.add('on');startMode=bt.dataset.m;setBanner();if(AXIS.length){render(backtest());}else run();});
 $('runBtn').onclick=()=>{ if(AXIS.length){const R=backtest();render(R);} else run(); };
+$('fStrength').onchange=()=>{ if(AXIS.length){render(backtest());} else run(); };   // bật/tắt lọc sức mạnh → chạy lại (không cần tải lại giá)
 setBanner(); run();
 </script>
 </body>
