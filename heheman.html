@@ -83,7 +83,7 @@ async function tryFetch(u,ms){const c=new AbortController(),t=setTimeout(()=>c.a
   try{const r=await fetch(u,{cache:'no-store',signal:c.signal});if(!r.ok)throw 0;return await r.json();}finally{clearTimeout(t);}}
 const PROX=[x=>x,x=>'/api/proxy?url='+encodeURIComponent(x),x=>'https://corsproxy.io/?url='+encodeURIComponent(x),x=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(x)];
 async function dchart(sym){
-  const to=Math.floor(Date.now()/1000),from=to-400*86400;
+  const to=Math.floor(Date.now()/1000),from=to-250*86400;   // ~170 phiên: đủ cho squeeze 100 phiên, giảm 38% payload → nhanh hơn
   const u=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${sym}&from=${from}&to=${to}`;
   for(const p of PROX){try{const j=await tryFetch(p(u),9000);if(j&&j.s==='ok'&&j.c&&j.c.length>60)return j;}catch(e){}}return null;
 }
@@ -113,6 +113,7 @@ function scan(j){
   const avgVol20=MA(V,20), avgVal20=MA(C.map((c,k)=>c*V[k]*1000),20);
   const vol20=avgVol20[i]||0, val20=avgVal20[i]||0;
   const isLiquid=vol20>=MINVOL && val20>=MINVAL;
+  if(!isLiquid)return {px:C[i],vol20,val20,isLiquid:false,score:0,strong:false};   // bỏ qua tính toán nặng cho mã thiếu thanh khoản (sẽ bị loại)
   const tight=(HHVi(H,4,i)-LLVi(L,4,i))/C[i]*100 < 5;
   // Layer 2: dòng tiền
   const obv=Array(n).fill(0);for(let k=1;k<n;k++)obv[k]=obv[k-1]+(C[k]>C[k-1]?V[k]:C[k]<C[k-1]?-V[k]:0);
@@ -199,7 +200,7 @@ async function runScan(){
     }));
     $('prog').style.width=Math.round(done/total*100)+'%';
     $('stat').textContent=`⏳ quét ${done}/${total}… (đạt lọc: ${ok})`;
-    if(done%40<CONC)render();
+    if(done%120<CONC)render();
   }
   $('scanBtn').disabled=false; $('prog').style.width='100%'; render();
   $('stat').textContent=`✓ quét ${done}/${total} · ${ok} mã đạt lọc · ${new Date().toLocaleTimeString('vi-VN')}`;
