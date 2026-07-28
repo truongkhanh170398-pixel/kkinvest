@@ -786,6 +786,21 @@ function renderSize(tk){
       else if(!(fvv>0)) fe.textContent='💡 FV: đặc thù'; }
   }
   window.refreshUpside=refreshUpside;
+  // ===== Số liệu tài chính THẬT từ 24hMoney → ghi đè EPS(TTM)/BVPS, tự điều chỉnh định giá =====
+  async function fetchFund(tk){
+    const u='https://api-finance-t19.24hmoney.vn/v1/web/company/index-with-price?symbol='+tk;
+    const PX=[x=>x,x=>'/api/proxy?url='+encodeURIComponent(x)];
+    for(const p of PX){try{const r=await fetch(p(u),{cache:'no-store'});if(r.ok){const j=await r.json();const d=(j&&j.data)||j;if(d&&(d.eps4Q||d.book_value))return d;}}catch(e){}}
+    return null;
+  }
+  async function applyFund(tk){
+    const d=await fetchFund(tk); if(!d)return;
+    const eps=d.eps4Q,bvps=d.book_value; let msg='';
+    if(eps>0){setV('eps',Math.round(eps));msg+=' · EPS(TTM) <b>'+fmt(eps)+'</b>';}
+    if(bvps>0){setV('bvps',Math.round(bvps));msg+=' · BVPS <b>'+fmt(bvps)+'</b>';}
+    recalc(); if(window.refreshUpside)window.refreshUpside();
+    const st=document.getElementById('pxStatus'); if(st&&msg){st.innerHTML='● Số liệu THẬT 24hMoney '+tk+msg+' · đã điều chỉnh định giá';st.style.color='#7fe3ab';}
+  }
   function loadTicker(tk){
     const st=document.getElementById('pxStatus');
     const _ti=document.getElementById('ticker');if(_ti)_ti.value=tk;   // luôn đồng bộ ô mã → "Lấy giá" đúng mã
@@ -797,6 +812,7 @@ function renderSize(tk){
       if(typeof renderInv==='function')renderInv(tk);
       if(typeof loadPriceChart==='function')loadPriceChart(tk);
       if(typeof fetchPrice==='function')fetchPrice();
+      applyFund(tk);   // lấy EPS/BVPS thật 24hMoney cho mã chưa hardcode
       recalc();
       if(typeof renderSize==='function')renderSize(tk);
       if(typeof renderHist==='function')renderHist(tk);
@@ -821,6 +837,7 @@ function renderSize(tk){
     st.textContent='● Đã nạp '+tk+' (13/06/2026) — '+(d.landBook>0?'RNAV quỹ đất + P/B':'P/B + P/E')+' · đang phân tích';
     st.style.color='#6fe3ab';
     if(typeof fetchPrice==='function')fetchPrice();   // ghi đè giá cứng bằng GIÁ THỊ TRƯỜNG thật (tự động)
+    applyFund(tk);   // ghi đè EPS/BVPS bằng số liệu THẬT mới nhất 24hMoney
   }
   window.loadTicker=loadTicker;
   const tkEl=document.getElementById('ticker');

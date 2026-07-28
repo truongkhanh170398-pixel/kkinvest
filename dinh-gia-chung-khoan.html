@@ -251,6 +251,22 @@ const FV={SSI:34000,VND:19000,VCI:26000,HCM:28000,VIX:18000,SHS:20000,MBS:21000,
   NAB:18000,MSB:16000,BSI:38000,CTS:30000,BVH:60000,PVI:80000,
   VDS:16000,BMI:18000,EVF:16000};
 function setV(id,v){const el=document.getElementById(id);if(el&&v!=null)el.value=v;}
+// ===== Số liệu tài chính THẬT từ 24hMoney → ghi đè EPS(TTM)/BVPS/ROE, tự điều chỉnh định giá =====
+async function fetchFund(tk){
+  const u='https://api-finance-t19.24hmoney.vn/v1/web/company/index-with-price?symbol='+tk;
+  const PX=[x=>x,x=>'/api/proxy?url='+encodeURIComponent(x)];   // 24hMoney CORS * → trực tiếp; fallback proxy nhà
+  for(const p of PX){try{const r=await fetch(p(u),{cache:'no-store'});if(r.ok){const j=await r.json();const d=(j&&j.data)||j;if(d&&(d.eps4Q||d.book_value))return d;}}catch(e){}}
+  return null;
+}
+async function applyFund(tk){
+  const d=await fetchFund(tk); if(!d)return;
+  const eps=d.eps4Q,bvps=d.book_value,roe=d.roe4Q;
+  if(eps>0)setV('eps',Math.round(eps));
+  if(bvps>0)setV('bvps',Math.round(bvps));
+  if(roe>0&&$('roe'))setV('roe',+roe.toFixed(1));
+  recalc();
+  const st=$('pxStatus'); if(st){st.innerHTML='● Số liệu THẬT 24hMoney '+tk+' — EPS(TTM) <b>'+fmt(eps)+'</b> · BVPS <b>'+fmt(bvps)+'</b>'+(roe>0?' · ROE <b>'+roe.toFixed(1)+'%</b>':'')+' · đã điều chỉnh định giá';st.style.color='#7fe3ab';}
+}
 function loadTicker(tk){
   const d=DATA[tk], st=$('pxStatus');
   $('ticker').value=tk;   // đồng bộ ô mã → "Lấy giá" đúng mã
@@ -259,12 +275,12 @@ function loadTicker(tk){
     if(typeof loadPriceChart==='function')loadPriceChart(tk);
     try{$('fetchPx').click();}catch(e){}
     const ce=$('oCons');if(ce)ce.textContent='';const fe=$('oFV');if(fe)fe.textContent='';
-    recalc();
-    st.innerHTML='● <b>'+tk+'</b> — chưa có dữ liệu nền tảng. Đã tải <b>giá & biểu đồ</b>; nhập BVPS/EPS/ROE… để định giá P/B.';st.style.color='#f0c26b';
+    recalc(); applyFund(tk);   // lấy EPS/BVPS/ROE thật 24hMoney cho mã chưa hardcode
+    st.innerHTML='● <b>'+tk+'</b> — chưa có dữ liệu nền tảng. Đang lấy <b>số liệu thật 24hMoney</b> + giá & biểu đồ để định giá P/B.';st.style.color='#f0c26b';
     return;
   }
   ['price','shares','bookEq','bvps','eps','roe','lev','marg','beta','tpb','tpe'].forEach(k=>setV(k,d[k]));
-  recalc();
+  recalc(); applyFund(tk);   // ghi đè bằng số liệu THẬT mới nhất từ 24hMoney
   const ce=$('oCons');if(ce){const u=(d.cons-d.price)/d.price*100;ce.textContent=d.cons>0?('🎯 CTCK: '+fmt(d.cons)+'đ ('+(u>=0?'+':'')+u.toFixed(0)+'%)'):'';}
   const fe=$('oFV'),fvv=FV[tk]||0;if(fe){const u=(fvv-d.price)/d.price*100;fe.textContent=fvv>0?('💡 FV của tôi: '+fmt(fvv)+'đ ('+(u>=0?'+':'')+u.toFixed(0)+'%)'):'';}
   if(typeof loadPriceChart==='function')loadPriceChart(tk);
