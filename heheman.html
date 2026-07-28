@@ -56,7 +56,7 @@
   <header>
     <span class="tag">Leading Early Detection · gom hàng trước DuckMan</span>
     <h1>Heheman — phát hiện GOM HÀNG sớm (Leading Indicators)</h1>
-    <div class="sub">Chuyển từ AFL "Leading Early Detection System". Tìm cổ phiếu đang <b>tích luỹ / gom hàng ngầm</b> TRƯỚC khi điểm DuckMan tăng — bằng <b>dòng tiền</b> (OBV/AccDist/CMF/MFI), <b>nén biến động</b> (Bollinger Squeeze), <b>phân kỳ RSI</b>, <b>tight range</b> và <b>khởi phát xu hướng</b> (Aroon/ADX). Chấm <b>Leading Score (~0–15)</b>. Lọc thanh khoản KL ≥100k &amp; GT ≥1 tỷ TB20. <b>★ GOM HÀNG</b> = hội tụ mạnh. Bấm mã → chart kỹ thuật. Quét ~2–4 phút.</div>
+    <div class="sub">Chuyển từ AFL "Leading Early Detection System". Tìm cổ phiếu đang <b>tích luỹ / gom hàng ngầm</b> TRƯỚC khi điểm DuckMan tăng — bằng <b>dòng tiền</b> (OBV/AccDist/CMF/MFI), <b>nén biến động</b> (Bollinger Squeeze), <b>phân kỳ RSI</b>, <b>tight range</b> và <b>khởi phát xu hướng</b> (Aroon/ADX). Chấm <b>Leading Score (~0–15)</b>. Lọc thanh khoản: KL TB20 ≥100k &amp; GT ≥1 tỷ &amp; <b>mọi phiên ≥50k cp</b> (loại mã nhỏ giọt). <b>★ GOM HÀNG</b> = hội tụ mạnh. Bấm mã → chart kỹ thuật. Quét ~2–4 phút.</div>
     <div class="ctrl">
       <div class="seg" id="segScore"><button class="on" data-s="5">≥ 5 (lọc)</button><button data-s="7">≥ 7</button><button data-s="8">≥ 8</button><button data-s="strong">★ Gom hàng</button></div>
       <select id="floorSel"><option value="">Tất cả sàn</option><option>HOSE</option><option>HNX</option><option>UPCOM</option></select>
@@ -70,13 +70,14 @@
     <th data-k="score">Leading</th><th data-k="setup">Nhận định</th>
     <th data-k="tight">Tight</th><th data-k="mfs">MoneyFlow+</th><th data-k="cmf">CMF+</th><th data-k="mfi">MFI&gt;50↑</th><th data-k="div">RSI Div+</th><th data-k="sqz">Squeeze</th><th data-k="aroon">Aroon↑</th><th data-k="adx">ADX↑</th>
   </tr></thead><tbody id="body"></tbody></table></div>
-  <div class="note"><b>Leading Score</b> (điểm càng cao càng gần điểm nổ): +1 thanh khoản, +2 <b>Tight</b> (biên độ 4 phiên &lt;5%), +3 <b>MoneyFlow+</b> (OBV/AccDist tăng khi giá đi ngang = gom ngầm), +1 <b>CMF+</b>, +1 <b>MFI&gt;50↑</b>, +2 <b>RSI Div+</b> (giá đáy mới nhưng RSI đáy cao hơn), +1 MACD hist mở rộng từ âm, +2 <b>Squeeze</b> (Bollinger hẹp nhất ~100 phiên), +1 <b>Aroon↑</b>, +1 <b>ADX↑</b> (18–35, +DI&gt;−DI). <b>★ GOM HÀNG</b> = thanh khoản + tight + dòng tiền + (squeeze/div/hist) + score ≥7. Lọc KL TB20 ≥100k cp &amp; GT ≥1 tỷ/phiên. Dữ liệu VNDirect. Tham khảo, không phải khuyến nghị.</div>
+  <div class="note"><b>Leading Score</b> (điểm càng cao càng gần điểm nổ): +1 thanh khoản, +2 <b>Tight</b> (biên độ 4 phiên &lt;5%), +3 <b>MoneyFlow+</b> (OBV/AccDist tăng khi giá đi ngang = gom ngầm), +1 <b>CMF+</b>, +1 <b>MFI&gt;50↑</b>, +2 <b>RSI Div+</b> (giá đáy mới nhưng RSI đáy cao hơn), +1 MACD hist mở rộng từ âm, +2 <b>Squeeze</b> (Bollinger hẹp nhất ~100 phiên), +1 <b>Aroon↑</b>, +1 <b>ADX↑</b> (18–35, +DI&gt;−DI). <b>★ GOM HÀNG</b> = thanh khoản + tight + dòng tiền + (squeeze/div/hist) + score ≥7. Lọc KL TB20 ≥100k cp &amp; GT ≥1 tỷ/phiên &amp; <b>mọi phiên trong 20 phiên gần nhất ≥50k cp</b> (loại mã có phiên thanh khoản nhỏ giọt). Dữ liệu VNDirect. Tham khảo, không phải khuyến nghị.</div>
 </div>
 
 <script>
 const $=id=>document.getElementById(id);
 const fpx=n=>isFinite(n)?(+n).toLocaleString('en-US',{maximumFractionDigits:2}):'—';
 const MINVOL=100000, MINVAL=1e9;   // thanh khoản: KL TB20 ≥100k cp & GT TB20 ≥1 tỷ/phiên
+const MINDAYVOL=50000;             // + mọi phiên (20 phiên gần nhất) phải ≥ 50k cp — loại mã có phiên nhỏ giọt
 const FALLBACK=[['HPG','HOSE'],['SSI','HOSE'],['MWG','HOSE'],['FPT','HOSE'],['VND','HOSE'],['VIX','HOSE'],['SHB','HOSE'],['STB','HOSE'],['MBB','HOSE'],['VPB','HOSE'],['TCB','HOSE'],['ACB','HOSE'],['CTG','HOSE'],['VCB','HOSE'],['HDB','HOSE'],['DIG','HOSE'],['DXG','HOSE'],['KDH','HOSE'],['NLG','HOSE'],['PDR','HOSE'],['GEX','HOSE'],['DGC','HOSE'],['HSG','HOSE'],['NKG','HOSE'],['GVR','HOSE'],['POW','HOSE'],['VRE','HOSE'],['KBC','HOSE'],['VHM','HOSE'],['HAG','HOSE'],['DBC','HOSE'],['PVD','HOSE'],['PVS','HNX'],['GMD','HOSE'],['VCI','HOSE'],['HCM','HOSE'],['BSR','HOSE'],['DCM','HOSE'],['FRT','HOSE'],['PNJ','HOSE'],['SHS','HNX'],['MBS','HNX'],['CEO','HNX'],['IDC','HNX']];
 
 async function tryFetch(u,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);
@@ -112,7 +113,8 @@ function scan(j){
   // Layer 1: thanh khoản (C nghìn đồng → GT VND ×1000)
   const avgVol20=MA(V,20), avgVal20=MA(C.map((c,k)=>c*V[k]*1000),20);
   const vol20=avgVol20[i]||0, val20=avgVal20[i]||0;
-  const isLiquid=vol20>=MINVOL && val20>=MINVAL;
+  let minV20=1e18;for(let k=Math.max(0,n-20);k<n;k++)if(V[k]<minV20)minV20=V[k];   // KL phiên THẤP NHẤT trong 20 phiên
+  const isLiquid=vol20>=MINVOL && val20>=MINVAL && minV20>=MINDAYVOL;   // loại mã có bất kỳ phiên KL < 50k cp
   if(!isLiquid)return {px:C[i],vol20,val20,isLiquid:false,score:0,strong:false};   // bỏ qua tính toán nặng cho mã thiếu thanh khoản (sẽ bị loại)
   const tight=(HHVi(H,4,i)-LLVi(L,4,i))/C[i]*100 < 5;
   // Layer 2: dòng tiền
