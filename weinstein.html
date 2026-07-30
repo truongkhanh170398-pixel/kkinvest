@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>KKINVEST · WeinsteinMan — Stage Analysis + Scorecard</title>
+<style>
+  :root{--bg:#080b13;--card:#0e1525;--card2:#141d31;--line:#1c2740;--txt:#e8edf7;--muted:#7e8db0;--accent:#e2b33b;--accent2:#4f8cff;--up:#26c281;--dn:#f0556b;--warn:#e2b33b;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1200px 700px at 50% -260px,#0c1730,#080b13);color:var(--txt);font-family:"Segoe UI",system-ui,Roboto,Arial,sans-serif;line-height:1.4;padding:0 0 40px}
+  .wrap{max-width:1500px;margin:0 auto;padding:0 16px}
+  .navsheets{display:flex;gap:8px;padding:11px 0 0;flex-wrap:wrap}
+  .ns{text-decoration:none;font-size:13px;font-weight:700;padding:7px 14px;border-radius:9px;border:1px solid var(--line);color:var(--muted);background:var(--card)}
+  .ns.active{background:var(--accent);color:#04140c;border-color:var(--accent)}.ns:hover{border-color:var(--accent2)}
+  header{padding:16px 0 12px;border-bottom:1px solid var(--line);margin-bottom:14px}
+  .tag{display:inline-block;background:var(--accent);color:#04140c;font-weight:700;font-size:11px;letter-spacing:1px;padding:4px 10px;border-radius:20px;text-transform:uppercase}
+  h1{font-size:22px;margin:9px 0 3px}.sub{color:var(--muted);font-size:13px}
+  .ctrl{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+  .seg{display:flex;gap:0;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .seg button{background:var(--card);color:var(--muted);border:none;border-right:1px solid var(--line);font-size:12.5px;font-weight:700;padding:7px 13px;cursor:pointer}
+  .seg button:last-child{border-right:none}.seg button.on{background:var(--accent);color:#04140c}
+  .rfbtn{background:var(--card2);color:var(--txt);border:1px solid var(--line);font-size:12.5px;font-weight:700;padding:7px 14px;border-radius:9px;cursor:pointer}
+  .rfbtn:hover{border-color:var(--accent2)}
+  .stat{color:var(--muted);font-size:12.5px;margin-left:auto}
+  select{background:var(--card);border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:7px 10px;font-size:12.5px;font-family:inherit}
+  .tablebox{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:auto;margin-top:14px}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:1020px}
+  th,td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+  th:nth-child(2),td:nth-child(2){text-align:left}
+  thead th{background:#0b1220;color:var(--muted);font-size:10.5px;text-transform:uppercase;cursor:pointer;position:sticky;top:0}
+  tbody tr{cursor:pointer}tbody tr:hover{background:#18203c}
+  .up{color:var(--up)}.dn{color:var(--dn)}.muted{color:var(--muted)}
+  .stg{font-weight:800;padding:2px 9px;border-radius:6px;font-size:11.5px}
+  .st2a{background:rgba(34,197,94,.28);color:#8bf0b0}.st2{background:rgba(34,197,94,.18);color:#7fe3a5}.st2b{background:rgba(46,199,120,.12);color:#6fd39a}
+  .st1{background:var(--card2);color:#9fb0d0}.st3{background:rgba(226,140,59,.20);color:#f0b86b}.st4{background:rgba(239,71,87,.20);color:#f5a3ac}
+  .sc{font-weight:800;padding:2px 8px;border-radius:6px;font-size:12px;min-width:34px;display:inline-block}
+  .sc.t1{background:rgba(34,197,94,.22);color:#7fe3a5}.sc.t2{background:rgba(226,179,59,.18);color:#f0c26b}.sc.t3{background:var(--card2);color:var(--muted)}
+  .grp{font-weight:800;padding:2px 9px;border-radius:6px;font-size:11.5px}
+  .grA{background:rgba(34,197,94,.22);color:#7fe3a5}.grB{background:rgba(226,179,59,.18);color:#f0c26b}.grC{background:var(--card2);color:var(--muted)}
+  .ep{background:rgba(162,132,255,.20);color:#c9b8ff;font-weight:800;padding:1px 7px;border-radius:5px;font-size:10.5px}
+  .note{color:var(--muted);font-size:12px;margin-top:12px;line-height:1.6}
+  .bar{height:5px;background:var(--card2);border-radius:3px;margin-top:8px;overflow:hidden}.bar>div{height:5px;background:var(--accent);width:0;transition:width .2s}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:9px"><span style="font-size:19px;font-weight:900;letter-spacing:3px;color:var(--accent)">KKINVEST</span><span style="font-size:11px;font-weight:600;letter-spacing:.5px;color:var(--muted)">· phân tích &amp; định giá chứng khoán</span></div>
+  <div class="navsheets">
+    <a class="ns" href="index.html">⭐ Tổng quan</a>
+    <a class="ns" href="phan-tich-co-ban.html">🧮 Phân tích cơ bản</a>
+    <a class="ns" href="phan-tich-ky-thuat.html">📊 Phân tích kỹ thuật</a>
+    <a class="ns" href="suc-manh-nganh.html">🔥 Sức mạnh ngành</a>
+    <a class="ns" href="diem-mua.html">🎯 Điểm mua</a>
+    <a class="ns" href="loc-duckman.html">🦆 Lọc DuckMan</a>
+    <a class="ns" href="heheman.html">🕵️ Heheman</a>
+    <a class="ns active" href="weinstein.html">📈 Weinstein</a>
+    <a class="ns" href="danh-muc.html">💼 Danh mục KH</a>
+  </div>
+  <header>
+    <span class="tag">Weinstein Stage Analysis · Classic · EP · Ranking</span>
+    <h1>WeinsteinMan — Phân tích Giai đoạn (Stage 1–4) + Chấm điểm</h1>
+    <div class="sub">Chuyển từ AFL "WeinsteinMan". Xác định <b>Stage 1/2/3/4 + substage</b> theo MA150 (≈30 tuần), MA200, RS Line vs VNINDEX, KMAs. Chấm 3 điểm 0–100: <b>Classic</b> (breakout nền chuẩn Weinstein/CANSLIM), <b>EP</b> (Episodic Pivot — gap ≥10% + vol ≥5×), <b>Ranking</b> (xếp hạng Stage 2 → Group A/B/C). Lọc thanh khoản KL TB20 ≥100k &amp; GT ≥1 tỷ &amp; mọi phiên ≥50k. Bấm mã → chart. Quét ~3–5 phút.</div>
+    <div class="ctrl">
+      <div class="seg" id="segView"><button class="on" data-v="rank">Stage 2 (xếp hạng)</button><button data-v="classic">Classic ≥70</button><button data-v="ep">Episodic Pivot</button><button data-v="all">Tất cả</button></div>
+      <select id="floorSel"><option value="">Tất cả sàn</option><option>HOSE</option><option>HNX</option><option>UPCOM</option></select>
+      <button class="rfbtn" id="scanBtn">↻ Quét lại</button>
+      <span class="stat" id="stat"></span>
+    </div>
+    <div class="bar"><div id="prog"></div></div>
+  </header>
+  <div class="tablebox"><table><thead><tr>
+    <th>STT</th><th data-k="tk">Mã</th><th data-k="floor">Sàn</th><th data-k="px">Giá</th><th data-k="val">GT TB20 (tỷ)</th>
+    <th data-k="stage">Stage</th><th data-k="classic">Classic</th><th data-k="ep">EP</th><th data-k="rank">Rank</th><th data-k="group">Group</th>
+  </tr></thead><tbody id="body"></tbody></table></div>
+  <div class="note"><b>Stage</b> (Weinstein): <b>1</b> tạo nền (1A/1B) · <b>2</b> tăng giá — điểm mua (2A đầu sóng gần MA150, 2B cuối sóng đã giãn) · <b>3</b> phân phối (3A/3B) · <b>4</b> giảm (4A/4B). <b>Classic</b> = điểm breakout nền (Stage 1B→2A, RS Line đỉnh mới, volume ≥150-200% TB50, KMAs, base ≥5-7 tuần). <b>EP</b> = Episodic Pivot (gap ≥10% + vol ≥5-10× + catalyst, xuất phát từ Stage 1/đầu 2); nhãn <span class="ep">EP</span> = có tín hiệu ≤15 phiên. <b>Rank</b> = xếp hạng Stage 2 (RS vs thị trường, momentum 3T vs VNINDEX, độ bền, dòng tiền OBV) → <b>Group A ≥75 / B 50-74 / C &lt;50</b>. Tier: ≥85=T1, ≥70=T2. Dữ liệu VNDirect, benchmark VNINDEX. Tham khảo, không phải khuyến nghị.</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const fpx=n=>isFinite(n)?(+n).toLocaleString('en-US',{maximumFractionDigits:2}):'—';
+const FALLBACK=[['HPG','HOSE'],['SSI','HOSE'],['MWG','HOSE'],['FPT','HOSE'],['VND','HOSE'],['VIX','HOSE'],['SHB','HOSE'],['STB','HOSE'],['MBB','HOSE'],['VPB','HOSE'],['TCB','HOSE'],['ACB','HOSE'],['CTG','HOSE'],['VCB','HOSE'],['HDB','HOSE'],['DIG','HOSE'],['DXG','HOSE'],['KDH','HOSE'],['NLG','HOSE'],['PDR','HOSE'],['GEX','HOSE'],['DGC','HOSE'],['HSG','HOSE'],['NKG','HOSE'],['GVR','HOSE'],['POW','HOSE'],['VRE','HOSE'],['KBC','HOSE'],['VHM','HOSE'],['HAG','HOSE'],['DBC','HOSE'],['PVD','HOSE'],['PVS','HNX'],['GMD','HOSE'],['VCI','HOSE'],['HCM','HOSE'],['BSR','HOSE'],['DCM','HOSE'],['FRT','HOSE'],['PNJ','HOSE'],['SHS','HNX'],['MBS','HNX'],['CEO','HNX'],['IDC','HNX']];
+
+async function tryFetch(u,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);
+  try{const r=await fetch(u,{cache:'no-store',signal:c.signal});if(!r.ok)throw 0;return await r.json();}finally{clearTimeout(t);}}
+const PROX=[x=>x,x=>'/api/proxy?url='+encodeURIComponent(x),x=>'https://corsproxy.io/?url='+encodeURIComponent(x),x=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(x)];
+async function dchart(sym){
+  const to=Math.floor(Date.now()/1000),from=to-360*86400;   // ~245 phiên: đủ cho MA200 + lịch sử
+  const u=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${sym}&from=${from}&to=${to}`;
+  for(const p of PROX){try{const j=await tryFetch(p(u),9000);if(j&&j.s==='ok'&&j.c&&j.c.length>60)return j;}catch(e){}}return null;
+}
+async function getJSONp(u){for(const p of PROX){try{const j=await tryFetch(p(u),12000);if(j&&j.data)return j;}catch(e){}}return null;}
+async function loadUniverse(){
+  const j=await getJSONp('https://api-finfo.vndirect.com.vn/v4/stocks?q=type:STOCK~status:LISTED&size=2500&fields=code,floor');
+  if(j&&j.data&&j.data.length>200)return j.data.map(d=>[d.code,d.floor]);
+  return FALLBACK;
+}
+function MA(a,n){const o=Array(a.length).fill(null);let s=0,c=0;for(let i=0;i<a.length;i++){s+=a[i];c++;if(i>=n){s-=a[i-n];c--;}if(i>=n-1)o[i]=s/n;}return o;}
+function toRows(j){const rows=j.t.map((t,k)=>({d:new Date(t*1000).toISOString().slice(0,10),o:j.o[k],h:j.h[k],l:j.l[k],c:j.c[k],v:(j.v&&j.v[k])||0})).filter(r=>r.c>0).sort((a,b)=>a.d<b.d?-1:1);
+  const seen={},R=[];rows.forEach(r=>{if(!seen[r.d]){seen[r.d]=1;R.push(r);}});return R;}
+
+// ===== VNINDEX (benchmark RS) =====
+let IDX=null;
+async function loadIndex(){
+  const j=await dchart('VNINDEX'); if(!j)return null;
+  const R=toRows(j),cm={},dates=[]; R.forEach(r=>{cm[r.d]=r.c;dates.push(r.d);});
+  return {closeAt(d){if(cm[d]!=null)return cm[d];let lo=0,hi=dates.length-1,res=null;while(lo<=hi){const m=(lo+hi)>>1;if(dates[m]<=d){res=cm[dates[m]];lo=m+1;}else hi=m-1;}return res;}};
+}
+
+const STG={41:['4A','st4'],42:['4','st4'],43:['4B','st4'],31:['3A','st3'],32:['3','st3'],33:['3B','st3'],21:['2A','st2a'],20:['2','st2'],22:['2B','st2b'],11:['1A','st1'],12:['1B','st1'],0:['—','st1']};
+
+// ===== WeinsteinMan scan cho 1 mã =====
+function scan(j){
+  const R=toRows(j),n=R.length; if(n<210)return null;
+  const C=R.map(r=>r.c),H=R.map(r=>r.h),L=R.map(r=>r.l),O=R.map(r=>r.o),V=R.map(r=>r.v),D=R.map(r=>r.d),i=n-1;
+  // thanh khoản (early-exit)
+  const av20=MA(V,20), aval20=MA(C.map((c,k)=>c*V[k]*1000),20);
+  const vol20=av20[i]||0, val20=aval20[i]||0; let minV20=1e18;for(let k=n-20;k<n;k++)if(V[k]<minV20)minV20=V[k];
+  const isLiquid=vol20>=1e5&&val20>=1e9&&minV20>=5e4;
+  if(!isLiquid)return {px:C[i],val20,isLiquid:false};
+  // MAs
+  const M10=MA(C,10),M21=MA(C,21),M50=MA(C,50),M150=MA(C,150),M200=MA(C,200),avgVol=MA(V,50);
+  if(M200[i]==null)return {px:C[i],val20,isLiquid:false};
+  // RS line vs VNINDEX
+  const rs=new Array(n);for(let k=0;k<n;k++){const vn=IDX?IDX.closeAt(D[k]):null;rs[k]=vn?C[k]/vn*100:null;}
+  const hh=(a,w,k)=>{let m=-1e18;for(let q=Math.max(0,k-w+1);q<=k;q++)if(a[q]!=null&&a[q]>m)m=a[q];return m;};
+  const ll=(a,w,k)=>{let m=1e18;for(let q=Math.max(0,k-w+1);q<=k;q++)if(a[q]!=null&&a[q]<m)m=a[q];return m;};
+  // OBV, ATR
+  const obv=Array(n).fill(0);for(let k=1;k<n;k++)obv[k]=obv[k-1]+(C[k]>C[k-1]?V[k]:C[k]<C[k-1]?-V[k]:0);
+  const obvMA=MA(obv,20);
+  const tr=Array(n);for(let k=0;k<n;k++)tr[k]=k?Math.max(H[k]-L[k],Math.abs(H[k]-C[k-1]),Math.abs(L[k]-C[k-1])):H[k]-L[k];
+  const atr=Array(n).fill(null);let av=null;for(let k=0;k<n;k++){av=(av==null)?tr[k]:(av*13+tr[k])/14;atr[k]=av;}
+  const atrMA=MA(atr,20);
+  // weeksAbove (số phiên liên tục đóng cửa trên MA50)
+  const wa=Array(n).fill(0);let c0=0;for(let k=0;k<n;k++){if(M50[k]!=null&&C[k]>M50[k])c0++;else c0=0;wa[k]=Math.min(c0,60);}
+  // ===== stage per bar =====
+  const code=Array(n).fill(0);
+  for(let k=0;k<n;k++){
+    if(M200[k]==null||M150[k]==null)continue;
+    const slope=(M150[k]-(k>=5?M150[k-5]:M150[k]))/5;
+    const sUp=slope>0, sFlat=Math.abs(slope)<0.001*M150[k], sDown=slope<0;
+    const dist=(C[k]-M150[k])/M150[k]*100;
+    const rsDiv=(C[k]>=hh(C,20,k)*0.99999)&&rs[k]!=null&&rs[k]<hh(rs,20,k);
+    const kmaEarly=M10[k]>M21[k]&&M21[k]>M50[k];
+    const s4=sDown&&C[k]<M150[k]&&C[k]<M200[k]&&M10[k]<M21[k]&&M21[k]<M50[k];
+    const s3=!s4&&(sFlat||(sUp&&dist>25&&rsDiv));
+    const s2=C[k]>M150[k]&&C[k]>M200[k]&&sUp&&!s3&&!s4;
+    let cd;
+    if(s4){ if(C[k]<ll(C,20,k)*1.02&&V[k]>avgVol[k]*1.5)cd=41; else if(sDown&&M10[k]<M21[k])cd=42; else cd=43; }
+    else if(s3){ if(rsDiv&&sFlat)cd=31; else if((M150[k]>C[k]&&M150[k-1]<=C[k-1])||(C[k]<M150[k]&&C[k-1]>M150[k-1]))cd=32; else cd=33; }
+    else if(s2){ if(dist<15&&wa[k]<=8&&kmaEarly)cd=21; else if(dist>25||wa[k]>20)cd=22; else cd=20; }
+    else { if(sDown||(sFlat&&C[k]<M150[k]))cd=11; else cd=12; }
+    code[k]=cd;
+  }
+  const stage=code[i];
+  // helpers at i
+  const relVol=avgVol[i]?V[i]/avgVol[i]:0, volDryUp=V[i]<avgVol[i]*0.7, dist=(C[i]-M150[i])/M150[i]*100;
+  const rsNewHigh=rs[i]!=null&&rs[i]>=hh(rs,50,i);
+  const rsDivBear=(C[i]>=hh(C,20,i)*0.99999)&&rs[i]!=null&&rs[i]<hh(rs,20,i);
+  const kmaBull=M10[i]>M21[i]&&M21[i]>M50[i]&&M50[i]>M150[i]&&M150[i]>M200[i];
+  const kmaEarly=M10[i]>M21[i]&&M21[i]>M50[i];
+  const varsPos=obv[i]>obvMA[i];
+  const roc1=C[i-1]?(C[i]/C[i-1]-1)*100:0;
+  const isPristine=(stage===21||stage===12)&&rsNewHigh&&volDryUp;
+  const isWeak=rsDivBear||(relVol>2&&roc1<0.5);
+  const ratingMod=isPristine?5:(isWeak?-5:0);
+  const clamp=x=>Math.max(0,Math.min(100,x));
+  // ===== EP =====
+  let bse=999;for(let k=i;k>=Math.max(0,i-20);k--){const gp=C[k-1]?(O[k]-C[k-1])/C[k-1]*100:0,rv=avgVol[k]?V[k]/avgVol[k]:0;if(gp>=10&&rv>=5&&code[k]>0&&code[k]<=22){bse=i-k;break;}}
+  const hasEP=bse<=15, epBar=hasEP?i-bse:i;
+  const isDay1=bse===0, isDelayed=bse>=3&&bse<=15&&C[i]>M10[i]&&V[i]<avgVol[i]*1.2;
+  let epScore=0;
+  if(hasEP){const gpb=C[epBar-1]?(O[epBar]-C[epBar-1])/C[epBar-1]*100:0, rvb=avgVol[epBar]?V[epBar]/avgVol[epBar]:0, cb=code[epBar];
+    const e1=gpb>=15?15:12, e2=rvb>=8?15:(rvb>=5?12:8), e3=(cb===12||cb===21)?15:8, e4=(rs[epBar]!=null&&rs[epBar]>=hh(rs,50,epBar))?10:5,
+      e5=C[epBar]>(H[epBar]+L[epBar])/2?10:5, e6=7, e7=isDelayed?15:(isDay1?10:5), e8=isDelayed&&C[i]>M10[i]?10:(isDay1?7:5);
+    epScore=clamp(e1+e2+e3+e4+e5+e6+e7+e8);}
+  // ===== CLASSIC =====
+  const s1=(stage===21&&(code[i-5]||99)<=12)?15:(stage===21?12:(stage===20?8:0));
+  const s2c=(stage===21&&dist<12)?10:(stage===21?7:(stage===20?5:(stage===22?3:0)));
+  const s3=(rsNewHigh&&!rsDivBear)?15:((rs[i]!=null&&rs[i-10]!=null&&rs[i]>rs[i-10])?8:0);
+  const s4c=relVol>=2?15:(relVol>=1.5?10:(relVol>=1.2?5:0));
+  const s5=(volDryUp&&atr[i]<atrMA[i])?10:(volDryUp?6:3);
+  const s6=kmaBull?10:(kmaEarly?6:0);
+  const s7=(varsPos&&relVol>1.3)?10:(varsPos?6:0);
+  const s8=stage===21?12:((stage>=20&&stage<=22)?8:4);
+  const classicAdj=clamp(s1+s2c+s3+s4c+s5+s6+s7+s8+ratingMod);
+  // ===== RANK =====
+  const vn_i=IDX?IDX.closeAt(D[i]):null, vn_63=IDX&&i>=63?IDX.closeAt(D[i-63]):null;
+  const roc63C=(i>=63&&C[i-63])?(C[i]/C[i-63]-1)*100:0, roc63vn=(vn_i&&vn_63)?(vn_i/vn_63-1)*100:0;
+  const r1=stage===21?10:(stage===20?6:(stage===22?3:0));
+  const r2=(rs[i]!=null&&rs[i]>=hh(rs,60,i))?15:((rs[i]!=null&&rs[i]>=hh(rs,30,i))?10:5);
+  const r3=6, r4=roc63C>roc63vn+10?10:(roc63C>roc63vn?6:3), r5=wa[i]>=12?10:(wa[i]>=6?6:3),
+    r6=(stage===20||stage===22)?6:3, r7=(varsPos&&relVol>1.2)?10:5, r8=s8, r9=avgVol[i]>1e5?5:(avgVol[i]>3e4?3:1), r10=hasEP?5:2;
+  const rankScore=clamp(r1+r2+r3+r4+r5+r6+r7+r8+r9+r10);
+  const group=rankScore>=75?'A':(rankScore>=50?'B':'C');
+  return {px:C[i],val20,isLiquid:true,stage,classic:classicAdj,ep:epScore,hasEP,rank:rankScore,group,isStage2:stage>=20&&stage<=22};
+}
+
+let view='rank', results=[], sortKey='rank', sortDir=-1;
+const scCls=v=>v>=85?'t1':(v>=70?'t2':'t3');
+function render(){
+  const floor=$('floorSel').value;
+  let rows=results.filter(r=>{const d=r.d; if(floor&&r.floor!==floor)return false;
+    if(view==='rank')return d.isStage2; if(view==='classic')return d.classic>=70; if(view==='ep')return d.hasEP; return true;});
+  const defKey={rank:'rank',classic:'classic',ep:'ep',all:'rank'}[view];
+  const sk=sortKey||defKey;
+  rows.sort((a,b)=>{let va,vb;
+    if(sk==='tk')return sortDir*((a.tk<b.tk)?-1:(a.tk>b.tk?1:0));
+    if(sk==='floor')return sortDir*((a.floor<b.floor)?-1:(a.floor>b.floor?1:0));
+    if(sk==='group')return sortDir*((a.d.group<b.d.group)?-1:(a.d.group>b.d.group?1:0));
+    if(sk==='px')[va,vb]=[a.d.px,b.d.px];else if(sk==='val')[va,vb]=[a.d.val20,b.d.val20];
+    else if(sk==='stage')[va,vb]=[a.d.stage,b.d.stage];else if(sk==='classic')[va,vb]=[a.d.classic,b.d.classic];
+    else if(sk==='ep')[va,vb]=[a.d.ep,b.d.ep];else [va,vb]=[a.d.rank,b.d.rank];
+    return sortDir*((va||0)-(vb||0))||(b.d.rank-a.d.rank);});
+  $('body').innerHTML=rows.map((r,idx)=>{const d=r.d,st=STG[d.stage]||STG[0];
+    return `<tr onclick="location.href='phan-tich-ky-thuat.html#${r.tk}'">
+      <td class="muted">${idx+1}</td><td style="font-weight:800">${r.tk}${d.hasEP?' <span class="ep">EP</span>':''}</td><td class="muted">${r.floor||'—'}</td>
+      <td>${fpx(d.px)}</td><td>${(d.val20/1e9).toFixed(1)}</td>
+      <td><span class="stg ${st[1]}">${st[0]}</span></td>
+      <td><span class="sc ${scCls(d.classic)}">${d.classic}</span></td>
+      <td><span class="sc ${scCls(d.ep)}">${d.ep}</span></td>
+      <td><span class="sc ${scCls(d.rank)}">${d.rank}</span></td>
+      <td><span class="grp gr${d.group}">${d.group}</span></td></tr>`;}).join('')
+    || `<tr><td colspan="10" class="muted" style="padding:18px">Không có mã nào ở chế độ này${floor?' · sàn '+floor:''}.</td></tr>`;
+  const nA=rows.filter(r=>r.d.group==='A').length;
+  $('stat').textContent=`${rows.length} mã · ${nA} Group A`;
+}
+async function runScan(){
+  results=[]; $('scanBtn').disabled=true; $('stat').textContent='⏳ tải VNINDEX…'; $('body').innerHTML='';
+  IDX=await loadIndex();
+  const UNI=await loadUniverse(); const total=UNI.length; let done=0,ok=0;
+  const CONC=8;
+  for(let i=0;i<total;i+=CONC){
+    const part=UNI.slice(i,i+CONC);
+    await Promise.all(part.map(async ([tk,floor])=>{
+      let d=null; try{const j=await dchart(tk); if(j)d=scan(j);}catch(e){}
+      if(d&&d.isLiquid){ok++;results.push({tk,floor,d});}
+      done++;
+    }));
+    $('prog').style.width=Math.round(done/total*100)+'%';
+    $('stat').textContent=`⏳ quét ${done}/${total}… (đạt lọc: ${ok})`;
+    if(done%120<CONC)render();
+  }
+  $('scanBtn').disabled=false; $('prog').style.width='100%'; render();
+  $('stat').textContent=`✓ quét ${done}/${total} · ${ok} mã đạt lọc · ${new Date().toLocaleTimeString('vi-VN')}`;
+}
+$('segView').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('segView').querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');view=b.dataset.v;sortKey={rank:'rank',classic:'classic',ep:'ep',all:'rank'}[view];sortDir=-1;render();});
+$('floorSel').onchange=render;
+$('scanBtn').onclick=runScan;
+document.querySelectorAll('thead th[data-k]').forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=(k==='tk'||k==='floor')?1:-1;}render();});
+runScan();
+</script>
+</body>
+</html>
