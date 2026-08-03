@@ -60,7 +60,7 @@
   <header>
     <span class="tag">Weinstein Stage Analysis · Classic · EP · Ranking</span>
     <h1>WeinsteinMan — Phân tích Giai đoạn (Stage 1–4) + Chấm điểm</h1>
-    <div class="sub">Chuyển từ AFL "WeinsteinMan". Xác định <b>Stage 1/2/3/4 + substage</b> theo MA150 (≈30 tuần), MA200, RS Line vs VNINDEX, KMAs. Chấm 3 điểm 0–100: <b>Classic</b> (breakout nền chuẩn Weinstein/CANSLIM), <b>EP</b> (Episodic Pivot — gap ≥10% + vol ≥5×), <b>Ranking</b> (xếp hạng Stage 2 → Group A/B/C). Lọc thanh khoản KL TB20 ≥100k &amp; GT ≥1 tỷ &amp; mọi phiên ≥50k. Bấm mã → chart. Quét ~3–5 phút.</div>
+    <div class="sub">Chuyển từ AFL "WeinsteinMan". Xác định <b>Stage 1/2/3/4 + substage</b> theo MA150 (≈30 tuần), MA200, RS Line vs VNINDEX, KMAs. Chấm 3 điểm 0–100: <b>Classic</b> (breakout nền chuẩn Weinstein/CANSLIM), <b>EP</b> (Episodic Pivot — phiên tăng gần trần: HOSE ~6.5%/HNX 9%/UPCOM 13% + vol ≥5×), <b>Ranking</b> (xếp hạng Stage 2 → Group A/B/C). Lọc thanh khoản KL TB20 ≥100k &amp; GT ≥1 tỷ &amp; mọi phiên ≥50k. Bấm mã → chart. Quét ~3–5 phút.</div>
     <div class="ctrl">
       <div class="seg" id="segView"><button class="on" data-v="rank">Stage 2 (xếp hạng)</button><button data-v="classic">Classic ≥70</button><button data-v="ep">Episodic Pivot</button><button data-v="all">Tất cả</button></div>
       <select id="floorSel"><option value="">Tất cả sàn</option><option>HOSE</option><option>HNX</option><option>UPCOM</option></select>
@@ -73,7 +73,7 @@
     <th>STT</th><th data-k="tk">Mã</th><th data-k="floor">Sàn</th><th data-k="px">Giá</th><th data-k="val">GT TB20 (tỷ)</th>
     <th data-k="stage">Stage</th><th data-k="classic">Classic</th><th data-k="ep">EP</th><th data-k="rank">Rank</th><th data-k="group">Group</th>
   </tr></thead><tbody id="body"></tbody></table></div>
-  <div class="note"><b>Stage</b> (Weinstein): <b>1</b> tạo nền (1A/1B) · <b>2</b> tăng giá — điểm mua (2A đầu sóng gần MA150, 2B cuối sóng đã giãn) · <b>3</b> phân phối (3A/3B) · <b>4</b> giảm (4A/4B). <b>Classic</b> = điểm breakout nền (Stage 1B→2A, RS Line đỉnh mới, volume ≥150-200% TB50, KMAs, base ≥5-7 tuần). <b>EP</b> = Episodic Pivot (gap ≥10% + vol ≥5-10× + catalyst, xuất phát từ Stage 1/đầu 2); nhãn <span class="ep">EP</span> = có tín hiệu ≤15 phiên. <b>Rank</b> = xếp hạng Stage 2 (RS vs thị trường, momentum 3T vs VNINDEX, độ bền, dòng tiền OBV) → <b>Group A ≥75 / B 50-74 / C &lt;50</b>. Tier: ≥85=T1, ≥70=T2. Dữ liệu VNDirect, benchmark VNINDEX. Tham khảo, không phải khuyến nghị.</div>
+  <div class="note"><b>Stage</b> (Weinstein): <b>1</b> tạo nền (1A/1B) · <b>2</b> tăng giá — điểm mua (2A đầu sóng gần MA150, 2B cuối sóng đã giãn) · <b>3</b> phân phối (3A/3B) · <b>4</b> giảm (4A/4B). <b>Classic</b> = điểm breakout nền (Stage 1B→2A, RS Line đỉnh mới, volume ≥150-200% TB50, KMAs, base ≥5-7 tuần). <b>EP</b> = Episodic Pivot (phiên tăng <b>gần trần</b> — HOSE ~6.5% / HNX 9% / UPCOM 13%, vì VN có biên độ nên không gap ≥10% như Mỹ — kèm vol ≥5× + xuất phát từ Stage 1/đầu 2); nhãn <span class="ep">EP</span> = có tín hiệu ≤15 phiên. <b>Rank</b> = xếp hạng Stage 2 (RS vs thị trường, momentum 3T vs VNINDEX, độ bền, dòng tiền OBV) → <b>Group A ≥75 / B 50-74 / C &lt;50</b>. Tier: ≥85=T1, ≥70=T2. Dữ liệu VNDirect, benchmark VNINDEX. Tham khảo, không phải khuyến nghị.</div>
 </div>
 
 <script>
@@ -110,7 +110,7 @@ async function loadIndex(){
 const STG={41:['4A','st4'],42:['4','st4'],43:['4B','st4'],31:['3A','st3'],32:['3','st3'],33:['3B','st3'],21:['2A','st2a'],20:['2','st2'],22:['2B','st2b'],11:['1A','st1'],12:['1B','st1'],0:['—','st1']};
 
 // ===== WeinsteinMan scan cho 1 mã =====
-function scan(j){
+function scan(j,floor){
   const R=toRows(j),n=R.length; if(n<210)return null;
   const C=R.map(r=>r.c),H=R.map(r=>r.h),L=R.map(r=>r.l),O=R.map(r=>r.o),V=R.map(r=>r.v),D=R.map(r=>r.d),i=n-1;
   // thanh khoản (early-exit)
@@ -165,13 +165,15 @@ function scan(j){
   const isWeak=rsDivBear||(relVol>2&&roc1<0.5);
   const ratingMod=isPristine?5:(isWeak?-5:0);
   const clamp=x=>Math.max(0,Math.min(100,x));
-  // ===== EP =====
-  let bse=999;for(let k=i;k>=Math.max(0,i-20);k--){const gp=C[k-1]?(O[k]-C[k-1])/C[k-1]*100:0,rv=avgVol[k]?V[k]/avgVol[k]:0;if(gp>=10&&rv>=5&&code[k]>0&&code[k]<=22){bse=i-k;break;}}
+  // ===== EP (Episodic Pivot) — CHỈNH theo biên độ sàn VN (không gap ≥10% như Mỹ) =====
+  const epLimit=floor==='HNX'?9:(floor==='UPCOM'?13:6.5);   // phiên "bùng nổ" = tăng gần trần từng sàn
+  const epMove=k=>C[k-1]?Math.max((C[k]-C[k-1])/C[k-1]*100,(O[k]-C[k-1])/C[k-1]*100):0;   // % tăng phiên (đóng cửa) HOẶC gap mở cửa
+  let bse=999;for(let k=i;k>=Math.max(0,i-20);k--){const rv=avgVol[k]?V[k]/avgVol[k]:0;if(epMove(k)>=epLimit&&rv>=5&&code[k]>0&&code[k]<=22){bse=i-k;break;}}
   const hasEP=bse<=15, epBar=hasEP?i-bse:i;
   const isDay1=bse===0, isDelayed=bse>=3&&bse<=15&&C[i]>M10[i]&&V[i]<avgVol[i]*1.2;
   let epScore=0;
-  if(hasEP){const gpb=C[epBar-1]?(O[epBar]-C[epBar-1])/C[epBar-1]*100:0, rvb=avgVol[epBar]?V[epBar]/avgVol[epBar]:0, cb=code[epBar];
-    const e1=gpb>=15?15:12, e2=rvb>=8?15:(rvb>=5?12:8), e3=(cb===12||cb===21)?15:8, e4=(rs[epBar]!=null&&rs[epBar]>=hh(rs,50,epBar))?10:5,
+  if(hasEP){const mvb=epMove(epBar), rvb=avgVol[epBar]?V[epBar]/avgVol[epBar]:0, cb=code[epBar];
+    const e1=mvb>=epLimit+4?15:12, e2=rvb>=8?15:(rvb>=5?12:8), e3=(cb===12||cb===21)?15:8, e4=(rs[epBar]!=null&&rs[epBar]>=hh(rs,50,epBar))?10:5,
       e5=C[epBar]>(H[epBar]+L[epBar])/2?10:5, e6=7, e7=isDelayed?15:(isDay1?10:5), e8=isDelayed&&C[i]>M10[i]?10:(isDay1?7:5);
     epScore=clamp(e1+e2+e3+e4+e5+e6+e7+e8);}
   // ===== CLASSIC =====
@@ -233,7 +235,7 @@ async function runScan(){
   for(let i=0;i<total;i+=CONC){
     const part=UNI.slice(i,i+CONC);
     await Promise.all(part.map(async ([tk,floor])=>{
-      let d=null; try{const j=await dchart(tk); if(j)d=scan(j);}catch(e){}
+      let d=null; try{const j=await dchart(tk); if(j)d=scan(j,floor);}catch(e){}
       if(d&&d.isLiquid){ok++;results.push({tk,floor,d});}
       done++;
     }));
