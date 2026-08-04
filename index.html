@@ -523,23 +523,30 @@ const NEWS_SRC=[
   {k:'cafef',    name:'CafeF',    color:'#e0282e',url:'https://cafef.vn/thi-truong-chung-khoan.rss'},
   {k:'vietstock',name:'Vietstock',color:'#1f6fb2',url:'https://vietstock.vn/145/chung-khoan.rss'},
   {k:'tnck',     name:'TNCK',     color:'#2e9e5b',url:['https://www.tinnhanhchungkhoan.vn/rss/chung-khoan-307.rss','https://www.tinnhanhchungkhoan.vn/rss/tai-chinh-309.rss']},
-  {k:'vneco',    name:'VnEconomy',color:'#7c5cf6',url:'https://vneconomy.vn/chung-khoan.rss'}
+  {k:'vneco',    name:'VnEconomy',color:'#7c5cf6',url:'https://vneconomy.vn/chung-khoan.rss'},
+  // ===== Tin QUỐC TẾ (dịch sang tiếng Việt) =====
+  {k:'cnbc',     name:'CNBC',     color:'#0068a5',intl:true,url:'https://www.cnbc.com/id/100003114/device/rss/rss.html'},
+  {k:'investing',name:'Investing',color:'#d0902a',intl:true,url:'https://www.investing.com/rss/news_25.rss'},
+  {k:'wsj',      name:'WSJ',      color:'#4a4a5a',intl:true,url:'https://feeds.a.dj.com/rss/RSSMarketsMain.xml'},
+  {k:'aljz',     name:'Địa chính trị',color:'#b5893f',intl:true,url:'https://www.aljazeera.com/xml/rss/all.xml'}
 ];
 let newsItems=[], newsFilter='ALL', _newsBusy=false;
 const escH=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 function parseRSS(xml,src){
   try{
     const doc=new DOMParser().parseFromString(xml,'text/xml');
-    return [...doc.querySelectorAll('item')].slice(0,25).map(it=>{
+    return [...doc.querySelectorAll('item')].slice(0,src.intl?10:25).map(it=>{
       const g=t=>{const e=it.querySelector(t);return e?e.textContent.trim():'';};
       const pd=g('pubDate'); const tm=pd?Date.parse(pd):NaN;
-      return {title:g('title'),link:g('link'),src,t:isFinite(tm)?tm:0};
+      return {title:g('title'),link:g('link'),src,intl:!!src.intl,t:isFinite(tm)?tm:0};
     }).filter(x=>x.title&&x.link);
   }catch(e){return [];}
 }
 function renderNews(){
   let rows=newsItems;
-  if(newsFilter!=='ALL')rows=rows.filter(r=>r.src.k===newsFilter);
+  if(newsFilter==='intl')rows=rows.filter(r=>r.intl);
+  else if(newsFilter==='vn')rows=rows.filter(r=>!r.intl);
+  else if(newsFilter!=='ALL')rows=rows.filter(r=>r.src.k===newsFilter);
   rows=rows.slice(0,70);
   $i('newsList').innerHTML=rows.map(r=>{
     const tm=r.t?new Date(r.t).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):'—';
@@ -555,7 +562,8 @@ const IMP_KW=[
   [/thâu tóm|mua lại|phát hành|chào bán|sáp nhập|thoái vốn|\bm&a\b|chuyển nhượng|cổ đông lớn|chào mua công khai|đăng ký mua|đăng ký bán/i,2,'Thương vụ'],
   [/cảnh báo|vi phạm|hủy niêm yết|đình chỉ|điều tra|khởi tố|thao túng|xử phạt|giải chấp|kiểm soát|bán giải chấp|lừa đảo|bắt giữ|truy tố/i,3,'Cảnh báo'],
   [/giảm sàn|tăng trần|kịch trần|kịch sàn|lao dốc|bứt phá|bốc hơi|tăng mạnh|giảm mạnh|tím trần|nằm sàn|trắng bên mua/i,2,'Biến động'],
-  [/giá vàng|\bvàng\b|dầu thô|brent|\bwti\b|bitcoin|\bbtc\b|crypto|giá dầu/i,1,'Hàng hoá']
+  [/giá vàng|\bvàng\b|dầu thô|brent|\bwti\b|bitcoin|\bbtc\b|crypto|giá dầu/i,1,'Hàng hoá'],
+  [/chiến tranh|xung đột|tấn công|không kích|trừng phạt|cấm vận|nga|ukraine|israel|iran|trung đông|đài loan|hạt nhân|tên lửa|căng thẳng|khủng hoảng|suy thoái|vỡ nợ|\bwar\b|sanction/i,3,'Địa chính trị']
 ];
 function importance(it){
   const title=it.title||''; let score=0; const tags=[];
@@ -586,12 +594,32 @@ async function fetchNews(){
     // khử trùng lặp theo tiêu đề (nhiều feed có thể trùng bài)
     const seen={},uniq=[];
     for(const it of all){const k=(it.title||'').toLowerCase().replace(/\s+/g,' ').trim();if(k&&!seen[k]){seen[k]=1;uniq.push(it);}}
-    if(uniq.length){newsItems=uniq.sort((a,b)=>b.t-a.t);renderNews();renderImp();$i('newsUpd').textContent='● '+new Date().toLocaleTimeString('vi-VN')+' · '+uniq.length+' tin';}
+    if(uniq.length){newsItems=uniq.sort((a,b)=>b.t-a.t);renderNews();renderImp();$i('newsUpd').textContent='● '+new Date().toLocaleTimeString('vi-VN')+' · '+uniq.length+' tin';
+      // dịch tiêu đề tin QUỐC TẾ sang tiếng Việt (nền, xong render lại)
+      const intl=uniq.filter(x=>x.intl&&x.title&&!x.titleEn);
+      if(intl.length)translateVI([...new Set(intl.map(x=>x.title))]).then(()=>{
+        intl.forEach(x=>{const vi=_trCache[x.title];if(vi&&vi!==x.title){x.titleEn=x.title;x.title=vi;}});renderNews();renderImp();});
+    }
     else $i('newsUpd').textContent='⚠ chưa tải được tin (CORS/proxy) — bấm ↻';
   }finally{_newsBusy=false;}
 }
+// Dịch EN→VI qua Google Translate free (CORS *, batch nhiều tiêu đề/1 request, có cache)
+const _trCache={};
+async function translateVI(titles){
+  const need=titles.filter(t=>!(t in _trCache));
+  for(let i=0;i<need.length;i+=15){
+    const chunk=need.slice(i,i+15);
+    try{
+      const q=encodeURIComponent(chunk.join('\n'));
+      const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=vi&dt=t&q='+q,{cache:'no-store'});
+      if(r.ok){const j=await r.json();const lines=j[0].map(x=>x[0]).join('').split('\n');
+        chunk.forEach((t,idx)=>{_trCache[t]=(lines[idx]||t).trim();});}
+      else chunk.forEach(t=>_trCache[t]=t);
+    }catch(e){chunk.forEach(t=>_trCache[t]=t);}
+  }
+}
 function buildNewsFilter(){
-  const fs=[['ALL','Tất cả']].concat(NEWS_SRC.map(s=>[s.k,s.name]));
+  const fs=[['ALL','Tất cả'],['vn','🇻🇳 Trong nước'],['intl','🌍 Quốc tế']].concat(NEWS_SRC.map(s=>[s.k,s.name]));
   $i('newsFilter').innerHTML=fs.map(([k,l])=>`<button class="rfbtn${k===newsFilter?' on':''}" data-n="${k}">${l}</button>`).join('');
   $i('newsFilter').querySelectorAll('button').forEach(b=>b.onclick=()=>{newsFilter=b.dataset.n;buildNewsFilter();renderNews();});
 }
