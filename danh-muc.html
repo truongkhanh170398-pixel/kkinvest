@@ -68,6 +68,11 @@
   .note{color:var(--muted);font-size:11.5px;margin-top:10px;line-height:1.6}
   .bar{height:5px;background:var(--card2);border-radius:3px;margin-top:10px;overflow:hidden}.bar>div{height:5px;background:var(--accent);width:0;transition:width .2s}
   .mini{font-size:11px;color:var(--muted)}
+  .cns{font-weight:800;padding:2px 8px;border-radius:6px;display:inline-block;min-width:32px;text-align:center}
+  .cns.hi{background:rgba(34,197,94,.22);color:#7fe3a5}.cns.md{background:rgba(226,179,59,.18);color:#f0c26b}.cns.lo{background:var(--card2);color:var(--muted)}
+  .sb2{font-weight:800;padding:1px 7px;border-radius:5px;font-size:11px}
+  .sb2.st2{background:rgba(34,197,94,.18);color:#7fe3a5}.sb2.st1{background:var(--card2);color:#9fb0d0}.sb2.st3{background:rgba(226,140,59,.2);color:#f0b86b}.sb2.st4{background:rgba(239,71,87,.2);color:#f5a3ac}
+  .vd{font-weight:800;padding:2px 8px;border-radius:6px;font-size:11px}.vd.up{background:rgba(34,197,94,.18);color:#7fe3a5}.vd.warn{background:rgba(226,179,59,.18);color:#f0c26b}.vd.dn{background:rgba(239,71,87,.18);color:#f5a3ac}
 </style>
 </head>
 <body>
@@ -110,6 +115,17 @@
     <div class="card"><div class="l">Sụt giảm tối đa</div><div class="v" id="cDD">—</div><div class="s">max drawdown</div></div>
   </div>
 
+  <div class="two">
+    <div class="panel"><h3>🩺 Sức khỏe danh mục — soi 4 công cụ <span class="c" id="healthSum"></span></h3>
+      <div class="tablebox"><table><thead><tr><th>Mã</th><th>Giai đoạn</th><th>Đồng thuận</th><th>Điểm mua</th><th>DuckMan</th><th>Hehe</th><th>Weinstein</th><th>Đánh giá</th></tr></thead><tbody id="healthBody"></tbody></table></div>
+      <div class="mini" style="margin-top:6px">Soi mỗi mã ĐANG GIỮ qua 4 lăng kính → 🟢 khỏe · 🟡 chú ý · 🔴 nên bán. Đồng thuận = điểm tổng hợp 0–100 (Stage 3/4 & tín hiệu bán bị hạ mạnh).</div>
+    </div>
+    <div class="panel"><h3>🎯 Radar MUA đồng thuận <span class="c" id="radarSum"></span></h3>
+      <div class="tablebox" style="max-height:392px"><table><thead><tr><th>#</th><th>Mã</th><th>Đồng thuận</th><th>Giai đoạn</th><th>ĐM</th><th>DK</th><th>Hehe</th><th>Stage·Grp</th></tr></thead><tbody id="radarBody"></tbody></table></div>
+      <div class="mini" style="margin-top:6px">Xếp rổ theo dõi (~82 mã) theo <b>đồng thuận 4 công cụ</b> — cao nhất trên đầu. <span style="color:#7fe3a5">●</span> đang giữ. Vòng đời lý tưởng: 🌱 Gom hàng → 📈 Dẫn dắt → 🎯 Điểm nổ.</div>
+    </div>
+  </div>
+
   <div class="panel"><h3>Đường NAV danh mục <span class="c" id="navRange"></span></h3><div class="chartbox"><canvas id="equity"></canvas></div>
     <div class="mini" style="margin-top:6px">● Chấm trên đường NAV = điểm <b style="color:#22c55e">chốt lời/bán lãi</b> hoặc <b style="color:#ef4757">cắt lỗ</b> — rê chuột xem mã & lợi nhuận lệnh.</div></div>
 
@@ -145,22 +161,87 @@ const UNIV=['HPG','SSI','MWG','FPT','VND','VIX','SHB','STB','MBB','VPB','TCB','A
   'LPB','TPB','SSB','OCB','BID','SHS','MBS','FTS','BSI','CTS','CEO','CII','VCG','HHV','CTD','DPM','BMP','DRC','PHR','SIP','SZC','IDC','NT2','PC1','REE','SBT','ANV','VHC','DGW','CTR','CMG','MSN','VNM','SAB','VJC','HVN','ACV','GAS','PLX','DHC','BAF','TCH','VPI'];
 const PROX=[x=>x,x=>'/api/proxy?url='+encodeURIComponent(x),x=>'https://corsproxy.io/?url='+encodeURIComponent(x),x=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(x),x=>'https://api.allorigins.win/raw?url='+encodeURIComponent(x)];
 async function tf(u,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(u,{cache:'no-store',signal:c.signal});if(!r.ok)throw 0;return await r.json();}finally{clearTimeout(t);}}
-async function dchart(sym){const to=Math.floor(Date.now()/1000),from=to-380*86400;const u=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${sym}&from=${from}&to=${to}`;for(const p of PROX){try{const j=await tf(p(u),9000);if(j&&j.s==='ok'&&j.c&&j.c.length>60)return j;}catch(e){}}return null;}
+async function dchart(sym){const to=Math.floor(Date.now()/1000),from=to-500*86400;const u=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${sym}&from=${from}&to=${to}`;for(const p of PROX){try{const j=await tf(p(u),9000);if(j&&j.s==='ok'&&j.c&&j.c.length>60)return j;}catch(e){}}return null;}
 const toV=v=>v<1000?v*1000:v;
 function sma(a,n){const o=Array(a.length).fill(null);let s=0;for(let i=0;i<a.length;i++){s+=a[i];if(i>=n)s-=a[i-n];if(i>=n-1)o[i]=s/n;}return o;}
 // VNINDEX làm chuẩn RS (relative strength) — giá đóng cửa theo ngày, forward-fill
 async function loadIdx(){
   const j=await dchart('VNINDEX'); if(!j)return null;
-  const seen={},dates=[],cm={};
-  j.t.map((t,k)=>({d:new Date(t*1000).toISOString().slice(0,10),c:j.c[k]})).filter(r=>r.c>0).sort((a,b)=>a.d<b.d?-1:1)
-    .forEach(r=>{if(!seen[r.d]){seen[r.d]=1;dates.push(r.d);cm[r.d]=r.c;}});
-  return {closeAt(d){if(cm[d]!=null)return cm[d];let lo=0,hi=dates.length-1,res=null;while(lo<=hi){const m=(lo+hi)>>1;if(dates[m]<=d){res=cm[dates[m]];lo=m+1;}else hi=m-1;}return res;}};
+  const seen={},dates=[],cm={},R=[];
+  j.t.map((t,k)=>({d:new Date(t*1000).toISOString().slice(0,10),o:j.o[k],h:j.h[k],l:j.l[k],c:j.c[k]})).filter(r=>r.c>0).sort((a,b)=>a.d<b.d?-1:1)
+    .forEach(r=>{if(!seen[r.d]){seen[r.d]=1;dates.push(r.d);cm[r.d]=r.c;R.push(r);}});
+  // tuần VNINDEX (cho tiêu chí DuckMan W:RS Drop / W:RS Div)
+  const wk=d=>{const dt=new Date(d+'T00:00:00Z');const dy=(dt.getUTCDay()+6)%7;dt.setUTCDate(dt.getUTCDate()-dy);return dt.toISOString().slice(0,10);};
+  const wm=new Map();for(const r of R){const k=wk(r.d);let g=wm.get(k);if(!g){g={k,o:r.o,h:r.h,l:r.l,c:r.c};wm.set(k,g);}else{if(r.h>g.h)g.h=r.h;if(r.l<g.l)g.l=r.l;g.c=r.c;}}
+  const iwA=[...wm.values()],iwk={};iwA.forEach((g,ix)=>{let mx=-1e18;for(let q=Math.max(0,ix-51);q<=ix;q++)mx=Math.max(mx,iwA[q].h);g.h52=mx;g.prevL=ix>0?iwA[ix-1].l:g.l;g.prevC=ix>0?iwA[ix-1].c:g.c;iwk[g.k]=g;});
+  return {iwk,closeAt(d){if(cm[d]!=null)return cm[d];let lo=0,hi=dates.length-1,res=null;while(lo<=hi){const m=(lo+hi)>>1;if(dates[m]<=d){res=cm[dates[m]];lo=m+1;}else hi=m-1;}return res;}};
 }
 
 let SYM={}; let AXIS=[]; let IDX=null; let equityChart=null; let allocChart=null; let startMode='today';
 const PAL=['#4f8cff','#26c281','#e2b33b','#ef4757','#a78bfa','#ec6a9c','#34d399','#f5b301','#fb7185','#22c55e','#38bdf8','#f97316','#c084fc','#2dd4bf'];
 const CASH_COL='#5a6b8c';
 const pct2=n=>n.toLocaleString('vi-VN',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+// ===== BỘ PHÂN TÍCH ĐA CÔNG CỤ: Điểm Mua + DuckMan(9) + Heheman(Leading) + Weinstein(Stage) → Đồng thuận =====
+const A4=(function(){
+  const ema=(a,n)=>{const o=Array(a.length).fill(null);const k=2/(n+1);let p=null;for(let i=0;i<a.length;i++){p=(p==null)?a[i]:a[i]*k+p*(1-k);o[i]=p;}return o;};
+  const hh=(a,w,k)=>{let m=-1e18;for(let q=Math.max(0,k-w+1);q<=k;q++)if(a[q]!=null&&a[q]>m)m=a[q];return m;};
+  const ll=(a,w,k)=>{let m=1e18;for(let q=Math.max(0,k-w+1);q<=k;q++)if(a[q]!=null&&a[q]<m)m=a[q];return m;};
+  const slope=(a,k,m)=>{const st=Math.max(0,k-m+1),c=k-st+1;let sx=0,sy=0,sxy=0,sxx=0;for(let t=0;t<c;t++){const x=t,y=a[st+t];sx+=x;sy+=y;sxy+=x*y;sxx+=x*x;}const den=c*sxx-sx*sx;return den?(c*sxy-sx*sy)/den:0;};
+  const wild=(a,p)=>{const o=Array(a.length).fill(null);let s=0;for(let i=1;i<=p&&i<a.length;i++)s+=a[i]||0;if(a.length>p)o[p]=s;for(let i=p+1;i<a.length;i++){s=s-s/p+(a[i]||0);o[i]=s;}return o;};
+  const wKey=d=>{const dt=new Date(d+'T00:00:00Z');const dy=(dt.getUTCDay()+6)%7;dt.setUTCDate(dt.getUTCDate()-dy);return dt.toISOString().slice(0,10);};
+  const mKey=d=>d.slice(0,7);
+  const agg=(R,f)=>{const m=new Map();for(const r of R){const k=f(r.d);let g=m.get(k);if(!g){g={k,o:r.o,h:r.h,l:r.l,c:r.c};m.set(k,g);}else{if(r.h>g.h)g.h=r.h;if(r.l<g.l)g.l=r.l;g.c=r.c;}}return[...m.values()];};
+  function diemMua(R){const C=R.map(r=>r.c),H=R.map(r=>r.h),L=R.map(r=>r.l),n=C.length,ma20=sma(C,20);let last=null,inBuy=false,inSell=false;
+    for(let i=8;i<n;i++){const mua=C[i]>=H[i-1]&&C[i]>=H[i-2]&&C[i]>=H[i-3]&&C[i]>=H[i-4]&&ma20[i]&&C[i]>ma20[i];const ban=C[i]<=L[i-1]&&C[i]<=L[i-2]&&C[i]<=L[i-3]&&C[i]<=L[i-4]&&C[i]<=L[i-5]&&C[i]<=L[i-6]&&C[i]<=L[i-7]&&C[i]<=L[i-8];if(mua&&!inBuy){inBuy=true;inSell=false;last={t:'MUA',i};}if(ban&&!inSell){inSell=true;inBuy=false;last={t:'BAN',i};}}
+    return last?{sig:last.t,ago:n-1-last.i}:{sig:'-',ago:999};}
+  function duckman(R,idx){const C=R.map(r=>r.c),n=C.length,i=n-1;const rs=new Array(n);let lst=null;for(let k=0;k<n;k++){const vn=idx?idx.closeAt(R[k].d):null;let v=vn?C[k]/vn:null;if(v==null)v=lst;rs[k]=v;lst=v;}
+    const e5=ema(C,5),e8=ema(C,8),s10=sma(C,10),e21=ema(C,21);let maxC=-1e18;for(let k=0;k<n;k++)if(C[k]>maxC)maxC=C[k];const isATH=C[i]>=maxC*0.999;const rsNH=rs[i]!=null&&rs[i]>=hh(rs,252,i);const dMA=e5[i]>e8[i]&&e8[i]>s10[i]&&s10[i]>e21[i];
+    const wk=agg(R,wKey),wn=wk.length,wi=wn-1,wC=wk.map(x=>x.c),wH=wk.map(x=>x.h);let w52=-1e18;for(let k=Math.max(0,wn-52);k<wn;k++)w52=Math.max(w52,wH[k]);const pOff=(w52-wC[wi])/w52;const iw=idx?idx.iwk[wk[wi].k]:null;let wDrop=false,wDiv=false;if(iw&&iw.h52>0){wDrop=pOff<((iw.h52-iw.c)/iw.h52);wDiv=wi>0&&wH[wi]>wk[wi-1].h&&iw.l<iw.prevL;}
+    const w5g=wn>=5&&wk.slice(wn-5).every(x=>x.c>x.o);let wt=false;if(wn>=4){const l4=wC.slice(wn-4),mx=Math.max(...l4),mn=Math.min(...l4);wt=mn>0&&(mx-mn)/mn<0.05;}
+    const mk=agg(R,mKey),mn2=mk.length,mi=mn2-1,mC=mk.map(x=>x.c);const big=(mi>=1&&mC[mi]/mC[mi-1]>1.5)||(mi>=2&&mC[mi]/mC[mi-2]>1.5)||(mi>=3&&mC[mi]/mC[mi-3]>1.5)||(mi>=6&&mC[mi]/mC[mi-6]>1.5);const ms10=sma(mC,Math.min(10,mn2)),msL=sma(mC,Math.min(50,mn2));const mma=ms10[mi]!=null&&msL[mi]!=null&&ms10[mi]>msL[mi]&&mn2>=6;
+    return {score:[isATH,rsNH,dMA,wDrop,wDiv,w5g,wt,big,mma].reduce((s,b)=>s+(b?1:0),0),rsRising:rs[i]!=null&&rs[i-10]!=null&&rs[i]>rs[i-10]};}
+  function heheman(R){const C=R.map(r=>r.c),H=R.map(r=>r.h),L=R.map(r=>r.l),V=R.map(r=>r.v),n=C.length,i=n-1;const av=sma(V,50);
+    const tight=(hh(H,4,i)-ll(L,4,i))/C[i]*100<5;const obv=Array(n).fill(0);for(let k=1;k<n;k++)obv[k]=obv[k-1]+(C[k]>C[k-1]?V[k]:C[k]<C[k-1]?-V[k]:0);
+    const mfv=C.map((c,k)=>{const r=H[k]-L[k];return (r>0?((c-L[k])-(H[k]-c))/r:0)*V[k];});const ad=Array(n).fill(0);for(let k=0;k<n;k++)ad[k]=(k>0?ad[k-1]:0)+mfv[k];
+    let cmf=0;{let sm=0,sv=0;for(let q=i-19;q<=i;q++){sm+=mfv[q];sv+=V[q];}cmf=sm/(sv+1e-10);}let cmfP=0;{let sm=0,sv=0;for(let q=i-22;q<=i-3;q++){sm+=mfv[q];sv+=V[q];}cmfP=sm/(sv+1e-10);}const cmfPos=cmf>0&&cmf>cmfP;
+    const tp=C.map((c,k)=>(H[k]+L[k]+c)/3),rmf=tp.map((t,k)=>t*V[k]);const mfiAt=(a,b)=>{let po=0,ne=0;for(let q=a;q<=b;q++){if(tp[q]>tp[q-1])po+=rmf[q];else if(tp[q]<tp[q-1])ne+=rmf[q];}return ne===0?100:100-100/(1+po/ne);};const mfi=mfiAt(i-13,i);const mfiBull=mfi>50&&mfi>mfiAt(i-16,i-3);
+    const obvR=obv[i]>obv[i-5]&&obv[i]>obv[i-10],adR=ad[i]>ad[i-5]&&ad[i]>ad[i-10];const pflat=(hh(H,10,i)-ll(L,10,i))/C[i]*100<9;const mfs=(obvR||adR)&&pflat;
+    const rsi=(()=>{const o=Array(n).fill(null);let g=0,l=0;for(let k=1;k<n;k++){const ch=C[k]-C[k-1],u=Math.max(ch,0),d=Math.max(-ch,0);if(k<=14){g+=u;l+=d;if(k===14){g/=14;l/=14;o[k]=100-100/(1+(l===0?100:g/l));}}else{g=(g*13+u)/14;l=(l*13+d)/14;o[k]=100-100/(1+(l===0?100:g/l));}}return o;})();
+    const bullDiv=L[i]<ll(L,20,i-1)&&rsi[i]!=null&&rsi[i]>ll(rsi,20,i-1)&&rsi[i]<45;
+    const bwArr=Array(n).fill(null);for(let k=19;k<n;k++){let m=0;for(let q=k-19;q<=k;q++)m+=C[q];m/=20;let v=0;for(let q=k-19;q<=k;q++)v+=(C[q]-m)**2;const s=Math.sqrt(v/20);bwArr[k]=m?(4*s)/m*100:null;}const sqz=bwArr[i]!=null&&bwArr[i]<ll(bwArr,100,i-1)*1.05;
+    const e12=ema(C,12),e26=ema(C,26),macd=C.map((_,k)=>e12[k]-e26[k]),sig=ema(macd,9),hist=macd.map((mm,k)=>mm-sig[k]);const histExp=hist[i]>hist[i-1]&&hist[i]>hist[i-2]&&hist[i-2]<0;
+    const ar=k=>{let hi2=-1e18,hI=k,lo=1e18,lI=k;for(let q=Math.max(0,k-25);q<=k;q++){if(H[q]>=hi2){hi2=H[q];hI=q;}if(L[q]<=lo){lo=L[q];lI=q;}}return{up:(25-(k-hI))/25*100,dn:(25-(k-lI))/25*100};};const a0=ar(i),a1=ar(i-1);const aroonB=(a0.up>a0.dn&&a1.up<=a1.dn)||(a0.up>70&&a0.up>a0.dn);
+    const tr=Array(n),pDM=Array(n).fill(0),mDM=Array(n).fill(0);for(let k=0;k<n;k++){tr[k]=k?Math.max(H[k]-L[k],Math.abs(H[k]-C[k-1]),Math.abs(L[k]-C[k-1])):H[k]-L[k];if(k){const up=H[k]-H[k-1],dn=L[k-1]-L[k];pDM[k]=(up>dn&&up>0)?up:0;mDM[k]=(dn>up&&dn>0)?dn:0;}}
+    const trS=wild(tr,14),pS=wild(pDM,14),mS=wild(mDM,14),pdi=Array(n).fill(null),mdi=Array(n).fill(null),dx=Array(n).fill(null);for(let k=14;k<n;k++){if(trS[k]){pdi[k]=100*pS[k]/trS[k];mdi[k]=100*mS[k]/trS[k];const su=pdi[k]+mdi[k];dx[k]=su?100*Math.abs(pdi[k]-mdi[k])/su:0;}}
+    const adx=Array(n).fill(null);let ap=null,cn=0,ds=0;for(let k=14;k<n;k++){if(dx[k]==null)continue;if(ap==null){ds+=dx[k];cn++;if(cn===14){ap=ds/14;adx[k]=ap;}}else{ap=(ap*13+dx[k])/14;adx[k]=ap;}}const adxR=adx[i]!=null&&adx[i-3]!=null&&adx[i]>adx[i-3]&&adx[i]>18&&adx[i]<35&&pdi[i]>mdi[i];
+    let sc=1;if(tight)sc+=2;if(mfs)sc+=3;if(cmfPos)sc+=1;if(mfiBull)sc+=1;if(bullDiv)sc+=2;if(histExp)sc+=1;if(sqz)sc+=2;if(aroonB)sc+=1;if(adxR)sc+=1;
+    return {score:sc,strong:tight&&(mfs||cmfPos)&&(sqz||bullDiv||histExp)&&sc>=7};}
+  function weinstein(R,idx){const C=R.map(r=>r.c),H=R.map(r=>r.h),L=R.map(r=>r.l),V=R.map(r=>r.v),n=C.length,i=n-1;if(n<210)return {stage:0,rank:0,group:'C',classic:0,isStage2:false};
+    const M10=sma(C,10),M21=sma(C,21),M50=sma(C,50),M150=sma(C,150),M200=sma(C,200),av=sma(V,50);if(M200[i]==null)return {stage:0,rank:0,group:'C',classic:0,isStage2:false};
+    const rs=new Array(n);let lst=null;for(let k=0;k<n;k++){const vn=idx?idx.closeAt(R[k].d):null;let v=vn?C[k]/vn*100:null;if(v==null)v=lst;rs[k]=v;lst=v;}
+    const wa=Array(n).fill(0);let c0=0;for(let k=0;k<n;k++){if(M50[k]!=null&&C[k]>M50[k])c0++;else c0=0;wa[k]=Math.min(c0,60);}
+    const code=Array(n).fill(0);for(let k=0;k<n;k++){if(M200[k]==null||M150[k]==null)continue;const sl=(M150[k]-(k>=5?M150[k-5]:M150[k]))/5;const sUp=sl>0,sFlat=Math.abs(sl)<0.001*M150[k],sDown=sl<0;const dist=(C[k]-M150[k])/M150[k]*100;const rsDiv=C[k]>=hh(C,20,k)*0.99999&&rs[k]!=null&&rs[k]<hh(rs,20,k);const kmaE=M10[k]>M21[k]&&M21[k]>M50[k];const s4=sDown&&C[k]<M150[k]&&C[k]<M200[k]&&M10[k]<M21[k]&&M21[k]<M50[k];const s3=!s4&&(sFlat||(sUp&&dist>25&&rsDiv));const s2=C[k]>M150[k]&&C[k]>M200[k]&&sUp&&!s3&&!s4;let cd;if(s4){cd=C[k]<ll(C,20,k)*1.02&&V[k]>av[k]*1.5?41:(sDown&&M10[k]<M21[k]?42:43);}else if(s3){cd=rsDiv&&sFlat?31:((M150[k]>C[k]&&M150[k-1]<=C[k-1])||(C[k]<M150[k]&&C[k-1]>M150[k-1])?32:33);}else if(s2){cd=dist<15&&wa[k]<=8&&kmaE?21:(dist>25||wa[k]>20?22:20);}else{cd=sDown||(sFlat&&C[k]<M150[k])?11:12;}code[k]=cd;}
+    const stage=code[i],dist=(C[i]-M150[i])/M150[i]*100;const vn_i=idx?idx.closeAt(R[i].d):null,vn_63=idx&&i>=63?idx.closeAt(R[i-63].d):null;const roc63C=(i>=63&&C[i-63])?(C[i]/C[i-63]-1)*100:0,roc63vn=(vn_i&&vn_63)?(vn_i/vn_63-1)*100:0;
+    const obv=Array(n).fill(0);for(let k=1;k<n;k++)obv[k]=obv[k-1]+(C[k]>C[k-1]?V[k]:C[k]<C[k-1]?-V[k]:0);const obvMA=sma(obv,20),varsPos=obv[i]>obvMA[i],relVol=av[i]?V[i]/av[i]:0;
+    const r1=stage===21?10:(stage===20?6:(stage===22?3:0)),r2=rs[i]>=hh(rs,60,i)?15:(rs[i]>=hh(rs,30,i)?10:5),r4=roc63C>roc63vn+10?10:(roc63C>roc63vn?6:3),r5=wa[i]>=12?10:(wa[i]>=6?6:3),r6=(stage===20||stage===22)?6:3,r7=(varsPos&&relVol>1.2)?10:5,r8=stage===21?12:((stage>=20&&stage<=22)?8:4),r9=av[i]>1e5?5:(av[i]>3e4?3:1);
+    const rank=Math.max(0,Math.min(100,r1+r2+6+r4+r5+r6+r7+r8+r9+2));
+    const rsNH=rs[i]!=null&&rs[i]>=hh(rs,50,i),kmaBull=M10[i]>M21[i]&&M21[i]>M50[i]&&M50[i]>M150[i]&&M150[i]>M200[i],kmaE=M10[i]>M21[i]&&M21[i]>M50[i];
+    const s1=(stage===21)?15:(stage===20?8:0),s2c=(stage===21&&dist<12)?10:(stage===21?7:(stage===20?5:(stage===22?3:0))),s3=rsNH?15:5,s4c=relVol>=2?15:(relVol>=1.5?10:(relVol>=1.2?5:0)),s6=kmaBull?10:(kmaE?6:0),s7=(varsPos&&relVol>1.3)?10:(varsPos?6:0),s8=stage===21?12:((stage>=20&&stage<=22)?8:4);
+    return {stage,rank,group:rank>=75?'A':(rank>=50?'B':'C'),classic:Math.max(0,Math.min(100,s1+s2c+s3+s4c+10+s6+s7+s8)),isStage2:stage>=20&&stage<=22};}
+  function analyze4(R,idx){
+    const dm=diemMua(R),dk=duckman(R,idx),he=heheman(R),wn=weinstein(R,idx);
+    const heheStr=Math.min(100,he.score/12*100),weinStr=wn.rank,dkStr=dk.score/9*100;
+    const dmFresh=dm.sig==='MUA'&&dm.ago<=10,dmStr=dm.sig==='MUA'?(dm.ago<=3?100:dm.ago<=10?75:40):(dm.sig==='BAN'?0:20);
+    const nPos=[he.score>=5,wn.isStage2||wn.stage===12,dk.score>=4,dmFresh].filter(Boolean).length;
+    let consensus=Math.round(0.20*heheStr+0.30*weinStr+0.30*dkStr+0.20*dmStr);
+    if(wn.stage>=31)consensus=Math.round(consensus*0.4); if(dm.sig==='BAN')consensus=Math.round(consensus*0.6);
+    let phase;if(wn.stage>=41)phase='🔻 Suy yếu';else if(wn.stage>=31)phase='⚠ Phân phối';else if(dmFresh)phase='🎯 Điểm nổ';else if(wn.stage===21&&dk.score>=4)phase='📈 Dẫn dắt(2A)';else if(wn.stage===22)phase='🏃 Đang chạy(2B)';else if(he.strong&&wn.stage<20)phase='🌱 Gom hàng';else if(wn.isStage2)phase='📈 Stage 2';else phase='⏳ Theo dõi';
+    return {dmSig:dm.sig,dmAgo:dm.ago,dk:dk.score,dkRising:dk.rsRising,hh:he.score,heheStrong:he.strong,stage:wn.stage,wRank:wn.rank,wGroup:wn.group,wClassic:wn.classic,nPos,consensus,phase};
+  }
+  return {analyze4};
+})();
+const STG_LBL={41:'4A',42:'4',43:'4B',31:'3A',32:'3',33:'3B',21:'2A',20:'2',22:'2B',11:'1A',12:'1B',0:'—'};
+function stgCls(s){return s>=41?'st4':s>=31?'st3':s>=20?'st2':'st1';}
 async function fetchAll(){
   SYM={}; const dateset={};
   $('status').textContent='⏳ tải VNINDEX (chuẩn RS)…'; IDX=await loadIdx();
@@ -171,9 +252,9 @@ async function fetchAll(){
       const j=await dchart(tk); done++;
       $('prog').style.width=Math.round(done/UNIV.length*100)+'%'; $('status').textContent='⏳ tải giá '+done+'/'+UNIV.length+'…';
       if(!j)return;
-      const seen={},dates=[],C=[],H=[],L=[],Vv=[];
-      const rows=j.t.map((t,k)=>({d:new Date(t*1000).toISOString().slice(0,10),c:toV(j.c[k]),h:toV(j.h[k]),l:toV(j.l[k]),v:(j.v&&j.v[k])||0})).filter(r=>r.c).sort((a,b)=>a.d<b.d?-1:1);
-      rows.forEach(r=>{if(!seen[r.d]){seen[r.d]=1;dates.push(r.d);C.push(r.c);H.push(r.h);L.push(r.l);Vv.push(r.v);}});
+      const seen={},dates=[],C=[],H=[],L=[],Vv=[],rowsA=[];
+      const rows=j.t.map((t,k)=>({d:new Date(t*1000).toISOString().slice(0,10),o:toV(j.o[k]),c:toV(j.c[k]),h:toV(j.h[k]),l:toV(j.l[k]),v:(j.v&&j.v[k])||0})).filter(r=>r.c).sort((a,b)=>a.d<b.d?-1:1);
+      rows.forEach(r=>{if(!seen[r.d]){seen[r.d]=1;dates.push(r.d);C.push(r.c);H.push(r.h);L.push(r.l);Vv.push(r.v);rowsA.push({d:r.d,o:r.o,h:r.h,l:r.l,c:r.c,v:r.v});}});
       const n=C.length, ma20=sma(C,20), ma50=sma(C,50), bd={};
       // RS line (Giá/VNINDEX) + giá trị giao dịch (VND)
       const RS=new Array(n), val=new Array(n);
@@ -194,7 +275,8 @@ async function fetchAll(){
         const str=(RS[k]!=null&&k>=60&&RS[k-60]>0)?(RS[k]/RS[k-60]-1):(k>=60&&C[k-60]>0?(C[k]/C[k-60]-1):0);
         bd[dates[k]]={c:C[k],buy,sell,strong,str}; dateset[dates[k]]=1;
       }
-      SYM[tk]={bd, lastClose:C[n-1]};
+      let tools=null; try{tools=A4.analyze4(rowsA,IDX);}catch(e){}
+      SYM[tk]={bd, lastClose:C[n-1], tools};
     }));
   }
   AXIS=Object.keys(dateset).sort();
@@ -336,6 +418,34 @@ function render(R){
   const lg=R.trades.slice().reverse().slice(0,60);
   $('logBody').innerHTML=lg.map(t=>`<tr><td class="mini">${t.d}</td><td style="font-weight:800">${t.tk}</td><td><span class="sb ${t.side==='MUA'?'b-mua':'b-ban'}">${t.side}</span></td><td>${fmt(t.px)}</td><td>${fmt(t.qty)}</td><td>${trM(t.qty*t.px)}</td><td class="mini">${t.note}</td></tr>`).join('');
   $('logSum').textContent=R.trades.length+' lệnh';
+  renderDash(R);
+}
+// ===== Dashboard đa công cụ: sức khỏe vị thế + radar mua đồng thuận =====
+function renderDash(R){
+  const cnsC=v=>v>=50?'hi':(v>=30?'md':'lo');
+  const held=new Set(Object.keys(R.pos));
+  const dmTxt=t=>t.dmSig==='MUA'?('Mua '+t.dmAgo+'p'):(t.dmSig==='BAN'?('<span class="dn">Bán '+t.dmAgo+'p</span>'):'—');
+  // Sức khỏe vị thế đang giữ
+  const opens=Object.keys(R.pos).map(tk=>({tk,t:SYM[tk]&&SYM[tk].tools})).filter(x=>x.t).sort((a,b)=>b.t.consensus-a.t.consensus);
+  $('healthBody').innerHTML=opens.map(({tk,t})=>{const isS2=t.stage>=20&&t.stage<=22;
+    const vd=(t.stage>=31||t.dmSig==='BAN')?['🔴 Nên bán','dn']:(isS2&&t.dk>=4?['🟢 Khỏe','up']:['🟡 Chú ý','warn']);
+    return `<tr onclick="location.href='phan-tich-ky-thuat.html#${tk}'"><td style="font-weight:800">${tk}</td>
+      <td class="mini">${t.phase}</td><td><span class="cns ${cnsC(t.consensus)}">${t.consensus}</span></td>
+      <td class="mini">${dmTxt(t)}</td><td>${t.dk}/9${t.dkRising?' <span class="up">↑</span>':''}</td><td>${t.hh}${t.heheStrong?'<span class="up">★</span>':''}</td>
+      <td><span class="sb2 ${stgCls(t.stage)}">${STG_LBL[t.stage]}</span> <span class="mini">${t.wRank}·${t.wGroup}</span></td>
+      <td><span class="vd ${vd[1]}">${vd[0]}</span></td></tr>`;}).join('')
+    ||'<tr><td colspan="8" class="mini" style="padding:14px;text-align:center">Hiện không nắm mã nào (giữ tiền mặt).</td></tr>';
+  $('healthSum').textContent=opens.length+' mã đang giữ';
+  // Radar MUA đồng thuận (toàn rổ)
+  const rows=UNIV.map(tk=>({tk,t:SYM[tk]&&SYM[tk].tools})).filter(x=>x.t).sort((a,b)=>b.t.consensus-a.t.consensus).slice(0,30);
+  $('radarBody').innerHTML=rows.map(({tk,t},i)=>`<tr onclick="location.href='phan-tich-ky-thuat.html#${tk}'">
+      <td class="mini">${i+1}</td><td style="font-weight:800">${held.has(tk)?'<span style="color:#7fe3a5">● </span>':''}${tk}</td>
+      <td><span class="cns ${cnsC(t.consensus)}">${t.consensus}</span></td><td class="mini">${t.phase}</td>
+      <td class="mini">${t.dmSig==='MUA'?t.dmAgo+'p':(t.dmSig==='BAN'?'<span class="dn">bán</span>':'—')}</td>
+      <td>${t.dk}</td><td>${t.hh}${t.heheStrong?'★':''}</td>
+      <td><span class="sb2 ${stgCls(t.stage)}">${STG_LBL[t.stage]}</span>·${t.wGroup}</td></tr>`).join('');
+  const nHi=UNIV.map(tk=>SYM[tk]&&SYM[tk].tools).filter(t=>t&&t.consensus>=50).length;
+  $('radarSum').textContent='top '+rows.length+'/'+UNIV.length+' · '+nHi+' mã đồng thuận ≥50';
 }
 async function run(){
   $('runBtn').disabled=true; $('status').textContent='⏳ đang chạy mô phỏng…';
