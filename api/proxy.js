@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     'query2.finance.yahoo.com',
     'cafef.vn', 'vietstock.vn', 'vneconomy.vn', 'tinnhanhchungkhoan.vn',
     'apipubaws.tcbs.com.vn', '24hmoney.vn',
-    'cnbc.com', 'investing.com', 'dj.com', 'aljazeera.com'   // tin quốc tế (RSS): CNBC · Investing · WSJ/DowJones · Al Jazeera
+    'cnbc.com', 'dowjones.io'   // tin tài chính quốc tế (RSS): CNBC · MarketWatch (feeds.content.dowjones.io)
   ];
   let host;
   try { host = new URL(target).hostname.replace(/^www\./, ''); }

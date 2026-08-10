@@ -524,11 +524,10 @@ const NEWS_SRC=[
   {k:'vietstock',name:'Vietstock',color:'#1f6fb2',url:'https://vietstock.vn/145/chung-khoan.rss'},
   {k:'tnck',     name:'TNCK',     color:'#2e9e5b',url:['https://www.tinnhanhchungkhoan.vn/rss/chung-khoan-307.rss','https://www.tinnhanhchungkhoan.vn/rss/tai-chinh-309.rss']},
   {k:'vneco',    name:'VnEconomy',color:'#7c5cf6',url:'https://vneconomy.vn/chung-khoan.rss'},
-  // ===== Tin QUỐC TẾ (dịch sang tiếng Việt) =====
-  {k:'cnbc',     name:'CNBC',     color:'#0068a5',intl:true,url:'https://www.cnbc.com/id/100003114/device/rss/rss.html'},
-  {k:'investing',name:'Investing',color:'#d0902a',intl:true,url:'https://www.investing.com/rss/news_25.rss'},
-  {k:'wsj',      name:'WSJ',      color:'#4a4a5a',intl:true,url:'https://feeds.a.dj.com/rss/RSSMarketsMain.xml'},
-  {k:'aljz',     name:'Địa chính trị',color:'#b5893f',intl:true,url:'https://www.aljazeera.com/xml/rss/all.xml'}
+  // ===== Tin QUỐC TẾ — CHỈ tài chính toàn cầu (dịch sang tiếng Việt) =====
+  {k:'cnbc',     name:'CNBC',        color:'#0068a5',intl:true,url:'https://www.cnbc.com/id/100003114/device/rss/rss.html'},
+  {k:'cnbcmkt',  name:'CNBC Markets',color:'#0089c7',intl:true,url:'https://www.cnbc.com/id/15839135/device/rss/rss.html'},
+  {k:'mw',       name:'MarketWatch', color:'#367f2a',intl:true,url:'https://feeds.content.dowjones.io/public/rss/mw_topstories'}
 ];
 let newsItems=[], newsFilter='ALL', _newsBusy=false;
 const escH=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -592,9 +591,13 @@ async function fetchNews(){
       for(const u of urls){try{const xml=await getTextP(u);all.push(...parseRSS(xml,s));}catch(e){}}
     }));
     // khử trùng lặp theo tiêu đề (nhiều feed có thể trùng bài)
-    const seen={},uniq=[];
-    for(const it of all){const k=(it.title||'').toLowerCase().replace(/\s+/g,' ').trim();if(k&&!seen[k]){seen[k]=1;uniq.push(it);}}
-    if(uniq.length){newsItems=uniq.sort((a,b)=>b.t-a.t);renderNews();renderImp();$i('newsUpd').textContent='● '+new Date().toLocaleTimeString('vi-VN')+' · '+uniq.length+' tin';
+    const seen={},uniq0=[];
+    for(const it of all){const k=(it.title||'').toLowerCase().replace(/\s+/g,' ').trim();if(k&&!seen[k]){seen[k]=1;uniq0.push(it);}}
+    // CHỈ giữ tin trong 24h gần nhất (mọi nguồn)
+    const DAY=86400000,nowT=Date.now();
+    let uniq=uniq0.filter(x=>x.t>0&&nowT-x.t<=DAY);
+    if(uniq.length<3)uniq=uniq0.slice().sort((a,b)=>b.t-a.t).slice(0,25);   // dự phòng: nếu quá ít tin <24h (cuối tuần/nguồn lỗi)
+    if(uniq.length){newsItems=uniq.sort((a,b)=>b.t-a.t);renderNews();renderImp();$i('newsUpd').textContent='● '+new Date().toLocaleTimeString('vi-VN')+' · '+uniq.length+' tin (24h qua)';
       // dịch tiêu đề tin QUỐC TẾ sang tiếng Việt (nền, xong render lại)
       const intl=uniq.filter(x=>x.intl&&x.title&&!x.titleEn);
       if(intl.length)translateVI([...new Set(intl.map(x=>x.title))]).then(()=>{
