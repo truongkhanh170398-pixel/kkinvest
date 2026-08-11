@@ -8,10 +8,10 @@
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
-  :root{--bg:#04120c;--card:#0c2117;--card2:#123021;--line:#1e4030;--txt:#e8edf7;--muted:#8fae9e;
-    --accent:#e2b33b;--accent2:#4fd1a0;--up:#26c281;--dn:#f0556b;--warn:#e2b33b;--orange:#f0a532;}
+  :root{--bg:#080b13;--card:#0e1525;--card2:#141d31;--line:#1c2740;--txt:#e8edf7;--muted:#7e8db0;
+    --accent:#e2b33b;--accent2:#4f8cff;--up:#26c281;--dn:#f0556b;--warn:#e2b33b;--orange:#f0a532;}
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:radial-gradient(1200px 700px at 50% -260px,#0a2a1e,#04120c);color:var(--txt);font-family:"Segoe UI",system-ui,Roboto,Arial,sans-serif;line-height:1.4;padding:0 0 30px}
+  body{background:radial-gradient(1200px 700px at 50% -260px,#0c1730,#080b13);color:var(--txt);font-family:"Segoe UI",system-ui,Roboto,Arial,sans-serif;line-height:1.4;padding:0 0 30px}
   .wrap{max-width:1560px;margin:0 auto;padding:0 14px}
   .navsheets{display:flex;gap:8px;padding:10px 0 0;flex-wrap:wrap}
   .ns{text-decoration:none;font-size:13px;font-weight:700;padding:7px 14px;border-radius:9px;border:1px solid var(--line);color:var(--muted);background:var(--card)}
@@ -72,7 +72,7 @@
   .chartcard.last{border-radius:0 0 12px 12px}
   .toggles{display:flex;gap:14px;flex-wrap:wrap;margin:10px 2px;font-size:12.5px;color:var(--muted)}
   .toggles label{display:flex;align-items:center;gap:5px;cursor:pointer}
-  .toggles b.ma20{color:#f0c26b}.toggles b.ma50{color:#4fd1a0}.toggles b.ma200{color:#ef4757}.toggles b.bb{color:#a78bfa}
+  .toggles b.ma20{color:#f0c26b}.toggles b.ma50{color:#4f8cff}.toggles b.ma200{color:#ef4757}.toggles b.bb{color:#a78bfa}
   /* SIGNALS */
   .gridc{display:grid;gap:11px;grid-template-columns:repeat(3,1fr);margin-top:14px}
   @media(max-width:860px){.gridc{grid-template-columns:1fr 1fr}}
@@ -216,7 +216,7 @@
         <canvas id="rrgCanvas"></canvas>
         <div class="rrglegend">
           <span><i style="background:#22c55e"></i>Leading · dẫn dắt</span>
-          <span><i style="background:#4fd1a0"></i>Improving · cải thiện</span>
+          <span><i style="background:#4f8cff"></i>Improving · cải thiện</span>
           <span><i style="background:#e2b33b"></i>Weakening · suy yếu</span>
           <span><i style="background:#ef4757"></i>Lagging · tụt hậu</span>
           <span style="margin-left:auto">● to = mã đang xem · đuôi = 12 phiên gần nhất</span>
@@ -432,13 +432,13 @@ function ensureCharts(){
   if(mainChart)return;
   const opt={autoSize:true,layout:{background:{type:'solid',color:'transparent'},textColor:'#8595b5',fontFamily:'Segoe UI'},
     grid:{vertLines:{color:'#172238'},horzLines:{color:'#172238'}},rightPriceScale:{borderColor:'#22304d'},
-    timeScale:{borderColor:'#22304d'},crosshair:{mode:1,vertLine:{color:'#4fd1a0',labelBackgroundColor:'#16203a'},horzLine:{color:'#4fd1a0',labelBackgroundColor:'#16203a'}}};
+    timeScale:{borderColor:'#22304d'},crosshair:{mode:1,vertLine:{color:'#4f8cff',labelBackgroundColor:'#16203a'},horzLine:{color:'#4f8cff',labelBackgroundColor:'#16203a'}}};
   mainChart=LightweightCharts.createChart($('mainChart'),{...opt,localization:{priceFormatter:v=>(v/1000).toFixed(2)}});
   candle=mainChart.addCandlestickSeries({upColor:'#22c55e',downColor:'#ef4757',borderUpColor:'#22c55e',borderDownColor:'#ef4757',wickUpColor:'#22c55e',wickDownColor:'#ef4757'});
   volS=mainChart.addHistogramSeries({priceScaleId:'vol',priceFormat:{type:'volume'},priceLineVisible:false,lastValueVisible:false});
   mainChart.priceScale('vol').applyOptions({scaleMargins:{top:0.84,bottom:0}});
   maS.m20=mainChart.addLineSeries({color:'#f0c26b',lineWidth:1,priceLineVisible:false});
-  maS.m50=mainChart.addLineSeries({color:'#4fd1a0',lineWidth:1,priceLineVisible:false});
+  maS.m50=mainChart.addLineSeries({color:'#4f8cff',lineWidth:1,priceLineVisible:false});
   maS.m200=mainChart.addLineSeries({color:'#ef4757',lineWidth:1,priceLineVisible:false});
   bb.u=mainChart.addLineSeries({color:'#a78bfa',lineWidth:1,lineStyle:2,priceLineVisible:false,lastValueVisible:false});
   bb.l=mainChart.addLineSeries({color:'#a78bfa',lineWidth:1,lineStyle:2,priceLineVisible:false,lastValueVisible:false});
@@ -665,7 +665,7 @@ function rrgTail(sClose,baseByDate,sDates){
 }
 function rrgQuad(x,y){
   if(x>=0&&y>=0)return{n:'LEADING · Dẫn dắt',c:'#22c55e',cls:'q-lead',d:'Mạnh hơn VNINDEX & còn tăng tốc — ưu tiên nắm giữ.'};
-  if(x<0&&y>=0)return{n:'IMPROVING · Cải thiện',c:'#4fd1a0',cls:'q-imp',d:'Đang hồi phục tương đối so với thị trường — theo dõi điểm mua.'};
+  if(x<0&&y>=0)return{n:'IMPROVING · Cải thiện',c:'#4f8cff',cls:'q-imp',d:'Đang hồi phục tương đối so với thị trường — theo dõi điểm mua.'};
   if(x>=0&&y<0)return{n:'WEAKENING · Suy yếu',c:'#e2b33b',cls:'q-weak',d:'Vẫn mạnh nhưng đà yếu dần — cẩn trọng, cân nhắc chốt lời.'};
   return{n:'LAGGING · Tụt hậu',c:'#ef4757',cls:'q-lag',d:'Yếu hơn thị trường & chưa cải thiện — nên tránh/đứng ngoài.'};
 }
@@ -715,7 +715,7 @@ function rrgDraw(pts,tk){
   ctx.strokeStyle='#2a3a5a';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad,cy);ctx.lineTo(W-pad,cy);ctx.moveTo(cx,pad);ctx.lineTo(cx,H-pad);ctx.stroke();
   ctx.font='bold 11px Segoe UI';
   ctx.fillStyle='#22c55e';ctx.textAlign='right';ctx.fillText('LEADING',W-pad-6,pad+14);
-  ctx.fillStyle='#4fd1a0';ctx.textAlign='left';ctx.fillText('IMPROVING',pad+6,pad+14);
+  ctx.fillStyle='#4f8cff';ctx.textAlign='left';ctx.fillText('IMPROVING',pad+6,pad+14);
   ctx.fillStyle='#e2b33b';ctx.textAlign='right';ctx.fillText('WEAKENING',W-pad-6,H-pad-6);
   ctx.fillStyle='#ef4757';ctx.textAlign='left';ctx.fillText('LAGGING',pad+6,H-pad-6);
   const keys=Object.keys(pts).filter(s=>s!==tk).concat(pts[tk]?[tk]:[]); // mã đang xem vẽ cuối (trên cùng)
@@ -727,7 +727,7 @@ function rrgDraw(pts,tk){
     ctx.fillStyle=isTk?q.c:'rgba(150,165,200,.6)';
     ctx.beginPath();ctx.arc(xx,yy,isTk?6.5:3,0,7);ctx.fill();
     if(isTk){ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();}
-    ctx.fillStyle=isTk?'#fff':'#8fae9e';ctx.font=(isTk?'bold 12px':'10px')+' Segoe UI';ctx.textAlign='left';
+    ctx.fillStyle=isTk?'#fff':'#7e8db0';ctx.font=(isTk?'bold 12px':'10px')+' Segoe UI';ctx.textAlign='left';
     ctx.fillText(s,xx+7,yy-5);
   });
 }

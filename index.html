@@ -7,10 +7,10 @@
 <title>KKINVEST · Tổng quan — Bảng điện thị trường</title>
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 <style>
-  :root{--bg:#04120c;--card:#0c2117;--card2:#123021;--line:#1e4030;--txt:#e8edf7;--muted:#8fae9e;
-    --accent:#e2b33b;--accent2:#4fd1a0;--up:#26c281;--dn:#f0556b;--ceil:#c17ce0;--floor:#2ec7d6;--ref:#e2b33b;}
+  :root{--bg:#080b13;--card:#0e1525;--card2:#141d31;--line:#1c2740;--txt:#e8edf7;--muted:#7e8db0;
+    --accent:#e2b33b;--accent2:#4f8cff;--up:#26c281;--dn:#f0556b;--ceil:#c17ce0;--floor:#2ec7d6;--ref:#e2b33b;}
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:radial-gradient(1200px 700px at 50% -260px,#0a2a1e,#04120c);color:var(--txt);
+  body{background:radial-gradient(1200px 700px at 50% -260px,#0c1730,#080b13);color:var(--txt);
     font-family:"Segoe UI",system-ui,Roboto,Arial,sans-serif;line-height:1.3;padding:0 0 50px}
   .wrap{max-width:1560px;margin:0 auto;padding:0 16px}
   header{padding:14px 0 8px;border-bottom:1px solid var(--line);margin-bottom:14px}
@@ -43,7 +43,7 @@
   body.edit .rm{display:flex}
   .addbox{display:none;gap:6px;margin-top:8px}
   body.edit .addbox{display:flex}
-  .addbox input{background:#0a2318;border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:7px 11px;font-size:13px;text-transform:uppercase;width:160px;font-family:inherit}
+  .addbox input{background:#0b1220;border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:7px 11px;font-size:13px;text-transform:uppercase;width:160px;font-family:inherit}
   .addbox button{background:var(--accent2);color:#04122b;border:none;border-radius:8px;padding:7px 14px;font-weight:700;cursor:pointer}
   /* PHÁI SINH */
   .dgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
@@ -77,8 +77,8 @@
   table{width:100%;border-collapse:collapse;font-size:13px}
   th,td{padding:8px 11px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
   th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
-  thead th{background:#0a2318;color:var(--muted);font-size:11px;text-transform:uppercase}
-  tbody tr{cursor:pointer}tbody tr:hover{background:#143026}
+  thead th{background:#0b1220;color:var(--muted);font-size:11px;text-transform:uppercase}
+  tbody tr{cursor:pointer}tbody tr:hover{background:#18203c}
   .mini{font-size:11.5px;color:var(--muted)}
   .reco{font-weight:700;padding:3px 9px;border-radius:7px;font-size:12px}
   .r-buy{background:rgba(38,194,129,.18);color:#6fe3ab}.r-hold{background:rgba(226,179,59,.16);color:#f0c26b}.r-sell{background:rgba(240,85,107,.18);color:#f59595}
@@ -89,7 +89,7 @@
   .newsfilter{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 9px}
   .newswrap{max-height:440px;overflow-y:auto;padding:0}
   .newsitem{display:flex;gap:10px;align-items:flex-start;padding:9px 13px;border-bottom:1px solid var(--line);cursor:pointer;text-decoration:none;color:var(--txt)}
-  .newsitem:hover{background:#143026}
+  .newsitem:hover{background:#18203c}
   .newsitem .ntime{color:var(--muted);font-size:11.5px;white-space:nowrap;min-width:40px;padding-top:1px}
   .newsitem .nsrc{font-size:10px;font-weight:800;padding:2px 7px;border-radius:5px;color:#fff;white-space:nowrap}
   .newsitem .ntitle{font-size:13px;line-height:1.42;font-weight:600}
@@ -117,16 +117,16 @@
   .rtbar{margin:0 0 10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
   .rtbar #rtStatus{font-size:11.5px}
   #rtForm{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-  #rtForm input{background:#0a2318;border:1px solid var(--line);border-radius:7px;color:var(--txt);padding:6px 9px;font-size:12px;font-family:inherit}
+  #rtForm input{background:#0b1220;border:1px solid var(--line);border-radius:7px;color:var(--txt);padding:6px 9px;font-size:12px;font-family:inherit}
   #rtForm input:focus{border-color:var(--accent2);outline:none}
   #rtForm button{background:var(--card2);color:var(--txt);border:1px solid var(--line);font-size:12px;font-weight:600;padding:6px 12px;border-radius:7px;cursor:pointer}
   #rtForm button#rtConnect{background:var(--up);color:#04140c;border-color:var(--up)}
   .rton{color:var(--up)!important;font-weight:700}
   .src{color:var(--muted);font-size:11.5px;margin-left:auto}
-  .loginGate{position:fixed;inset:0;background:#04120c;z-index:1000;display:flex;align-items:center;justify-content:center}
+  .loginGate{position:fixed;inset:0;background:#080b13;z-index:1000;display:flex;align-items:center;justify-content:center}
   .loginGate.hidden{display:none}
   .loginBox{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:30px;width:min(350px,92vw);display:flex;flex-direction:column;gap:11px}
-  .loginBox input{background:#0a2318;border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:11px;font-size:14px}
+  .loginBox input{background:#0b1220;border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:11px;font-size:14px}
   .loginBox button{background:var(--accent);color:#1a1405;border:none;border-radius:9px;padding:11px;font-weight:700;cursor:pointer}
 </style>
 </head>
