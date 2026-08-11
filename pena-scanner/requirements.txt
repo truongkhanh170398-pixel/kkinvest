@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+pandas
+numpy
+vnstock
+requests
+beautifulsoup4
+openpyxl
+psutil
+packaging
+importlib-metadata
+tenacity
+vnai
+pytz

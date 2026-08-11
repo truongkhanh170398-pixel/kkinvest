@@ -6,10 +6,10 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>KKINVEST · Phân tích cơ bản — Định giá theo ngành</title>
 <style>
-  :root{--bg:#080b13;--card:#0e1525;--card2:#141d31;--line:#1c2740;--txt:#e8edf7;
-    --muted:#7e8db0;--accent:#e2b33b;--accent2:#4f8cff;--good:#3ba776;--danger:#e25c5c;}
+  :root{--bg:#04120c;--card:#0c2117;--card2:#123021;--line:#1e4030;--txt:#e8edf7;
+    --muted:#8fae9e;--accent:#e2b33b;--accent2:#4fd1a0;--good:#3ba776;--danger:#e25c5c;}
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:radial-gradient(1200px 700px at 50% -260px,#0c1730,#080b13);color:var(--txt);
+  body{background:radial-gradient(1200px 700px at 50% -260px,#0a2a1e,#04120c);color:var(--txt);
     font-family:"Segoe UI",system-ui,Roboto,Arial,sans-serif;line-height:1.5;padding:0 0 40px}
   .wrap{max-width:1340px;margin:0 auto;padding:0 18px}
   header{padding:22px 0 14px;border-bottom:1px solid var(--line);margin-bottom:14px}
@@ -24,7 +24,7 @@
   .sub{color:var(--muted);font-size:13.5px}
   .tickbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}
   .tickbar input.tk{font-size:22px;font-weight:800;letter-spacing:1px;text-transform:uppercase;width:130px;
-    background:#0c142b;border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:8px 12px}
+    background:#0a2318;border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:8px 12px}
   button{background:var(--card2);color:var(--txt);border:1px solid var(--line);font-size:13px;font-weight:600;
     padding:9px 14px;border-radius:9px;cursor:pointer}
   button:hover{border-color:var(--accent2)}
@@ -45,7 +45,7 @@
   .thesis .th-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:7px}
   .thesis .th-tk{font-size:17px;font-weight:800;letter-spacing:.5px}
   .thesis .th-h{font-size:13.5px;color:#dbe3f4;font-weight:600}
-  .thesis .bctc{margin-left:auto;text-decoration:none;font-size:12.5px;font-weight:700;color:#9cc0ff;background:#0c142b;border:1px solid var(--line);padding:6px 13px;border-radius:8px;white-space:nowrap}
+  .thesis .bctc{margin-left:auto;text-decoration:none;font-size:12.5px;font-weight:700;color:#9cc0ff;background:#0a2318;border:1px solid var(--line);padding:6px 13px;border-radius:8px;white-space:nowrap}
   .thesis .bctc:hover{border-color:var(--accent2);color:#cfe0ff}
   .thesis ul{margin:2px 0 0;padding-left:18px}
   .thesis li{font-size:13px;color:#c7d0e4;margin:3px 0;line-height:1.45}
@@ -54,22 +54,22 @@
   .ctck{margin-top:9px;border-top:1px solid var(--line);padding-top:9px}
   .ctck .lbl{font-size:11.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
   .tgtrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-  .tgt{background:#0c142b;border:1px solid var(--line);border-radius:8px;padding:5px 11px;font-size:13px;font-weight:700;display:flex;flex-direction:column;line-height:1.25}
+  .tgt{background:#0a2318;border:1px solid var(--line);border-radius:8px;padding:5px 11px;font-size:13px;font-weight:700;display:flex;flex-direction:column;line-height:1.25}
   .tgt small{font-size:10px;color:var(--muted);font-weight:600}
   .tgt.mid{border-color:var(--accent2);background:#0e1c3a}.tgt.mid b{color:#9cc0ff}
   .upbox{font-size:13px;font-weight:800;padding:5px 11px;border-radius:8px;border:1px solid var(--line)}
   .upbox.pos{background:rgba(59,167,118,.13);color:#7fe3b0;border-color:#2e6b4f}
   .upbox.neg{background:rgba(226,92,92,.13);color:#f1a3a3;border-color:#7a3636}
   .repbtns{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
-  .repbtn{text-decoration:none;font-size:12px;font-weight:700;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:#0c142b;white-space:nowrap}
+  .repbtn{text-decoration:none;font-size:12px;font-weight:700;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:#0a2318;white-space:nowrap}
   .repbtn.dnse{color:#9be3c6}.repbtn.h24{color:#f3cd84}.repbtn:hover{border-color:var(--accent2)}
   .ctck .disc{font-size:10.8px;color:var(--muted);margin-top:6px}
-  .loginGate{position:fixed;inset:0;background:radial-gradient(1200px 700px at 50% -260px,#0c1730,#080b13);z-index:1000;display:flex;align-items:center;justify-content:center}
+  .loginGate{position:fixed;inset:0;background:radial-gradient(1200px 700px at 50% -260px,#0a2a1e,#04120c);z-index:1000;display:flex;align-items:center;justify-content:center}
   .loginGate.hidden{display:none}
   .loginBox{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:32px 30px;width:min(360px,92vw);display:flex;flex-direction:column;gap:12px}
   .loginTitle{font-size:20px;font-weight:800;text-align:center}
   .loginSub{font-size:12.5px;color:var(--muted);text-align:center;margin-bottom:6px}
-  .loginBox input{background:#0c142b;border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:11px 13px;font-size:14px;font-family:inherit}
+  .loginBox input{background:#0a2318;border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:11px 13px;font-size:14px;font-family:inherit}
   .loginBox input:focus{border-color:var(--accent2);outline:none}
   .loginBox button{background:var(--accent);color:#04122b;border:none;border-radius:9px;padding:11px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px}
   .lerr{color:var(--danger);font-size:12.5px;text-align:center;min-height:15px}

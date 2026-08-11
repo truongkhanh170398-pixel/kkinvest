@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DUCKMAN Score — Sức mạnh cổ phiếu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <div class="brand-line">
+        <span class="duck-badge">🦆</span>
+        <span class="brand-wordmark">DUCKMAN</span>
+        <span class="brand-sub">Relative Strength · AmiBroker</span>
+      </div>
+      <p class="eyebrow">Sức mạnh cổ phiếu - RS Duckman (gốc Duck Man RS, AmiBroker)</p>
+      <h1>Sức mạnh cổ phiếu trong phiên — xếp hạng <span class="gold">DUCKMAN Score</span></h1>
+      <p class="tagline">Đánh giá sức mạnh tương đối của cổ phiếu so với thị trường để tìm kiếm cơ hội vượt trội.</p>
+    </div>
+
+    <div class="hero-score-card">
+      <span class="trophy">🏆</span>
+      <div>
+        <p class="card-title">DUCKMAN Score</p>
+        <p class="card-range">0 – 9 điểm</p>
+        <p class="card-note">Điểm càng cao<br>sức mạnh càng tốt</p>
+      </div>
+    </div>
+
+    <svg class="hero-art" viewBox="0 0 480 300" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <defs>
+        <linearGradient id="barFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#9FEBC4" stop-opacity="0.95"/>
+          <stop offset="100%" stop-color="#0E6B44" stop-opacity="0.5"/>
+        </linearGradient>
+        <linearGradient id="goldStroke" x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0%" stop-color="#8A5A1E"/>
+          <stop offset="50%" stop-color="#E8B04B"/>
+          <stop offset="100%" stop-color="#FFE9B8"/>
+        </linearGradient>
+        <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="5" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+
+      <g>
+        <rect x="20"  y="190" width="34" height="70"  rx="4" fill="url(#barFill)"/>
+        <rect x="68"  y="165" width="34" height="95"  rx="4" fill="url(#barFill)"/>
+        <rect x="116" y="180" width="34" height="80"  rx="4" fill="url(#barFill)"/>
+        <rect x="164" y="135" width="34" height="125" rx="4" fill="url(#barFill)"/>
+        <rect x="212" y="150" width="34" height="110" rx="4" fill="url(#barFill)"/>
+        <rect x="260" y="100" width="34" height="160" rx="4" fill="url(#barFill)"/>
+        <rect x="308" y="60"  width="34" height="200" rx="4" fill="url(#barFill)"/>
+        <rect x="20"  y="190" width="13" height="70"  rx="4" fill="#FFFFFF" opacity="0.16"/>
+        <rect x="68"  y="165" width="13" height="95"  rx="4" fill="#FFFFFF" opacity="0.16"/>
+        <rect x="116" y="180" width="13" height="80"  rx="4" fill="#FFFFFF" opacity="0.16"/>
+        <rect x="164" y="135" width="13" height="125" rx="4" fill="#FFFFFF" opacity="0.16"/>
+        <rect x="212" y="150" width="13" height="110" rx="4" fill="#FFFFFF" opacity="0.16"/>
+        <rect x="260" y="100" width="13" height="160" rx="4" fill="#FFFFFF" opacity="0.16"/>
+        <rect x="308" y="60"  width="13" height="200" rx="4" fill="#FFFFFF" opacity="0.16"/>
+      </g>
+
+      <g filter="url(#glow)">
+        <polyline points="37,190 85,165 133,180 181,135 229,150 277,100 325,60 420,20"
+          fill="none" stroke="url(#goldStroke)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        <polygon points="420,20 393,30 407,45" fill="#FFE9B8"/>
+      </g>
+      <g fill="#FFE9B8">
+        <circle cx="37" cy="190" r="3.5"/><circle cx="85" cy="165" r="3.5"/><circle cx="133" cy="180" r="3.5"/>
+        <circle cx="181" cy="135" r="3.5"/><circle cx="229" cy="150" r="3.5"/><circle cx="277" cy="100" r="3.5"/>
+        <circle cx="325" cy="60" r="3.5"/>
+      </g>
+      <g fill="#E8B04B" opacity="0.55">
+        <circle cx="440" cy="70" r="3"/><circle cx="410" cy="110" r="2.2"/><circle cx="60" cy="120" r="2.2"/>
+      </g>
+    </svg>
+  </div>
+</header>
+
+<div class="shell">
+  <main class="page">
+
+    <div id="view-scanner">
+      <div class="toolbar">
+        <label class="search-wrap">
+          <span class="ic">🔍</span>
+          <input type="text" id="ticker-search" class="ticker-search" placeholder="Tìm mã CK..." autocomplete="off" spellcheck="false">
+        </label>
+        <label class="sector-wrap">
+          <span class="ic">🔽</span>
+          <select id="sector-select" class="sector-select" aria-label="Lọc theo ngành/sàn">
+            <option value="all">Tất cả ngành / sàn</option>
+          </select>
+        </label>
+        <button id="buysell-btn" class="btn-rescan"><span class="ic">🎯</span>Điểm mua/bán</button>
+        <button id="rank-btn" class="btn-rescan"><span class="ic">📊</span>Biến động thứ hạng</button>
+        <button id="rescan-btn" class="btn-rescan"><span class="ic">🔄</span>Quét lại</button>
+        <div class="updated-card">
+          <span class="ic">🕐</span>
+          <span id="scan-status" class="scan-status">Chưa quét lần nào</span>
+        </div>
+      </div>
+
+      <div class="table-wrap table-wrap-fit">
+        <table id="results-table" class="results results-fit">
+          <colgroup>
+            <col style="width:3%">
+            <col style="width:6.5%">
+            <col style="width:8%">
+            <col style="width:6%">
+            <col style="width:9.5%">
+            <col style="width:6%">
+            <col span="9" style="width:6.78%">
+          </colgroup>
+          <thead>
+            <tr id="results-head"></tr>
+          </thead>
+          <tbody id="results-body">
+            <tr><td class="empty-cell" colspan="20">Chưa có dữ liệu — bấm “Quét lại” để bắt đầu.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="criteria-legend">
+        <p class="legend-title">Chú giải 9 tiêu chí DUCKMAN Score <span class="legend-title-sub">— đạt ≥4/9 thì điểm hiện khoanh xanh</span></p>
+        <div class="legend-grid">
+          <div class="legend-item"><span class="legend-code">ATH</span><span>All-Time High — giá đóng cửa chạm đỉnh cao nhất mọi thời đại (~10 năm)</span></div>
+          <div class="legend-item"><span class="legend-code">RS 52W</span><span>RS 52W High — đường RS Line (so VNINDEX) lập đỉnh cao nhất 52 tuần</span></div>
+          <div class="legend-item"><span class="legend-code">D: MA Order</span><span>Daily — MA ngày đúng thứ tự tăng dần: EMA5 &gt; EMA8 &gt; SMA10 &gt; EMA21</span></div>
+          <div class="legend-item"><span class="legend-code">W: RS Drop</span><span>Weekly — cổ phiếu giảm từ đỉnh 52 tuần ít hơn mức giảm của VNINDEX</span></div>
+          <div class="legend-item"><span class="legend-code">W: RS Div</span><span>Weekly — tuần này tạo đỉnh cao hơn tuần trước, trong khi VNINDEX tạo đáy thấp hơn</span></div>
+          <div class="legend-item"><span class="legend-code">W: 5+ Green</span><span>Weekly — 5 tuần gần nhất đều đóng cửa tăng (nến tuần xanh liên tục)</span></div>
+          <div class="legend-item"><span class="legend-code">W: Tight</span><span>Weekly — biên độ giá đóng cửa 4 tuần gần nhất hẹp, dưới 5%</span></div>
+          <div class="legend-item"><span class="legend-code">M: &gt;50%</span><span>Monthly — đã tăng hơn 50% trong 1, 2, 3 hoặc 6 tháng gần nhất</span></div>
+          <div class="legend-item"><span class="legend-code">M: MA Order</span><span>Monthly — SMA10 tháng lớn hơn SMA50 tháng (xu hướng trung/dài hạn tăng)</span></div>
+        </div>
+      </div>
+
+      <div class="page-footer">
+        <p class="footnote-short"><span class="ic">ℹ️</span>Ghi chú: DUCKMAN Score từ 0–9 điểm. Điểm càng cao thể hiện sức mạnh vượt trội so với thị trường.</p>
+        <p class="source-badges">Nguồn: <span class="chip">24HMoney</span><span class="chip">Vietcap (VCI)</span><span class="chip">vnstock</span></p>
+      </div>
+
+      <p class="footnote">
+        Chuyển thể từ AFL "RS Duck Man" (Relative Strength, gốc AmiBroker) sang quét tự động trên web. Tab
+        <b>Điểm BÁN</b> là logic đối xứng (giảm giá) do tôi suy ra thêm, không có trong file AFL gốc. Nguồn giá:
+        endpoint biểu đồ công khai (không chính thức) của 24HMoney; danh sách mã/ngành lấy từ Vietcap (VCI) qua thư
+        viện mã nguồn mở <code>vnstock</code> — không phải feed dữ liệu thương mại có giấy phép, dùng cho mục đích
+        cá nhân.
+      </p>
+    </div>
+
+    <div id="view-buysell" hidden>
+      <div class="toolbar">
+        <button id="buysell-back-btn" class="btn-rescan btn-back"><span class="ic">←</span>Quay lại Sức mạnh CP</button>
+        <div class="view-subtabs" role="tablist">
+          <button class="view-subtab is-active" data-view="buy"><span class="ic">🎯</span>Điểm MUA</button>
+          <button class="view-subtab" data-view="sell"><span class="ic">📉</span>Điểm BÁN</button>
+        </div>
+        <div class="updated-card">
+          <span class="ic">ℹ️</span>
+          <span id="buysell-sub" class="scan-status">Đang tải…</span>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table id="buysell-table" class="results">
+          <thead>
+            <tr id="buysell-head"></tr>
+          </thead>
+          <tbody id="buysell-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="view-rank" hidden>
+      <div class="toolbar">
+        <button id="rank-back-btn" class="btn-rescan btn-back"><span class="ic">←</span>Quay lại Sức mạnh CP</button>
+        <div class="updated-card">
+          <span class="ic">📊</span>
+          <span id="rank-sub" class="scan-status">Đang tải…</span>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table id="rank-table" class="results">
+          <thead>
+            <tr>
+              <th>#</th><th>Mã CK</th><th>Ngành</th>
+              <th class="num">Hôm qua</th><th class="num">Hôm nay</th><th class="num">Thay đổi</th>
+            </tr>
+          </thead>
+          <tbody id="rank-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

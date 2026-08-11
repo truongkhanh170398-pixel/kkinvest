@@ -1,0 +1,157 @@
+//------------------------------------------------------------------------------
+// Duck man�s Relative Strength Techniques
+// Compatible with AmiBroker 6.2
+// Usage: Send to Analysis -> Run "Explore"
+//------------------------------------------------------------------------------
+
+_SECTION_BEGIN("Duckman RS Scan");
+
+// 1. X�c d?nh Index chung c?a th? tru?ng d? so s�nh RS
+// B?n c� th? d?i sang "^VNINDEX" n?u d�ng cho th? tru?ng Vi?t Nam
+IndexSym = ParamStr("Market Index", "SPY");
+SetForeign(IndexSym);
+IndexC = C; 
+IndexH = H;
+IndexL = L;
+RestorePriceArrays();
+
+// -----------------------------------------------------------------------------
+// B?T K? KHUNG TH?I GIAN N�O (ANY TIMEFRAME & DAILY)
+// -----------------------------------------------------------------------------
+// RS Line
+RSLine = C / IndexC;
+RS_NewHigh = RSLine >= HHV(RSLine, 252); // RS Line ? d?nh m?i (52 tu?n)
+
+// All-time highs (Gi? l?p b?ng d?nh cao nh?t trong 10 nam ~ 2500 phi�n)
+ATH = HHV(H, 2500); 
+IsATH = H >= ATH;
+
+// Daily MAs
+ema5 = EMA(C, 5);
+ema8 = EMA(C, 8);
+sma10 = MA(C, 10);
+ema21 = EMA(C, 21);
+
+// C? phi?u gi? tr�n c�c MA ng?n h?n v� d�ng th? t? (5 > 8 > 10 > 21)
+Daily_AboveMAs = C > ema5 AND C > ema8 AND C > sma10 AND C > ema21;
+Daily_MAsInOrder = (ema5 > ema8) AND (ema8 > sma10) AND (sma10 > ema21);
+
+// N?n h? tr? Daily: ��ng c?a n?a tr�n, kh�ng t?o gap down
+Daily_UpperHalf = (C - L) / (H - L + 0.0001) > 0.5; // > 50% daily closing range
+Daily_NoGapDown = O >= Ref(L, -1);
+Daily_SupportCandle = Daily_UpperHalf AND Daily_NoGapDown;
+
+
+// -----------------------------------------------------------------------------
+// KHUNG TH?I GIAN TU?N (WEEKLY)
+// -----------------------------------------------------------------------------
+TimeFrameSet(inWeekly);
+w_C = C; w_H = H; w_L = L; w_O = O;
+
+SetForeign(IndexSym);
+w_IndexC = C; w_IndexH = H; w_IndexL = L;
+RestorePriceArrays();
+
+// �?nh 52 tu?n
+w_52W_H = HHV(w_H, 52);
+w_New52W_High = w_H >= w_52W_H;
+
+// T? l? % gi?m t? d?nh 52 tu?n: C? phi?u so v?i Th? tru?ng (Market)
+w_PctOffHigh = (w_52W_H - w_C) / w_52W_H;
+w_Index52W_H = HHV(w_IndexH, 52);
+w_IndexPctOffHigh = (w_Index52W_H - w_IndexC) / w_Index52W_H;
+w_OutperformMarketDrop = w_PctOffHigh < w_IndexPctOffHigh;
+
+// N?n h? tr? Weekly
+w_UpperHalf = (w_C - w_L) / (w_H - w_L + 0.0001) > 0.5;
+
+// > 5 tu?n d�ng n?n xanh (Green closes)
+w_GreenWeek = w_C > w_O;
+w_5WeeksGreen = Sum(w_GreenWeek, 5) >= 5;
+
+// 3-4 tu?n gi� d�ng c?a ch?t (Tight closes - bi�n d? d�ng c?a 4 tu?n h?p < 5%)
+w_TightCloses = (HHV(w_C, 4) - LLV(w_C, 4)) / LLV(w_C, 4) < 0.05;
+
+// �?nh tu?n cao hon trong khi th? tru?ng t?o d�y tu?n th?p hon (Divergence)
+w_HigherHigh = w_H > Ref(w_H, -1);
+w_IndexLowerLow = w_IndexL < Ref(w_IndexL, -1);
+w_RS_Divergence = w_HigherHigh AND w_IndexLowerLow;
+
+// ��ng c?a xanh tu?n trong khi th? tru?ng d? d?m (d?i di?n: th? tru?ng gi?m > 2%)
+w_GreenMarketRed = w_GreenWeek AND ((w_IndexC - Ref(w_IndexC, -1))/Ref(w_IndexC, -1) < -0.02);
+
+TimeFrameRestore();
+
+// M? r?ng d? li?u Weekly v? Daily d? Scan
+Weekly_New52High = TimeFrameExpand(w_New52W_High, inWeekly);
+Weekly_OutperformDrop = TimeFrameExpand(w_OutperformMarketDrop, inWeekly);
+Weekly_UpperHalf = TimeFrameExpand(w_UpperHalf, inWeekly);
+Weekly_5Green = TimeFrameExpand(w_5WeeksGreen, inWeekly);
+Weekly_TightCloses = TimeFrameExpand(w_TightCloses, inWeekly);
+Weekly_RS_Divergence = TimeFrameExpand(w_RS_Divergence, inWeekly);
+Weekly_GreenMarketRed = TimeFrameExpand(w_GreenMarketRed, inWeekly);
+
+
+// -----------------------------------------------------------------------------
+// KHUNG TH?I GIAN TH�NG (MONTHLY)
+// -----------------------------------------------------------------------------
+TimeFrameSet(inMonthly);
+m_C = C;
+
+// �?ng lu?ng gi� % l?n trong 1, 2, 3, ho?c 6 th�ng (tang > 50%)
+m_Move1 = (m_C / Ref(m_C, -1)) > 1.5;
+m_Move2 = (m_C / Ref(m_C, -2)) > 1.5;
+m_Move3 = (m_C / Ref(m_C, -3)) > 1.5;
+m_Move6 = (m_C / Ref(m_C, -6)) > 1.5;
+m_BigMove = m_Move1 OR m_Move2 OR m_Move3 OR m_Move6;
+
+// Monthly MAs (vd: 10 th�ng v� 50 th�ng d?i di?n cho Short > Long)
+m_SMA10 = MA(m_C, 10);
+m_SMA50 = MA(m_C, 50);
+m_MA_Order = m_SMA10 > m_SMA50;
+
+// C�c MA hu?ng l�n (Slope/Degrees > 0)
+m_MA_TrendUp = m_SMA10 > Ref(m_SMA10, -1) AND m_SMA50 > Ref(m_SMA50, -1);
+TimeFrameRestore();
+
+// M? r?ng d? li?u Monthly v? Daily
+Monthly_BigMove = TimeFrameExpand(m_BigMove, inMonthly);
+Monthly_MA_Order = TimeFrameExpand(m_MA_Order, inMonthly);
+Monthly_MA_TrendUp = TimeFrameExpand(m_MA_TrendUp, inMonthly);
+
+
+// -----------------------------------------------------------------------------
+// L?C V� HI?N TH? (EXPLORATION)
+// -----------------------------------------------------------------------------
+// �i?u ki?n l?c ch�nh: N?n ng�y h? tr? t?t & Xu hu?ng ng?n h?n ?n 
+// HO?C C? phi?u dang l?p d?nh m?i th?i d?i.
+
+Vol= V>=50000;
+Filter = Vol AND ((Daily_SupportCandle AND Daily_MAsInOrder) OR IsATH OR Weekly_New52High);
+
+// T�nh di?m RS t?ng h?p (Scoring) d? Sort
+Score = RS_NewHigh + IsATH + Daily_MAsInOrder + Weekly_OutperformDrop + 
+        Weekly_5Green + Weekly_TightCloses + Weekly_RS_Divergence + 
+        Weekly_GreenMarketRed + Monthly_BigMove + Monthly_MA_Order;
+
+AddColumn(C, "Close", 1.2);
+AddColumn(V, "Volume", 1.0);
+AddColumn(Score, "Duckman Score", 1.0, colorDefault, IIf(Score >= 4, colorGreen, colorWhite));
+
+// General / Daily
+AddColumn(IsATH, "All-Time High", 1.0, colorDefault, IIf(IsATH, colorGreen, colorWhite));
+AddColumn(RS_NewHigh, "RS 52W High", 1.0, colorDefault, IIf(RS_NewHigh, colorGreen, colorWhite));
+AddColumn(Daily_MAsInOrder, "Dly: MA 5>8>10>21", 1.0, colorDefault, IIf(Daily_MAsInOrder, colorLightBlue, colorWhite));
+
+// Weekly
+AddColumn(Weekly_OutperformDrop, "Wkly: Drop < Market", 1.0, colorDefault, IIf(Weekly_OutperformDrop, colorGreen, colorWhite));
+AddColumn(Weekly_RS_Divergence, "Wkly: Higher High vs Mkt Low", 1.0, colorDefault, IIf(Weekly_RS_Divergence, colorGreen, colorWhite));
+AddColumn(Weekly_5Green, "Wkly: 5+ Green", 1.0, colorDefault, IIf(Weekly_5Green, colorGreen, colorWhite));
+AddColumn(Weekly_TightCloses, "Wkly: 4w Tight", 1.0, colorDefault, IIf(Weekly_TightCloses, colorGreen, colorWhite));
+
+// Monthly
+AddColumn(Monthly_BigMove, "Mthly: >50% Move", 1.0, colorDefault, IIf(Monthly_BigMove, colorGreen, colorWhite));
+AddColumn(Monthly_MA_Order, "Mthly: Short MA > Long MA", 1.0, colorDefault, IIf(Monthly_MA_Order, colorGreen, colorWhite));
+SetSortColumns(-5,-4);
+
+_SECTION_END();

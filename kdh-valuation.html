@@ -7,12 +7,12 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   :root{
-    --bg:#080b13; --card:#0e1525; --card2:#141d31; --line:#1c2740;
-    --txt:#e8edf7; --muted:#7e8db0; --accent:#e2b33b; --accent2:#4f8cff;
+    --bg:#04120c; --card:#0c2117; --card2:#123021; --line:#1e4030;
+    --txt:#e8edf7; --muted:#8fae9e; --accent:#e2b33b; --accent2:#4fd1a0;
     --warn:#e2a33b; --danger:#e25c5c; --good:#3ba776;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:radial-gradient(1200px 700px at 50% -260px,#0c1730,#080b13);color:var(--txt);
+  body{background:radial-gradient(1200px 700px at 50% -260px,#0a2a1e,#04120c);color:var(--txt);
     font-family:"Segoe UI",system-ui,Roboto,Arial,sans-serif;line-height:1.5;padding:0 0 60px}
   .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
   header{padding:38px 0 26px;border-bottom:1px solid var(--line);margin-bottom:30px}
@@ -37,7 +37,7 @@
   th,td{padding:11px 12px;text-align:right;border-bottom:1px solid var(--line)}
   th:first-child,td:first-child{text-align:left}
   thead th{color:var(--muted);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.4px}
-  tbody tr:hover{background:#18203c}
+  tbody tr:hover{background:#143026}
   .pill{font-weight:700;padding:3px 9px;border-radius:8px;font-size:13px}
   .pill.base{background:rgba(59,167,118,.16);color:#6fe3ab}
   .pill.low{background:rgba(226,163,59,.16);color:#f0c26b}
@@ -123,7 +123,7 @@
         <div style="color:var(--muted);font-size:13px;letter-spacing:1px;text-transform:uppercase">Nhập thị giá hiện tại để tính upside</div>
         <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
           <input id="px" type="number" value="33000" step="100" min="0"
-            style="width:160px;font-size:24px;font-weight:700;background:#0c142b;border:1px solid var(--line);
+            style="width:160px;font-size:24px;font-weight:700;background:#0a2318;border:1px solid var(--line);
             border-radius:10px;padding:8px 12px;color:var(--txt)">
           <span style="color:var(--muted);font-size:15px">VND/cp</span>
         </div>
@@ -180,7 +180,7 @@
 const f={responsive:true,maintainAspectRatio:false,
   plugins:{legend:{labels:{color:'#cdd6ea'}},title:{color:'#e8edf7',font:{size:15,weight:'600'}}},
   scales:{x:{ticks:{color:'#93a0bd'},grid:{color:'#26324f'}},y:{ticks:{color:'#93a0bd'},grid:{color:'#26324f'}}}};
-const C={a:'#3ba776',b:'#4f8cff',w:'#e2a33b',d:'#e25c5c'};
+const C={a:'#3ba776',b:'#4fd1a0',w:'#e2a33b',d:'#e25c5c'};
 
 new Chart(cPL,{type:'bar',data:{labels:['Doanh thu thuần','LN gộp','LN thuần HĐKD','LNST cty mẹ'],
   datasets:[{label:'Q1/2025',data:[709.9,306.7,161.6,121.9],backgroundColor:'#5b6788'},

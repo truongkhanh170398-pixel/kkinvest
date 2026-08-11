@@ -8,10 +8,10 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <style>
-  :root{--bg:#080b13;--card:#0e1525;--card2:#141d31;--line:#1c2740;--txt:#e8edf7;
-    --muted:#7e8db0;--accent:#e2b33b;--accent2:#4f8cff;--warn:#e2a33b;--danger:#e25c5c;--good:#3ba776;}
+  :root{--bg:#04120c;--card:#0c2117;--card2:#123021;--line:#1e4030;--txt:#e8edf7;
+    --muted:#8fae9e;--accent:#e2b33b;--accent2:#4fd1a0;--warn:#e2a33b;--danger:#e25c5c;--good:#3ba776;}
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:radial-gradient(1200px 700px at 50% -260px,#0c1730,#080b13);color:var(--txt);
+  body{background:radial-gradient(1200px 700px at 50% -260px,#0a2a1e,#04120c);color:var(--txt);
     font-family:"Segoe UI",system-ui,Roboto,Arial,sans-serif;line-height:1.5;padding:0 0 60px}
   .wrap{max-width:1340px;margin:0 auto;padding:0 18px}
   header{padding:26px 0 16px;border-bottom:1px solid var(--line);margin-bottom:20px}
@@ -21,7 +21,7 @@
   .sub{color:var(--muted);font-size:13.5px}
   .tickbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}
   .tickbar input.tk{font-size:22px;font-weight:800;letter-spacing:1px;text-transform:uppercase;width:130px;
-    background:#0c142b;border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:8px 12px}
+    background:#0a2318;border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:8px 12px}
   button{background:var(--card2);color:var(--txt);border:1px solid var(--line);font-size:13px;font-weight:600;
     padding:9px 14px;border-radius:9px;cursor:pointer}
   button:hover{border-color:var(--accent2)}
@@ -34,7 +34,7 @@
   .panel h3:first-child{margin-top:2px}
   .fld{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:5px 0}
   .fld label{font-size:12.5px;color:#c7d0e4;flex:1}
-  .fld input,.fld select{width:96px;background:#0c142b;border:1px solid var(--line);border-radius:7px;
+  .fld input,.fld select{width:96px;background:#0a2318;border:1px solid var(--line);border-radius:7px;
     color:var(--txt);padding:5px 7px;text-align:right;font-size:13px;font-family:inherit}
   .fld input:focus,.fld select:focus{border-color:var(--accent2);outline:none}
   .fld .u{font-size:11px;color:var(--muted);width:34px;text-align:left}
@@ -66,12 +66,12 @@
     border:1px solid var(--line);color:var(--muted);background:var(--card)}
   .ns.active{background:var(--accent);color:#04110a;border-color:var(--accent)}
   .ns:hover{border-color:var(--accent2)}
-  .loginGate{position:fixed;inset:0;background:radial-gradient(1200px 700px at 50% -260px,#0c1730,#080b13);z-index:1000;display:flex;align-items:center;justify-content:center}
+  .loginGate{position:fixed;inset:0;background:radial-gradient(1200px 700px at 50% -260px,#0a2a1e,#04120c);z-index:1000;display:flex;align-items:center;justify-content:center}
   .loginGate.hidden{display:none}
   .loginBox{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:32px 30px;width:min(360px,92vw);display:flex;flex-direction:column;gap:12px}
   .loginTitle{font-size:20px;font-weight:800;text-align:center}
   .loginSub{font-size:12.5px;color:var(--muted);text-align:center;margin-bottom:6px}
-  .loginBox input{background:#0c142b;border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:11px 13px;font-size:14px;font-family:inherit}
+  .loginBox input{background:#0a2318;border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:11px 13px;font-size:14px;font-family:inherit}
   .loginBox input:focus{border-color:var(--accent2);outline:none}
   .loginBox button{background:var(--accent);color:#04110a;border:none;border-radius:9px;padding:11px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px}
   .lerr{color:var(--danger);font-size:12.5px;text-align:center;min-height:15px}
@@ -416,7 +416,7 @@ function drawField(methods,price){
   if(fieldChart)fieldChart.destroy();
   fieldChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[
     {label:'min',data:base,backgroundColor:'rgba(0,0,0,0)',stack:'s'},
-    {label:'Vùng định giá',data:span,backgroundColor:'#4f8cff',stack:'s',borderRadius:4}
+    {label:'Vùng định giá',data:span,backgroundColor:'#4fd1a0',stack:'s',borderRadius:4}
   ]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
     plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const m=methods[c.dataIndex];return ` ${fmt(m.lo)} – ${fmt(m.hi)} đ (giữa ${fmt(m.mid)})`;}}},
       annotation:false},
@@ -593,8 +593,8 @@ function renderInv(tk){
   if(!d){el.innerHTML='';window.sotpSurplus=null;if(note)note.textContent='Chưa có dữ liệu tồn kho chi tiết cho '+tk+' — gửi BCTC mã này để nạp số thật.';return;}
   const COST=40; // tr/m² giả định (giá vốn all-in) để suy diện tích từ sổ sách
   const tl=TIMELINE[tk]||[];
-  const inS='width:74px;background:#0c142b;border:1px solid var(--line);border-radius:6px;color:var(--txt);padding:4px 6px;text-align:right;font-family:inherit;font-size:12px';
-  const yS='width:74px;background:#0c142b;border:1px solid var(--line);border-radius:6px;color:var(--txt);padding:4px 6px;text-align:center;font-family:inherit;font-size:12px';
+  const inS='width:74px;background:#0a2318;border:1px solid var(--line);border-radius:6px;color:var(--txt);padding:4px 6px;text-align:right;font-family:inherit;font-size:12px';
+  const yS='width:74px;background:#0a2318;border:1px solid var(--line);border-radius:6px;color:var(--txt);padding:4px 6px;text-align:center;font-family:inherit;font-size:12px';
   let h='<thead><tr><th>Dự án (khu vực)</th><th>Sổ sách (tỷ)</th><th>Diện tích (m²)</th><th>Giá TT (tr/m²)</th><th>Giá TT (tỷ)</th><th>Thặng dư</th><th>Bàn giao</th></tr></thead><tbody>';
   d.rows.forEach((r,i)=>{const book=r[1], regP=r[2]||COST, yr=tl[i]||'';
     const area=Math.round(book*1000/COST);
@@ -688,9 +688,9 @@ async function loadPriceChart(tk){
   if(!lwChart){
     lwChart=LightweightCharts.createChart(cont,{autoSize:true,
       layout:{background:{type:'solid',color:'transparent'},textColor:'#93a0bd',fontFamily:'Segoe UI'},
-      grid:{vertLines:{color:'#1c2740'},horzLines:{color:'#1c2740'}},
+      grid:{vertLines:{color:'#1e4030'},horzLines:{color:'#1e4030'}},
       rightPriceScale:{borderColor:'#26324f'},timeScale:{borderColor:'#26324f',timeVisible:false},
-      crosshair:{mode:1,vertLine:{color:'#4f8cff',labelBackgroundColor:'#1b2647'},horzLine:{color:'#4f8cff',labelBackgroundColor:'#1b2647'}}});
+      crosshair:{mode:1,vertLine:{color:'#4fd1a0',labelBackgroundColor:'#1b2647'},horzLine:{color:'#4fd1a0',labelBackgroundColor:'#1b2647'}}});
     lwSeries=lwChart.addCandlestickSeries({upColor:'#3ba776',downColor:'#e25c5c',
       borderUpColor:'#3ba776',borderDownColor:'#e25c5c',wickUpColor:'#6fe3ab',wickDownColor:'#f59595'});
   }
@@ -698,7 +698,7 @@ async function loadPriceChart(tk){
   lwLines.forEach(pl=>{try{lwSeries.removePriceLine(pl);}catch(e){}}); lwLines=[];
   const refs=[];
   const tgt=window.lastTarget, rnav=window.lastRnav, cons=(DATA[tk]&&DATA[tk].cons)||0, fv=(typeof FV!=='undefined'&&FV[tk])||0;
-  if(isFinite(rnav)&&rnav>0)refs.push({v:rnav,c:'#4f8cff',t:'RNAV'});
+  if(isFinite(rnav)&&rnav>0)refs.push({v:rnav,c:'#4fd1a0',t:'RNAV'});
   if(isFinite(tgt)&&tgt>0) refs.push({v:tgt, c:'#6fe3ab',t:'MT mô hình'});
   if(fv>0)               refs.push({v:fv,  c:'#f0c26b',t:'FV của tôi'});
   if(cons>0)             refs.push({v:cons, c:'#e2823b',t:'CTCK'});
@@ -728,12 +728,12 @@ function renderHist(tk){
   document.getElementById('histTk').textContent=tk;
   if(histChart)histChart.destroy();
   histChart=new Chart(document.getElementById('histChart'),{type:'bar',data:{labels:d.years,datasets:[
-    {type:'bar',label:'Doanh thu',data:d.rev,backgroundColor:'#4f8cff'},
+    {type:'bar',label:'Doanh thu',data:d.rev,backgroundColor:'#4fd1a0'},
     {type:'bar',label:'LNST công ty mẹ',data:d.npat,backgroundColor:'#3ba776'},
     {type:'line',label:'Tổng tài sản',data:d.assets,borderColor:'#e2823b',backgroundColor:'#e2823b',tension:.2,pointRadius:3,borderWidth:2}
   ]},options:{responsive:true,maintainAspectRatio:false,
     plugins:{legend:{labels:{color:'#cdd6ea',boxWidth:12}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt(c.parsed.y)+' tỷ'}}},
-    scales:{x:{ticks:{color:'#93a0bd'},grid:{color:'#1c2740'}},y:{ticks:{color:'#93a0bd',callback:v=>fmt(v)},grid:{color:'#1c2740'}}}}});
+    scales:{x:{ticks:{color:'#93a0bd'},grid:{color:'#1e4030'}},y:{ticks:{color:'#93a0bd',callback:v=>fmt(v)},grid:{color:'#1e4030'}}}}});
   const rd=[['Doanh thu thuần',d.rev,1],['Lợi nhuận gộp',d.gross,0],['LNST công ty mẹ',d.npat,1],['EPS (đ)',d.eps,0],['Tổng tài sản',d.assets,1],['Vốn chủ sở hữu',d.equity,0],['Hàng tồn kho',d.inv,1]];
   const yoy=arr=>arr.map((v,i)=>i===0?null:(arr[i-1]?(v-arr[i-1])/arr[i-1]*100:null));
   let hh='<thead><tr><th>Tỷ đồng (EPS: đồng)</th>'+d.years.map(y=>`<th>${y}</th>`).join('')+'</tr></thead><tbody>';
@@ -761,10 +761,10 @@ function renderSize(tk){
   if(sizeChart)sizeChart.destroy();
   sizeChart=new Chart(el,{type:'bar',data:{
     labels:['Vốn hóa','Hàng tồn kho','Tổng tài sản'],
-    datasets:[{data:[mc,inv,assets],backgroundColor:['#4f8cff','#3ba776','#5b6788'],borderRadius:5}]},
+    datasets:[{data:[mc,inv,assets],backgroundColor:['#4fd1a0','#3ba776','#5b6788'],borderRadius:5}]},
     options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.parsed.x)+' tỷ'}}},
-      scales:{x:{ticks:{color:'#93a0bd',callback:v=>fmt(v)},grid:{color:'#1c2740'}},
+      scales:{x:{ticks:{color:'#93a0bd',callback:v=>fmt(v)},grid:{color:'#1e4030'}},
         y:{ticks:{color:'#cdd6ea',font:{weight:'700'}},grid:{display:false}}}}});
   const r1=inv?mc/inv:NaN, r2=assets?mc/assets:NaN;
   document.getElementById('szRatios').innerHTML=

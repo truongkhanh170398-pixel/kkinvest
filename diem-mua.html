@@ -6,9 +6,9 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>KKINVEST · Điểm mua — Quét CANSLIM</title>
 <style>
-  :root{--bg:#080b13;--card:#0e1525;--card2:#141d31;--line:#1c2740;--txt:#e8edf7;--muted:#7e8db0;--accent:#e2b33b;--accent2:#4f8cff;--up:#26c281;--dn:#f0556b;--warn:#e2b33b;}
+  :root{--bg:#04120c;--card:#0c2117;--card2:#123021;--line:#1e4030;--txt:#e8edf7;--muted:#8fae9e;--accent:#e2b33b;--accent2:#4fd1a0;--up:#26c281;--dn:#f0556b;--warn:#e2b33b;}
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:radial-gradient(1200px 700px at 50% -260px,#0c1730,#080b13);color:var(--txt);font-family:"Segoe UI",system-ui,Roboto,Arial,sans-serif;line-height:1.4;padding:0 0 40px}
+  body{background:radial-gradient(1200px 700px at 50% -260px,#0a2a1e,#04120c);color:var(--txt);font-family:"Segoe UI",system-ui,Roboto,Arial,sans-serif;line-height:1.4;padding:0 0 40px}
   .wrap{max-width:1340px;margin:0 auto;padding:0 16px}
   .navsheets{display:flex;gap:8px;padding:11px 0 0;flex-wrap:wrap}
   .ns{text-decoration:none;font-size:13px;font-weight:700;padding:7px 14px;border-radius:9px;border:1px solid var(--line);color:var(--muted);background:var(--card)}
@@ -30,8 +30,8 @@
   th,td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
   th:first-child,td:first-child{text-align:center;color:var(--muted)}
   th:nth-child(2),td:nth-child(2),th:nth-child(3),td:nth-child(3){text-align:left}
-  thead th{background:#0e1525;color:var(--muted);font-size:11px;text-transform:uppercase;cursor:pointer;position:sticky;top:0}
-  tbody tr{cursor:pointer}tbody tr:hover{background:#18203c}
+  thead th{background:#0c2117;color:var(--muted);font-size:11px;text-transform:uppercase;cursor:pointer;position:sticky;top:0}
+  tbody tr{cursor:pointer}tbody tr:hover{background:#143026}
   .up{color:var(--up)}.dn{color:var(--dn)}.muted{color:var(--muted)}
   .sigb{font-weight:800;padding:2px 9px;border-radius:6px;font-size:12px}
   .b-mua{background:rgba(33,150,243,.18);color:#7cc0ff}.b-ban{background:rgba(239,71,87,.18);color:#f5a3ac}
@@ -125,7 +125,9 @@ const PROX=[x=>x,x=>'/api/proxy?url='+encodeURIComponent(x),x=>'https://corsprox
 async function dchart(sym){
   const to=Math.floor(Date.now()/1000),from=to-220*86400;   // ~7 tháng dương lịch để đủ 126 phiên (6 tháng) tính thanh khoản
   const u=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${sym}&from=${from}&to=${to}`;
-  for(const p of PROX){try{const j=await tryFetch(p(u),9000);if(j&&j.s==='ok'&&j.c&&j.c.length>20)return j;}catch(e){}}
+  // quét hàng loạt: chỉ 2 đường NHANH (trực tiếp + proxy cùng origin), timeout 7s — bỏ proxy công cộng chậm để không treo lô
+  const FAST=[x=>x, x=>'/api/proxy?url='+encodeURIComponent(x)];
+  for(const p of FAST){try{const j=await tryFetch(p(u),7000);if(j&&j.s==='ok'&&j.c&&j.c.length>20)return j;}catch(e){}}
   return null;
 }
 async function getJSONp(u){for(const p of PROX){try{const j=await tryFetch(p(u),12000);if(j&&j.data)return j;}catch(e){}}return null;}
@@ -203,19 +205,18 @@ function render(){
 async function runScan(){
   results=[]; $('scanBtn').disabled=true; $('stat').textContent='⏳ đang lấy danh sách toàn thị trường…';
   const UNIVERSE=await loadUniverse();
-  const total=UNIVERSE.length; let done=0,ok=0;
-  const CONC=8;
-  for(let i=0;i<total;i+=CONC){
-    const part=UNIVERSE.slice(i,i+CONC);
-    await Promise.all(part.map(async ([tk,sec,fv])=>{
+  const total=UNIVERSE.length; let done=0,ok=0,idx=0,painted=0;
+  const CONC=18;   // worker pool: 18 luồng tự kéo mã kế tiếp, không chờ theo lô
+  async function worker(){
+    while(idx<total){
+      const my=idx++, [tk,sec,fv]=UNIVERSE[my];
       let d=null; try{const j=await dchart(tk); if(j)d=scan(j);}catch(e){}
       if(d){ok++; const priceD=d.px*1000, up=fv>0?(fv-priceD)/priceD*100:NaN; results.push({tk,sec,fv,d,up});}
       done++;
-    }));
-    $('prog').style.width=Math.round(done/total*100)+'%';
-    $('stat').textContent=`⏳ quét ${done}/${total}…`;
-    render();
+      if(done-painted>=24||done===total){painted=done;$('prog').style.width=Math.round(done/total*100)+'%';$('stat').textContent=`⏳ quét ${done}/${total}…`;render();}
+    }
   }
+  await Promise.all(Array.from({length:CONC},()=>worker()));
   $('scanBtn').disabled=false;
   $('prog').style.width='100%';
   render();
