@@ -87,7 +87,7 @@ const PROX=[x=>x,x=>'/api/proxy?url='+encodeURIComponent(x),x=>'https://corsprox
 async function dchart(sym){
   const to=Math.floor(Date.now()/1000),from=to-250*86400;   // ~170 phiên: đủ cho squeeze 100 phiên, giảm 38% payload → nhanh hơn
   const u=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${sym}&from=${from}&to=${to}`;
-  for(const p of [x=>x,x=>'/api/proxy?url='+encodeURIComponent(x)]){try{const j=await tryFetch(p(u),7000);if(j&&j.s==='ok'&&j.c&&j.c.length>60)return j;}catch(e){}}return null;
+  for(const p of [x=>x,x=>'/api/proxy?url='+encodeURIComponent(x)]){try{const j=await tryFetch(p(u),4500);if(j&&j.s==='ok'&&j.c&&j.c.length>60)return j;}catch(e){}}return null;
 }
 async function getJSONp(u){for(const p of PROX){try{const j=await tryFetch(p(u),12000);if(j&&j.data)return j;}catch(e){}}return null;}
 async function loadUniverse(){
@@ -193,18 +193,17 @@ function render(){
 async function runScan(){
   results=[]; $('scanBtn').disabled=true; $('stat').textContent='⏳ đang quét…'; $('body').innerHTML='';
   const UNI=await loadUniverse(); const total=UNI.length; let done=0,ok=0;
-  const CONC=16;
-  for(let i=0;i<total;i+=CONC){
-    const part=UNI.slice(i,i+CONC);
-    await Promise.all(part.map(async ([tk,floor])=>{
+  let idx=0,painted=0; const CONC=8;   // worker pool: không chờ theo lô
+  async function worker(){
+    while(idx<total){
+      const [tk,floor]=UNI[idx++];
       let d=null; try{const j=await dchart(tk); if(j)d=scan(j);}catch(e){}
       if(d&&d.isLiquid&&d.score>=5){ok++;results.push({tk,floor,d});}
       done++;
-    }));
-    $('prog').style.width=Math.round(done/total*100)+'%';
-    $('stat').textContent=`⏳ quét ${done}/${total}… (đạt lọc: ${ok})`;
-    if(done%120<CONC)render();
+      if(done-painted>=30||done===total){painted=done;$('prog').style.width=Math.round(done/total*100)+'%';$('stat').textContent=`⏳ quét ${done}/${total}… (đạt lọc: ${ok})`;render();}
+    }
   }
+  await Promise.all(Array.from({length:CONC},()=>worker()));
   $('scanBtn').disabled=false; $('prog').style.width='100%'; render();
   $('stat').textContent=`✓ quét ${done}/${total} · ${ok} mã đạt lọc · ${new Date().toLocaleTimeString('vi-VN')}`;
 }

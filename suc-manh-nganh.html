@@ -135,7 +135,7 @@ const UNI=[...new Set(Object.values(SECTORS).flat())];
 const PROX=[x=>x,x=>'/api/proxy?url='+encodeURIComponent(x),x=>'https://corsproxy.io/?url='+encodeURIComponent(x),x=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(x),x=>'https://api.allorigins.win/raw?url='+encodeURIComponent(x)];
 async function tf(u,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(u,{cache:'no-store',signal:c.signal});if(!r.ok)throw 0;return await r.json();}finally{clearTimeout(t);}}
 async function dchart(sym){const to=Math.floor(Date.now()/1000),from=to-430*86400;const u=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${sym}&from=${from}&to=${to}`;
-  for(const p of [x=>x,x=>'/api/proxy?url='+encodeURIComponent(x)]){try{const j=await tf(p(u),7000);if(j&&j.s==='ok'&&j.c&&j.c.length>60)return j;}catch(e){}}return null;}
+  for(const p of [x=>x,x=>'/api/proxy?url='+encodeURIComponent(x)]){try{const j=await tf(p(u),4500);if(j&&j.s==='ok'&&j.c&&j.c.length>60)return j;}catch(e){}}return null;}
 
 // ===== compute RS =====
 let SYM={}, AXIS=[], STR={}, SEC=[], updatedAt='';
@@ -146,18 +146,18 @@ function rawAt(px,i){let num=0,den=0;const add=(v,w)=>{if(v!=null){num+=v*w;den+
 function upperCount(a,v){let lo=0,hi=a.length;while(lo<hi){const m=(lo+hi)>>1;if(a[m]<=v)lo=m+1;else hi=m;}return lo;}
 
 async function fetchAll(){
-  SYM={}; const dateset={}; let done=0; const CONC=16;
-  for(let i=0;i<UNI.length;i+=CONC){
-    const part=UNI.slice(i,i+CONC);
-    await Promise.all(part.map(async tk=>{
-      const j=await dchart(tk); done++;
-      $('prog').style.width=Math.round(done/UNI.length*100)+'%'; $('stat').textContent='⏳ tải giá '+done+'/'+UNI.length+'…';
-      if(!j)return;
+  SYM={}; const dateset={}; let done=0,idx=0; const CONC=8, T=UNI.length;
+  async function worker(){
+    while(idx<T){
+      const tk=UNI[idx++]; const j=await dchart(tk); done++;
+      $('prog').style.width=Math.round(done/T*100)+'%'; $('stat').textContent='⏳ tải giá '+done+'/'+T+'…';
+      if(!j)continue;
       const seen={},rows=j.t.map((t,k)=>({d:new Date(t*1000).toISOString().slice(0,10),c:j.c[k]})).filter(r=>r.c>0).sort((a,b)=>a.d<b.d?-1:1);
       const dates=[],C=[]; rows.forEach(r=>{if(!seen[r.d]){seen[r.d]=1;dates.push(r.d);C.push(r.c);dateset[r.d]=1;}});
       SYM[tk]={dates,C};
-    }));
+    }
   }
+  await Promise.all(Array.from({length:CONC},()=>worker()));
   AXIS=Object.keys(dateset).sort();
   // forward-fill giá lên AXIS chung
   for(const tk in SYM){const map={};SYM[tk].dates.forEach((d,k)=>map[d]=SYM[tk].C[k]);

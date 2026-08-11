@@ -127,7 +127,7 @@ async function dchart(sym){
   const u=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${sym}&from=${from}&to=${to}`;
   // quét hàng loạt: chỉ 2 đường NHANH (trực tiếp + proxy cùng origin), timeout 7s — bỏ proxy công cộng chậm để không treo lô
   const FAST=[x=>x, x=>'/api/proxy?url='+encodeURIComponent(x)];
-  for(const p of FAST){try{const j=await tryFetch(p(u),7000);if(j&&j.s==='ok'&&j.c&&j.c.length>20)return j;}catch(e){}}
+  for(const p of FAST){try{const j=await tryFetch(p(u),4500);if(j&&j.s==='ok'&&j.c&&j.c.length>20)return j;}catch(e){}}
   return null;
 }
 async function getJSONp(u){for(const p of PROX){try{const j=await tryFetch(p(u),12000);if(j&&j.data)return j;}catch(e){}}return null;}
