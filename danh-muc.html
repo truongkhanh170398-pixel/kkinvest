@@ -92,13 +92,13 @@
   <header>
     <span class="tag">Lọc sức mạnh RS → điểm mua · chuyên nghiệp</span>
     <h1>Danh mục mẫu — NAV 1 tỷ, giải ngân "cổ phiếu mạnh + điểm mua"</h1>
-    <div class="sub"><b>Bắt đầu 22/06/2026</b> với NAV 1 tỷ tiền mặt. Quy trình 2 lớp: <b>① Lọc cổ phiếu mạnh</b> (RS/DuckMan: giá vượt trội VNINDEX, uptrend MA20&gt;MA50, thanh khoản ≥2 tỷ/phiên) → <b>② chỉ MUA khi có điểm mua breakout</b> (vượt đỉnh 4 phiên, trên MA20), ưu tiên mã RS mạnh nhất. Tự <b>BÁN</b> khi cắt lỗ / chốt lời / tín hiệu bán. Bỏ tick "Chỉ mua CP mạnh" để so sánh với chiến lược breakout thuần.</div>
+    <div class="sub"><b>Bắt đầu 22/06/2026</b> với NAV 1 tỷ tiền mặt. Quy trình 3 lớp: <b>① Lọc THỊ TRƯỜNG trước</b> (VNINDEX so MA20/MA50 + độ rộng rổ → quyết định được mở 0/1/3/5 vị thế) → <b>② Lọc CỔ PHIẾU mạnh</b> (uptrend MA20&gt;MA50, MA50 hướng lên, RS vượt trội VNINDEX, thanh khoản ≥2 tỷ/phiên) → <b>③ ĐIỂM MUA breakout đỉnh 10 phiên</b>, ưu tiên mã xếp hạng RS cao nhất rổ. Quản trị lệnh: cắt lỗ −8% · <b>chốt 1/2 tại +12%</b> rồi kéo stop về hoà vốn · <b>trailing 8%</b> khi lãi ≥10% · thoát khi thủng MA20 (2 phiên) hoặc đáy 8 phiên. Bỏ tick "Phương pháp chuyên nghiệp" để đối chứng với breakout 4 phiên thuần.</div>
     <div class="ctrl">
       <div class="seg" id="segMode"><button class="on" data-m="today">Thật · từ 22/6</button><button data-m="3m">MP 3 tháng</button><button data-m="6m">MP 6 tháng</button><button data-m="1y">MP 1 năm</button></div>
       <label>Số mã tối đa <input type="number" id="pMax" value="5" min="3" max="5"></label>
       <label>Cắt lỗ % <input type="number" id="pStop" value="8" min="3" max="20"></label>
-      <label>Chốt lời % <input type="number" id="pTgt" value="25" min="10" max="60"></label>
-      <label style="gap:6px"><input type="checkbox" id="fStrength" checked style="width:auto;accent-color:var(--accent2)"> 🦆 Chỉ mua CP mạnh (RS/DuckMan)</label>
+      <label title="Đạt mốc này thì bán 1/2, phần còn lại kéo stop về hoà vốn và để trailing chạy">Chốt 1/2 % <input type="number" id="pTgt" value="12" min="5" max="40"></label>
+      <label style="gap:6px" title="Bật: phương pháp đầy đủ (lọc thị trường + breakout 10 phiên + RS + trailing). Tắt: breakout 4 phiên thuần để đối chứng"><input type="checkbox" id="fStrength" checked style="width:auto;accent-color:var(--accent2)"> 🛡️ Phương pháp chuyên nghiệp</label>
       <button class="btn" id="runBtn">▶ Chạy lại</button>
       <span class="stat" id="status"></span>
     </div>
@@ -106,6 +106,7 @@
   </header>
 
   <div class="banner live" id="modeBanner">📌 Danh mục thật — bắt đầu 22/06/2026.</div>
+  <div class="banner" id="mktBanner" style="background:var(--card2);border:1px solid var(--line);color:var(--muted)">⏳ đang xác định trạng thái thị trường…</div>
   <div class="cards">
     <div class="card"><div class="l">NAV hiện tại</div><div class="v" id="cNav">—</div><div class="s" id="cCash">—</div></div>
     <div class="card"><div class="l">Tổng lợi nhuận</div><div class="v" id="cRet">—</div><div class="s">so vốn 1 tỷ</div></div>
@@ -127,7 +128,7 @@
   </div>
 
   <div class="panel"><h3>Đường NAV danh mục <span class="c" id="navRange"></span></h3><div class="chartbox"><canvas id="equity"></canvas></div>
-    <div class="mini" style="margin-top:6px">● Chấm trên đường NAV = điểm <b style="color:#22c55e">chốt lời/bán lãi</b> hoặc <b style="color:#ef4757">cắt lỗ</b> — rê chuột xem mã & lợi nhuận lệnh.</div></div>
+    <div class="mini" style="margin-top:6px"><b style="color:#4f8cff">▲ xanh dương</b> = lệnh MUA · <b style="color:#22c55e">● xanh lá</b> = bán lãi · <b style="color:#ef4757">● đỏ</b> = bán lỗ · <b style="color:#7e8db0">--- đứt nét</b> = VNINDEX quy về cùng vốn. Rê chuột lên bất kỳ phiên nào để xem toàn bộ lệnh khớp hôm đó.</div></div>
 
   <div class="allocrow">
     <div class="panel"><h3>Tỷ trọng danh mục <span class="c" id="allocSum"></span></h3>
@@ -148,7 +149,12 @@
       <div class="tablebox"><table><thead><tr><th>Ngày</th><th>Mã</th><th>Lệnh</th><th>Giá</th><th>SL</th><th>Giá trị (tr)</th><th>Ghi chú</th></tr></thead><tbody id="logBody"></tbody></table></div>
     </div>
   </div>
-  <div class="note">Quy tắc (chuyên nghiệp, 2 lớp): <b>① LỌC sức mạnh</b> — chỉ xét mã <b>giá/VNINDEX (RS line) đang ở đỉnh 60 phiên hoặc đi lên</b> (mạnh hơn thị trường), <b>uptrend</b> (giá &gt; MA20 &gt; MA50) và <b>GT giao dịch TB20 ≥ 2 tỷ/phiên</b>. <b>② ĐIỂM MUA</b> — trong nhóm mạnh đó, MUA khi đóng cửa vượt đỉnh 4 phiên (breakout) + trên MA20; nhiều tín hiệu cùng lúc thì <b>ưu tiên mã RS mạnh nhất</b>. Gói <b>tối đa 5 mã</b>, mỗi vị thế ~NAV/5 (lô 100). <b>BÁN</b> khi chạm cắt lỗ / chốt lời / thủng đáy 8 phiên (ưu tiên điều kiện đến trước) — hoặc bấm <b>Bán tay</b>. Rổ ~82 mã thanh khoản cao, chuẩn RS = VNINDEX. Bỏ tick lọc để về breakout thuần. Dữ liệu VNDirect. MÔ PHỎNG tham khảo, không phải khuyến nghị.</div>
+  <div class="note"><b>Quy tắc đầy đủ (3 lớp).</b>
+    <b>① LỌC THỊ TRƯỜNG</b> — số vị thế được phép mở phụ thuộc sức khoẻ thị trường: đếm 3 điều kiện (VNINDEX trên MA20 · VNINDEX trên MA50 · độ rộng rổ ≥28% mã uptrend) → được mở <b>0 / 1 / 3 / 5 mã</b>. Độ rộng &lt;10% thì <b>ngừng mua hoàn toàn</b>, ôm tiền mặt. Đây là lớp quan trọng nhất: mua breakout khi thị trường dưới MA20 là nguyên nhân chính gây thua lỗ.
+    <b>② LỌC CỔ PHIẾU</b> — chỉ xét mã <b>uptrend</b> (giá &gt; MA20 &gt; MA50), <b>MA50 hướng lên</b>, <b>RS line (giá/VNINDEX) ở đỉnh 60 phiên hoặc đang đi lên</b>, và <b>GT giao dịch TB20 ≥ 2 tỷ/phiên</b>.
+    <b>③ ĐIỂM MUA</b> — MUA khi đóng cửa <b>vượt đỉnh 10 phiên</b> (lần đầu, không mua đuổi phiên thứ hai); nhiều tín hiệu cùng lúc thì ưu tiên mã có <b>xếp hạng RS cao nhất rổ</b>. Mỗi vị thế ~NAV/5 (lô 100). Sau khi bán một mã, <b>nghỉ 10 phiên</b> mới được mua lại mã đó.
+    <b>④ QUẢN TRỊ LỆNH</b> — cắt lỗ cố định −8% · đạt <b>+12% bán 1/2</b> và kéo stop phần còn lại về hoà vốn · lãi ≥10% thì bật <b>trailing stop 8%</b> từ đỉnh · thoát nốt khi đóng cửa <b>dưới MA20 hai phiên liên tiếp</b> hoặc <b>thủng đáy 8 phiên</b> — hoặc bấm <b>Bán tay</b>.
+    Rổ ~82 mã thanh khoản cao, chuẩn RS = VNINDEX. Dữ liệu VNDirect. MÔ PHỎNG tham khảo, không phải khuyến nghị đầu tư.</div>
 </div>
 
 <script>
@@ -174,10 +180,19 @@ async function loadIdx(){
   const wk=d=>{const dt=new Date(d+'T00:00:00Z');const dy=(dt.getUTCDay()+6)%7;dt.setUTCDate(dt.getUTCDate()-dy);return dt.toISOString().slice(0,10);};
   const wm=new Map();for(const r of R){const k=wk(r.d);let g=wm.get(k);if(!g){g={k,o:r.o,h:r.h,l:r.l,c:r.c};wm.set(k,g);}else{if(r.h>g.h)g.h=r.h;if(r.l<g.l)g.l=r.l;g.c=r.c;}}
   const iwA=[...wm.values()],iwk={};iwA.forEach((g,ix)=>{let mx=-1e18;for(let q=Math.max(0,ix-51);q<=ix;q++)mx=Math.max(mx,iwA[q].h);g.h52=mx;g.prevL=ix>0?iwA[ix-1].l:g.l;g.prevC=ix>0?iwA[ix-1].c:g.c;iwk[g.k]=g;});
-  return {iwk,closeAt(d){if(cm[d]!=null)return cm[d];let lo=0,hi=dates.length-1,res=null;while(lo<=hi){const m=(lo+hi)>>1;if(dates[m]<=d){res=cm[dates[m]];lo=m+1;}else hi=m-1;}return res;}};
+  // MA20/MA50 của VNINDEX → bộ lọc trạng thái thị trường (quyết định có được giải ngân hay không)
+  const iC=dates.map(d=>cm[d]), i20=sma(iC,20), i50=sma(iC,50);
+  const at=d=>{let lo=0,hi=dates.length-1,res=-1;while(lo<=hi){const m=(lo+hi)>>1;if(dates[m]<=d){res=m;lo=m+1;}else hi=m-1;}return res;};
+  return {iwk,dates:dates,c:iC,
+    closeAt(d){const i=at(d);return i<0?null:iC[i];},
+    regimeAt(d){const i=at(d);if(i<0)return {a20:true,a50:true,c:null};
+      return {a20:i20[i]==null||iC[i]>i20[i], a50:i50[i]==null||iC[i]>i50[i], c:iC[i], ma20:i20[i], ma50:i50[i]};}};
 }
 
 let SYM={}; let AXIS=[]; let IDX=null; let equityChart=null; let allocChart=null; let startMode='today';
+let BREADTH={}, RSRANK={};
+const BR_LO=10, BR_HI=28;      // ngưỡng độ rộng: <10% = ngừng mua hẳn · ≥28% = cho phép full 5 mã
+const TRAIL=8, TRAIL_ARM=10;   // trailing stop 8% kích hoạt khi lãi ≥ 10%
 const PAL=['#4f8cff','#26c281','#e2b33b','#ef4757','#a78bfa','#ec6a9c','#34d399','#f5b301','#fb7185','#22c55e','#38bdf8','#f97316','#c084fc','#2dd4bf'];
 const CASH_COL='#5a6b8c';
 const pct2=n=>n.toLocaleString('vi-VN',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
@@ -260,20 +275,32 @@ async function fetchAll(){
       const RS=new Array(n), val=new Array(n);
       for(let k=0;k<n;k++){const ic=IDX?IDX.closeAt(dates[k]):null;RS[k]=ic?C[k]/ic:null;val[k]=Vv[k]*C[k]*1000;}
       const val20=sma(val,20);
+      const hhH=(w,k)=>{let m=-1e18;for(let q=Math.max(0,k-w+1);q<=k;q++)if(H[q]>m)m=H[q];return m;};
       for(let k=0;k<n;k++){
         let buy=false,sell=false;
+        // điểm mua CŨ (breakout đỉnh 4 phiên) — giữ lại cho chế độ "breakout thuần" để so sánh
         if(k>=4){const bo=C[k]>=H[k-1]&&C[k]>=H[k-2]&&C[k]>=H[k-3]&&C[k]>=H[k-4]&&ma20[k]&&C[k]>ma20[k];
           const boPrev=k>=5&&C[k-1]>=H[k-2]&&C[k-1]>=H[k-3]&&C[k-1]>=H[k-4]&&C[k-1]>=H[k-5]&&ma20[k-1]&&C[k-1]>ma20[k-1];
           buy=bo&&!boPrev;}
         if(k>=8)sell=C[k]<=L[k-1]&&C[k]<=L[k-2]&&C[k]<=L[k-3]&&C[k]<=L[k-4]&&C[k]<=L[k-5]&&C[k]<=L[k-6]&&C[k]<=L[k-7]&&C[k]<=L[k-8];
+        // ĐIỂM MUA MỚI: breakout đỉnh 10 phiên (lần đầu) — ít nhiễu hơn hẳn đỉnh 4 phiên
+        let buy10=false;
+        if(k>=11){const b0=C[k]>=hhH(10,k-1)*1.0001, b1=C[k-1]>=hhH(10,k-2)*1.0001; buy10=b0&&!b1;}
         // ===== Bộ lọc SỨC MẠNH (DuckMan/RS-lite): uptrend + RS vượt trội + thanh khoản =====
         const trendOk=ma20[k]!=null&&ma50[k]!=null&&C[k]>ma20[k]&&C[k]>ma50[k]&&ma20[k]>ma50[k];
+        const ma50Up=k>=10&&ma50[k]!=null&&ma50[k-10]!=null&&ma50[k]>ma50[k-10];
         let rsHi=false,rsUp=false;
         if(RS[k]!=null){let mx=-1e18;for(let q=Math.max(0,k-59);q<=k;q++)if(RS[q]!=null&&RS[q]>mx)mx=RS[q];rsHi=RS[k]>=mx*0.999;
           if(k>=20&&RS[k-20]!=null)rsUp=RS[k]>RS[k-20];}
         const strong=trendOk&&(rsHi||rsUp)&&((val20[k]||0)>=2e9);
+        const strong2=strong&&ma50Up;   // chặt hơn: MA50 phải đang hướng lên
         const str=(RS[k]!=null&&k>=60&&RS[k-60]>0)?(RS[k]/RS[k-60]-1):(k>=60&&C[k-60]>0?(C[k]/C[k-60]-1):0);
-        bd[dates[k]]={c:C[k],buy,sell,strong,str}; dateset[dates[k]]=1;
+        // thoát lệnh: thủng MA20 2 phiên liên tiếp
+        const belowMA20x2=k>=1&&ma20[k]!=null&&ma20[k-1]!=null&&C[k]<ma20[k]&&C[k-1]<ma20[k-1];
+        // động lượng để xếp hạng RS trong rổ
+        const mom60=(k>=60&&C[k-60]>0)?C[k]/C[k-60]-1:0, mom120=(k>=120&&C[k-120]>0)?C[k]/C[k-120]-1:0;
+        bd[dates[k]]={c:C[k],buy,buy10,sell,strong,strong2,str,trendOk,belowMA20x2,mom:0.6*mom60+0.4*mom120};
+        dateset[dates[k]]=1;
       }
       let tools=null; try{tools=A4.analyze4(rowsA,IDX);}catch(e){}
       SYM[tk]={bd, lastClose:C[n-1], tools};
@@ -283,63 +310,109 @@ async function fetchAll(){
   // forward-fill giá theo AXIS để tính NAV mượt (giữ giá gần nhất khi mã ko có phiên)
   for(const tk in SYM){const bd=SYM[tk].bd,arr=Array(AXIS.length);let last=null;
     for(let i=0;i<AXIS.length;i++){const b=bd[AXIS[i]];if(b)last=b.c;arr[i]=last;}SYM[tk].pxAxis=arr;}
+  // ĐỘ RỘNG THỊ TRƯỜNG (% mã trong rổ đang uptrend) + XẾP HẠNG RS trong rổ, theo từng phiên
+  BREADTH={}; RSRANK={};
+  for(const d of AXIS){
+    let up=0,tot=0; const arr=[];
+    for(const tk in SYM){const b=SYM[tk].bd[d];if(!b)continue;tot++;if(b.trendOk)up++;arr.push([tk,b.mom]);}
+    BREADTH[d]=tot?up/tot*100:0;
+    arr.sort((a,b)=>a[1]-b[1]);
+    const m={}; arr.forEach(([tk],i)=>m[tk]=arr.length>1?i/(arr.length-1)*100:50);
+    RSRANK[d]=m;
+  }
+}
+// Số vị thế được phép mở theo trạng thái thị trường: càng xấu càng ít giải ngân (giữ tiền mặt)
+function slotsAllowed(d,maxPos){
+  const r=IDX?IDX.regimeAt(d):{a20:true,a50:true}, br=BREADTH[d]||0;
+  if(br<BR_LO)return 0;
+  const risk=(r.a20?1:0)+(r.a50?1:0)+(br>=BR_HI?1:0);
+  return Math.min(maxPos,[0,1,3,5][risk]);
 }
 function backtest(){
-  const maxPos=Math.min(5,Math.max(1,+$('pMax').value||5)), stop=(+$('pStop').value||8)/100, tgt=(+$('pTgt').value||25)/100;
-  let cash=NAV0, pos={}, trades=[], closed=[], equity=[];
+  const maxPos=Math.min(5,Math.max(1,+$('pMax').value||5)), stop=(+$('pStop').value||8)/100, half=(+$('pTgt').value||12)/100;
+  const pro=$('fStrength')?$('fStrength').checked:true;   // bật = phương pháp chuyên nghiệp · tắt = breakout thuần (đối chứng)
+  const COOL=10;
+  let cash=NAV0, pos={}, trades=[], closed=[], equity=[], lastSell={}, regime=[];
   let start;
   if(startMode==='today'){start=AXIS.findIndex(d=>d>=START_DATE);if(start<0)start=AXIS.length;}
   else{const days={'3m':63,'6m':126,'1y':250}[startMode]||63;start=Math.max(0,AXIS.length-days);}
   for(let di=start;di<AXIS.length;di++){
     const d=AXIS[di];
-    // EXITS
+    const nSlot=pro?slotsAllowed(d,maxPos):maxPos;
+    regime.push({d,slots:nSlot,br:BREADTH[d]||0});
+    // ===== THOÁT LỆNH =====
     for(const tk of Object.keys(pos)){
       const bar=SYM[tk].bd[d]; if(!bar)continue; const px=bar.c, p=pos[tk];
+      if(px>p.hi)p.hi=px;
+      // ① chốt 1/2 khi đạt mốc lãi → phần còn lại đưa stop về hoà vốn (khoá lãi, cho chạy tiếp)
+      if(pro&&!p.tookHalf&&px>=p.entry*(1+half)){
+        const q=Math.floor(p.qty/2/100)*100;
+        if(q>0&&q<p.qty){
+          cash+=q*px; const pnl=(px-p.entry)*q;
+          trades.push({d,tk,side:'BÁN',px,qty:q,note:'Chốt 1/2'});
+          closed.push({tk,buyD:p.entryD,sellD:d,buyPx:p.entry,sellPx:px,qty:q,pnl,pct:(px/p.entry-1)*100,reason:'Chốt 1/2'});
+          p.qty-=q; p.tookHalf=true; p.stopPx=Math.max(p.stopPx,p.entry*1.002);
+        }
+      }
+      // ② stop động: cắt lỗ cố định → hoà vốn → trailing khi đã lãi đủ
+      let stopPx=p.stopPx;
+      if(pro&&p.hi>=p.entry*(1+TRAIL_ARM/100))stopPx=Math.max(stopPx,p.hi*(1-TRAIL/100));
       let reason=null;
-      if(px<=p.entry*(1-stop))reason='Cắt lỗ';
-      else if(px>=p.entry*(1+tgt))reason='Chốt lời';
-      else if(bar.sell)reason='Tín hiệu bán';
+      if(px<=stopPx)reason=stopPx>p.entry?'Trailing/Hoà vốn':'Cắt lỗ';
+      else if(pro&&bar.belowMA20x2)reason='Thủng MA20';
+      else if(bar.sell)reason='Thủng đáy 8 phiên';
       if(reason){const pnl=(px-p.entry)*p.qty, pct=(px/p.entry-1)*100;
         cash+=p.qty*px;
         trades.push({d,tk,side:'BÁN',px,qty:p.qty,note:reason});
         closed.push({tk,buyD:p.entryD,sellD:d,buyPx:p.entry,sellPx:px,qty:p.qty,pnl,pct,reason});
-        delete pos[tk];}
+        lastSell[tk]=di; delete pos[tk];}
     }
     // equity (trước khi mua) để chia vốn — dùng giá forward-fill
     let mv=0; for(const tk in pos){mv+=pos[tk].qty*(SYM[tk].pxAxis[di]||pos[tk].entry);}
     const eqNow=cash+mv;
-    // ENTRIES
-    let slots=maxPos-Object.keys(pos).length;
+    // ===== VÀO LỆNH =====
+    let slots=nSlot-Object.keys(pos).length;
     if(slots>0){
-      const useStr=$('fStrength')?$('fStrength').checked:true;
-      const cands=UNIV.filter(tk=>!pos[tk]&&SYM[tk]&&SYM[tk].bd[d]&&SYM[tk].bd[d].buy&&(!useStr||SYM[tk].bd[d].strong));
-      cands.sort((a,b)=>((SYM[b].bd[d].str||0)-(SYM[a].bd[d].str||0)));   // ưu tiên mã RS mạnh nhất
+      const cands=UNIV.filter(tk=>{
+        if(pos[tk])return false; const b=SYM[tk]&&SYM[tk].bd[d]; if(!b)return false;
+        if(!pro)return b.buy;                                  // đối chứng: breakout 4 phiên thuần
+        if(lastSell[tk]!=null&&di-lastSell[tk]<COOL)return false;   // nghỉ 10 phiên sau khi bán, tránh mua đi mua lại
+        return b.buy10&&b.strong2;
+      });
+      // ưu tiên mã khoẻ nhất rổ: xếp hạng RS phân vị (chuyên nghiệp) hoặc RS 60 phiên (đối chứng)
+      const key=pro?(tk=>(RSRANK[d]&&RSRANK[d][tk])||0):(tk=>SYM[tk].bd[d].str||0);
+      cands.sort((a,b)=>key(b)-key(a));
       for(const tk of cands){ if(slots<=0)break;
         const px=SYM[tk].bd[d].c, size=Math.min(cash,eqNow/maxPos), qty=Math.floor(size/px/100)*100;
-        if(qty>0&&qty*px<=cash){cash-=qty*px;pos[tk]={qty,entry:px,entryD:d};trades.push({d,tk,side:'MUA',px,qty,note:useStr?'Breakout + RS mạnh':'Breakout'});slots--;}
+        if(qty>0&&qty*px<=cash){cash-=qty*px;
+          pos[tk]={qty,entry:px,entryD:d,hi:px,stopPx:px*(1-stop),tookHalf:false};
+          trades.push({d,tk,side:'MUA',px,qty,note:pro?'Breakout 10p + RS mạnh':'Breakout 4p'});slots--;}
       }
     }
     let mv2=0; for(const tk in pos){mv2+=pos[tk].qty*(SYM[tk].pxAxis[di]||pos[tk].entry);}
     equity.push({d,nav:cash+mv2});
   }
-  return {cash,pos,trades,closed,equity};
+  return {cash,pos,trades,closed,equity,regime,pro};
 }
 // ===== Bán tay + AI khuyến nghị bán (lưu localStorage, overlay lên danh mục mô phỏng) =====
 const SOLD_KEY='dm_manual_sold_v1';
 function getSold(){try{return JSON.parse(localStorage.getItem(SOLD_KEY))||{};}catch(e){return{};}}
 function setSold(o){try{localStorage.setItem(SOLD_KEY,JSON.stringify(o));}catch(e){}}
-function ma20At(tk){const px=SYM[tk]&&SYM[tk].pxAxis;if(!px||px.length<20)return null;let s=0;for(let i=px.length-20;i<px.length;i++)s+=px[i];return s/20;}
 // AI khuyến nghị theo skill (HungCanslim) — chỉ CẢNH BÁO, người dùng bấm Bán để xác nhận
 function recFor(o){
-  const stop=+$('pStop').value||8, tgt=+$('pTgt').value||25, pnl=o.pct;
-  const ma20=ma20At(o.tk), below=ma20!=null&&o.px<ma20;
-  const bar=SYM[o.tk]&&SYM[o.tk].bd[AXIS[AXIS.length-1]], sig=bar&&bar.sell;
-  if(pnl<=-stop)  return {t:'🔴 BÁN',r:'Chạm cắt lỗ −'+stop+'%',c:'sell'};
-  if(pnl>=tgt)    return {t:'🟢 BÁN',r:'Đạt chốt lời +'+tgt+'%',c:'take'};
-  if(sig)         return {t:'🔴 BÁN',r:'Tín hiệu bán — thủng đáy 8 phiên',c:'sell'};
-  if(below)       return {t:'🟠 CÂN NHẮC',r:'Giá dưới MA20 — xu hướng yếu đi',c:'warn'};
-  if(pnl+stop<=2) return {t:'🟠 CÂN NHẮC',r:'Sát cắt lỗ (còn '+(pnl+stop).toFixed(1)+'% là cắt)',c:'warn'};
-  if(tgt-pnl<=3)  return {t:'🔵 THEO DÕI',r:'Sắp chốt lời (còn '+(tgt-pnl).toFixed(1)+'%)',c:'watch'};
+  const stop=+$('pStop').value||8, half=+$('pTgt').value||12, pnl=o.pct;
+  const bar=SYM[o.tk]&&SYM[o.tk].bd[AXIS[AXIS.length-1]];
+  const sig=bar&&bar.sell, ma20x2=bar&&bar.belowMA20x2;
+  const hi=o.p.hi||o.px, run=(hi/o.p.entry-1)*100;                       // đỉnh lãi đã đạt
+  const trailHit=run>=TRAIL_ARM&&o.px<=hi*(1-TRAIL/100);
+  if(pnl<=-stop)   return {t:'🔴 BÁN',r:'Chạm cắt lỗ −'+stop+'%',c:'sell'};
+  if(sig)          return {t:'🔴 BÁN',r:'Thủng đáy 8 phiên — tín hiệu bán',c:'sell'};
+  if(ma20x2)       return {t:'🔴 BÁN',r:'Đóng cửa dưới MA20 hai phiên liên tiếp',c:'sell'};
+  if(trailHit)     return {t:'🟢 BÁN',r:'Trailing stop: đã lãi đỉnh +'+run.toFixed(1)+'%, nay tụt quá '+TRAIL+'%',c:'take'};
+  if(!o.p.tookHalf&&pnl>=half) return {t:'🟢 CHỐT 1/2',r:'Đạt +'+half+'% — bán nửa, phần còn lại kéo stop về hoà vốn',c:'take'};
+  if(run>=TRAIL_ARM) return {t:'🔵 THEO DÕI',r:'Đang trailing — stop bảo vệ ở '+fmt(hi*(1-TRAIL/100))+'đ',c:'watch'};
+  if(pnl+stop<=2)  return {t:'🟠 CÂN NHẮC',r:'Sát cắt lỗ (còn '+(pnl+stop).toFixed(1)+'% là cắt)',c:'warn'};
+  if(half-pnl<=3)  return {t:'🔵 THEO DÕI',r:'Sắp tới mốc chốt 1/2 (còn '+(half-pnl).toFixed(1)+'%)',c:'watch'};
   return {t:'✅ GIỮ',r:'Xu hướng ổn, chưa chạm quy tắc bán',c:'hold'};
 }
 function sellManual(tk,entryD){
@@ -370,18 +443,35 @@ function render(R){
   let peak=-1e18,dd=0; eq.forEach(e=>{peak=Math.max(peak,e.nav);dd=Math.min(dd,(e.nav-peak)/peak);});
   $('cDD').textContent=(dd*100).toFixed(1)+'%'; $('cDD').className='v dn';
   $('navRange').textContent=eq.length?(eq[0].d+' → '+eq[eq.length-1].d):'';
-  // equity chart + đánh dấu lệnh bán/chốt lời
+  renderMarket(R);
+  // ===== Đồ thị NAV + TOÀN BỘ lịch sử giao dịch (mua ▲ / bán ▼) + VNINDEX đối chiếu =====
   const dateIdx={}; eq.forEach((e,i)=>dateIdx[e.d]=i);
-  const mY=Array(eq.length).fill(null),mC=Array(eq.length).fill('#22c55e'),mInfo=Array(eq.length).fill('');
-  R.closed.forEach(c=>{const i=dateIdx[c.sellD];if(i==null)return;mY[i]=eq[i].nav/1e6;mC[i]=c.pnl>=0?'#22c55e':'#ef4757';
-    mInfo[i]=(mInfo[i]?mInfo[i]+' · ':'')+'BÁN '+c.tk+' '+(c.pct>=0?'+':'')+c.pct.toFixed(1)+'% ('+c.reason+')';});
+  const bY=Array(eq.length).fill(null), bInfo=Array(eq.length).fill('');
+  const sY=Array(eq.length).fill(null), sC=Array(eq.length).fill('#22c55e'), sInfo=Array(eq.length).fill('');
+  R.trades.filter(t=>t.side==='MUA').forEach(t=>{const i=dateIdx[t.d]; if(i==null)return;
+    bY[i]=eq[i].nav/1e6;
+    bInfo[i]=(bInfo[i]?bInfo[i]+' · ':'')+'MUA '+t.tk+' @'+fmt(t.px)+'đ · '+fmt(t.qty)+' cp';});
+  R.closed.forEach(c=>{const i=dateIdx[c.sellD]; if(i==null)return;
+    sY[i]=eq[i].nav/1e6;
+    if(c.pnl<0)sC[i]='#ef4757'; else if(sC[i]!=='#ef4757')sC[i]='#22c55e';
+    sInfo[i]=(sInfo[i]?sInfo[i]+' · ':'')+'BÁN '+c.tk+' '+(c.pct>=0?'+':'')+c.pct.toFixed(1)+'% ('+c.reason+')';});
+  // VNINDEX chuẩn hoá về cùng mốc vốn để thấy danh mục hơn/kém thị trường
+  let vnY=null;
+  if(IDX){const v0=IDX.closeAt(eq.length?eq[0].d:null);
+    if(v0)vnY=eq.map(e=>{const v=IDX.closeAt(e.d);return v?v/v0*NAV0/1e6:null;});}
+  const ds=[{label:'NAV danh mục',data:eq.map(e=>e.nav/1e6),borderColor:ret>=0?'#22c55e':'#ef4757',backgroundColor:ret>=0?'rgba(34,197,94,.10)':'rgba(239,71,87,.10)',fill:true,pointRadius:0,borderWidth:2,tension:.15,order:4}];
+  const iVN=vnY?ds.push({label:'VNINDEX (quy về cùng vốn)',data:vnY,borderColor:'#7e8db0',borderDash:[5,4],borderWidth:1.4,pointRadius:0,fill:false,tension:.15,order:5})-1:-1;
+  const iBuy=ds.push({label:'Lệnh MUA',data:bY,showLine:false,pointStyle:'triangle',pointRadius:bY.map(v=>v==null?0:6),pointHoverRadius:8,pointBackgroundColor:'#4f8cff',pointBorderColor:'#dbe7ff',pointBorderWidth:1,order:2})-1;
+  const iSell=ds.push({label:'Lệnh BÁN',data:sY,showLine:false,pointStyle:'circle',pointRadius:sY.map(v=>v==null?0:5),pointHoverRadius:7,pointBackgroundColor:sC,pointBorderColor:'#fff',pointBorderWidth:1,order:1})-1;
   if(equityChart)equityChart.destroy();
-  equityChart=new Chart($('equity'),{type:'line',data:{labels:eq.map(e=>e.d),datasets:[
-    {label:'NAV',data:eq.map(e=>e.nav/1e6),borderColor:ret>=0?'#22c55e':'#ef4757',backgroundColor:ret>=0?'rgba(34,197,94,.10)':'rgba(239,71,87,.10)',fill:true,pointRadius:0,borderWidth:2,tension:.15,order:2},
-    {label:'Lệnh bán',data:mY,showLine:false,pointRadius:mY.map(v=>v==null?0:4.5),pointHoverRadius:6,pointBackgroundColor:mC,pointBorderColor:'#fff',pointBorderWidth:1,order:1}
-  ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
-      tooltip:{callbacks:{label:c=>c.datasetIndex===1?(mInfo[c.dataIndex]||''):('NAV '+c.parsed.y.toLocaleString('vi-VN',{maximumFractionDigits:0})+' tr')}}},
+  equityChart=new Chart($('equity'),{type:'line',data:{labels:eq.map(e=>e.d),datasets:ds},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:true,position:'top',align:'end',labels:{usePointStyle:true,boxWidth:8,color:'#8595b5',font:{size:11},padding:12}},
+      tooltip:{filter:it=>it.parsed.y!=null,callbacks:{label:c=>{
+        if(c.datasetIndex===iBuy)return bInfo[c.dataIndex]||null;
+        if(c.datasetIndex===iSell)return sInfo[c.dataIndex]||null;
+        if(c.datasetIndex===iVN)return 'VNINDEX '+((c.parsed.y/(NAV0/1e6)-1)*100).toFixed(1)+'%';
+        return 'NAV '+c.parsed.y.toLocaleString('vi-VN',{maximumFractionDigits:0})+' tr';}}}},
       scales:{x:{ticks:{color:'#8595b5',maxTicksLimit:8},grid:{color:'#172238'}},y:{ticks:{color:'#8595b5',callback:v=>v.toLocaleString('vi-VN')+'tr'},grid:{color:'#172238'}}}}});
   // open positions (loại mã đã BÁN TAY)
   const sold=getSold();
@@ -419,6 +509,24 @@ function render(R){
   $('logBody').innerHTML=lg.map(t=>`<tr><td class="mini">${t.d}</td><td style="font-weight:800">${t.tk}</td><td><span class="sb ${t.side==='MUA'?'b-mua':'b-ban'}">${t.side}</span></td><td>${fmt(t.px)}</td><td>${fmt(t.qty)}</td><td>${trM(t.qty*t.px)}</td><td class="mini">${t.note}</td></tr>`).join('');
   $('logSum').textContent=R.trades.length+' lệnh';
   renderDash(R);
+}
+// ===== Trạng thái thị trường: quyết định được giải ngân bao nhiêu mã =====
+function renderMarket(R){
+  const b=$('mktBanner'); if(!b)return;
+  const d=AXIS[AXIS.length-1], r=IDX?IDX.regimeAt(d):null, br=BREADTH[d]||0;
+  if(!r){b.textContent='—';return;}
+  const maxPos=Math.min(5,Math.max(1,+$('pMax').value||5));
+  const slots=R.pro?slotsAllowed(d,maxPos):maxPos;
+  const tag=(ok,t)=>`<b style="color:${ok?'#7fe3a5':'#f5a3ac'}">${ok?'✔':'✘'} ${t}</b>`;
+  const lvl=slots===0?['#f5a3ac','rgba(239,71,87,.12)','rgba(239,71,87,.3)','PHÒNG THỦ — giữ tiền mặt, KHÔNG mở lệnh mới']
+        :slots<=1?['#f0c26b','rgba(226,179,59,.12)','rgba(226,179,59,.3)','THẬN TRỌNG — chỉ thăm dò 1 vị thế']
+        :slots<=3?['#f0c26b','rgba(226,179,59,.12)','rgba(226,179,59,.3)','TRUNG TÍNH — giải ngân tối đa '+slots+' mã']
+        :['#7fe3a5','rgba(34,197,94,.12)','rgba(34,197,94,.3)','THUẬN LỢI — được giải ngân đủ '+slots+' mã'];
+  b.style.background=lvl[1]; b.style.border='1px solid '+lvl[2]; b.style.color=lvl[0];
+  b.innerHTML=`🌡️ <b>Trạng thái thị trường: ${lvl[3]}</b>`+
+    `<span style="color:var(--muted);font-weight:500"> — VNINDEX ${r.c?Math.round(r.c).toLocaleString('vi-VN'):'—'} · `+
+    `${tag(r.a20,'trên MA20')} · ${tag(r.a50,'trên MA50')} · độ rộng rổ <b style="color:${br>=BR_HI?'#7fe3a5':br>=BR_LO?'#f0c26b':'#f5a3ac'}">${br.toFixed(0)}%</b> mã uptrend`+
+    (R.pro?'':' · <b style="color:#f0c26b">đang TẮT bộ lọc — chế độ đối chứng</b>')+`</span>`;
 }
 // ===== Dashboard đa công cụ: sức khỏe vị thế + radar mua đồng thuận =====
 function renderDash(R){
