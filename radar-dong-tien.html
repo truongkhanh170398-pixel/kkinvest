@@ -6,6 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>KKINVEST · Radar lệnh lớn — dòng tiền cá mập realtime</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 <style>
   :root{--bg:#080b13;--card:#0e1525;--card2:#141d31;--line:#1c2740;--txt:#e8edf7;--muted:#7e8db0;--accent:#e2b33b;--accent2:#4f8cff;--up:#26c281;--dn:#f0556b;}
   *{box-sizing:border-box;margin:0;padding:0}
@@ -180,9 +181,16 @@
           </div>
         </div>
         <div class="hrow">
+          <div class="seg" id="segSrc"><button class="on" data-x="min">📊 Nến 1 phút</button><button data-x="dnse">🔴 Tick DNSE</button></div>
           <div class="seg" id="segSide"><button class="on" data-s="all">Tất cả</button><button data-s="buy">MUA</button><button data-s="sell">BÁN</button></div>
           <button class="ctl" id="btnRf">⟳ Làm mới</button>
           <span class="stat" id="stat">⏳ đang tải…</span>
+        </div>
+        <div class="hrow hide" id="dnseBox">
+          <input class="srch" id="dUser" placeholder="TK DNSE (SĐT / 064Cxxxxxx)" autocomplete="username" style="width:210px">
+          <input class="srch" id="dPass" type="password" placeholder="Mật khẩu DNSE" autocomplete="current-password" style="width:160px">
+          <button class="ctl" id="btnDnse">Kết nối tick</button>
+          <span class="stat" id="dStat">○ chưa nối</span>
         </div>
       </div>
     </div>
@@ -318,6 +326,7 @@ const SRC_MINUTE=(function(){
   return {
     label:'Nến 1 phút · VNDirect',
     tick:false,                       // false = mỗi bản ghi là 1 PHÚT gộp lệnh, không phải lệnh lẻ
+    note:'⚠️ <b>Cách tính — đọc kỹ để dùng đúng.</b> Nguồn đang dùng là <b>nến 1 phút VNDirect</b>: mỗi dòng là <b>MỘT PHÚT giao dịch</b> có tổng giá trị khớp ≥ ngưỡng, <b>gộp tất cả lệnh trong phút đó</b> — không phải một lệnh đơn lẻ. Chiều <b>MUA/BÁN</b> suy ra bằng <b>quy tắc tick</b> (giá đóng phút này so phút liền trước; đi ngang thì xét vị trí đóng cửa trong biên độ) nên là <b>ước lượng</b>. Ưu điểm bù lại: <b>có đủ lịch sử 10 phiên</b>, xem lại phiên cũ được. Muốn từng lệnh thật thì bấm <b>🔴 Tick DNSE</b> trên header.',
     days:()=>DAYS,
     async fetch(onProgress){
       const to=Math.floor(Date.now()/1000), from=to-8*86400;
@@ -390,11 +399,74 @@ const SRC_REALTIME={
   load(day,thVnd){return this._rows.filter(r=>vnDate(r.t)===day&&r.val>=thVnd);}
 };
 
-let SOURCE = SRC_MINUTE;      // ←←← ĐỔI SANG SRC_REALTIME KHI CÓ API
+/* ── NGUỒN C: TICK THẬT qua DNSE MQTT (từng lệnh khớp) ────────────────────
+   Dùng chính cơ chế đã chạy ở index.html: người dùng tự đăng nhập tài khoản
+   DNSE ngay trên trình duyệt (mật khẩu KHÔNG gửi đi đâu khác, KHÔNG lưu lại),
+   rồi subscribe topic tick của toàn rổ. Mỗi message = MỘT LỆNH KHỚP THẬT.
+   Hạn chế bản chất của MQTT: chỉ nhận được từ lúc kết nối trở đi, không có
+   lịch sử — nên tick nhận được sẽ ghi vào localStorage theo ngày để F5 không mất. */
+const SRC_DNSE=(function(){
+  const KEEP_MIN=1e9, CAP=6000;      // chỉ giữ lệnh ≥1 tỷ, tối đa 6000 bản ghi/phiên
+  let rows=[], lastPx={}, client=null, nTick=0, connected=false;
+  const key=()=>'radar_dnse_'+vnDate(Math.floor(Date.now()/1000));
+  function save(){try{localStorage.setItem(key(),JSON.stringify(rows.slice(-CAP)));}catch(e){}}
+  function restore(){try{rows=JSON.parse(localStorage.getItem(key()))||[];}catch(e){rows=[];}}
+  function onMsg(topic,payload){
+    let d; try{d=JSON.parse(payload.toString());}catch(e){return;}
+    const tk=d.symbol||topic.split('/').pop(); if(!tk)return;
+    const mp=d.matchPrice, qt=d.matchQtty!=null?d.matchQtty:d.matchQty;
+    if(mp==null||!qt)return;
+    const px=mp>3000?mp:mp*1000;        // chuẩn hoá về VND/cp
+    nTick++;
+    const prev=lastPx[tk]; lastPx[tk]=px;
+    const val=px*qt;
+    if(val<KEEP_MIN)return;             // lọc ngay lúc nhận để không phình bộ nhớ
+    const dir=prev==null?'B':(px>prev?'B':px<prev?'S':(rows.length&&rows[rows.length-1].tk===tk?rows[rows.length-1].dir:'B'));
+    rows.push({t:Math.floor(Date.now()/1000),tk,px,vol:qt,val,dir});
+    if(rows.length>CAP)rows=rows.slice(-CAP);
+  }
+  return {
+    label:'Tick DNSE · từng lệnh khớp',
+    tick:true,
+    note:'✅ <b>Nguồn tick thật.</b> Mỗi dòng là <b>MỘT LỆNH KHỚP đơn lẻ</b> nhận trực tiếp từ luồng MQTT của DNSE. Chiều MUA/BÁN suy ra bằng <b>quy tắc tick ở cấp từng lệnh</b> (so giá lệnh này với lệnh liền trước cùng mã) — chính xác hơn hẳn so với suy từ nến phút. <b>Lưu ý bản chất:</b> MQTT chỉ đẩy dữ liệu từ lúc kết nối trở đi, <b>không có lịch sử</b> — mở trang càng sớm trong phiên thì càng đủ. Tick đã nhận được lưu trong máy anh theo ngày nên F5 không mất.',
+    days(){const d=vnDate(Math.floor(Date.now()/1000));return rows.length?[...new Set(rows.map(r=>vnDate(r.t)))].sort():[d];},
+    stats(){return {nTick,connected,kept:rows.length};},
+    async fetch(){ if(!rows.length)restore(); save(); return rows.length||1; },
+    load(day,th){return rows.filter(r=>vnDate(r.t)===day&&r.val>=th);},
+    async connect(user,pass,onStat){
+      if(typeof mqtt==='undefined'){onStat('⚠ chưa tải được thư viện MQTT');return false;}
+      onStat('⏳ đang đăng nhập DNSE…');
+      try{
+        let r=await fetch('https://api.dnse.com.vn/user-service/api/auth',{method:'POST',
+          headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user,password:pass})});
+        if(!r.ok)throw new Error('đăng nhập thất bại ('+r.status+')');
+        const token=(await r.json()).token;
+        r=await fetch('https://api.dnse.com.vn/user-service/api/me',{headers:{Authorization:'Bearer '+token}});
+        const inv=(await r.json()).investorId;
+        onStat('⏳ đang nối luồng tick…');
+        const cid='dnse-price-json-mqtt-ws-sub-'+inv+'-'+Math.random().toString(16).slice(2,8);
+        client=mqtt.connect('wss://datafeed-lts-krx.dnse.com.vn/wss',
+          {clientId:cid,username:inv,password:token,protocolVersion:5,clean:true,keepalive:60,reconnectPeriod:5000,connectTimeout:15000});
+        client.on('connect',()=>{
+          connected=true; restore();
+          for(let i=0;i<UNI.length;i+=50)   // subscribe theo lô cho nhẹ
+            client.subscribe(UNI.slice(i,i+50).map(s=>'plaintext/quotes/krx/mdds/tick/v1/roundlot/symbol/'+s));
+          onStat('● đã nối · subscribe '+UNI.length+' mã · chờ tick…');
+          setInterval(()=>{save();onStat('● LIVE · '+nTick+' tick · giữ '+rows.length+' lệnh ≥1 tỷ');},5000);
+        });
+        client.on('message',onMsg);
+        client.on('error',e=>onStat('⚠ '+(e.message||e)));
+        return true;
+      }catch(e){ onStat('⚠ '+(e.message||e)+' — sai TK/mật khẩu hoặc DNSE chặn CORS'); return false; }
+    }
+  };
+})();
+
+let SOURCE = SRC_MINUTE;      // đổi qua lại bằng nút "Nến 1 phút / Tick DNSE" trên header
 
 /* ═══════════════════════ TRẠNG THÁI & VÒNG ĐỜI ═══════════════════════════ */
 let EVT=[], VIEWED=[], side='all', view='dash', secMode='all', bigMode='all', cumMode='5m';
-let paused=false, timer=null, prevKeys=new Set(), chCum=null;
+let paused=false, timer=null, liveT=null, prevKeys=new Set(), chCum=null;
 
 function inSession(){const n=new Date(Date.now()+7*3600e3),dw=n.getUTCDay(),hm=n.getUTCHours()*60+n.getUTCMinutes();
   return dw>=1&&dw<=5&&hm>=9*60&&hm<=15*60;}
@@ -426,9 +498,7 @@ function render(){
   $('subTxt').innerHTML='Theo dõi biến động dòng tiền cá mập thời gian thực với <b>'+EVT.length+'</b> '+unit+' lớn từ <b>'+nSym+'</b> mã phát hiện trong phiên <b class="gold">'+dmy(day)+'</b>';
   $('filtLine').innerHTML='Dữ liệu được tính toán dựa trên bộ lọc: <b>'+(SOURCE.tick?'Lệnh':'Phút giao dịch')+' trên '+$('selTh').value+' tỷ</b> <a id="lnkDetail">(Chi tiết)</a>';
   $('lnkDetail').onclick=()=>$('method').classList.toggle('open');
-  $('method').innerHTML=SOURCE.tick
-    ? '✅ <b>Nguồn:</b> '+SOURCE.label+' — mỗi dòng là <b>một lệnh khớp đơn lẻ</b>, chiều MUA/BÁN lấy trực tiếp từ dữ liệu bên chủ động.'
-    : '⚠️ <b>Cách tính — đọc kỹ để dùng đúng.</b> Hiện chưa cắm API tick nên nguồn đang dùng là <b>'+SOURCE.label+'</b>: mỗi dòng là <b>MỘT PHÚT giao dịch</b> có tổng giá trị khớp ≥ ngưỡng, <b>gộp tất cả lệnh trong phút đó</b> — không phải một lệnh đơn lẻ. Chiều <b>MUA/BÁN</b> suy ra bằng <b>quy tắc tick</b> (giá đóng phút này so phút liền trước; đi ngang thì xét vị trí đóng cửa trong biên độ) nên là <b>ước lượng</b>. Khi anh có API realtime, cắm vào <code>SRC_REALTIME</code> trong file này là toàn bộ bảng tự chuyển sang lệnh thật.';
+  $('method').innerHTML=SOURCE.note||'';
 
   const live=day===SOURCE.days().slice(-1)[0]&&inSession();
   $('pillLive').className='pill'+(live?' on':'');
@@ -658,7 +728,8 @@ async function load(first){
   fillDays(keep); render();
 }
 function setAuto(){ if(timer){clearInterval(timer);timer=null;}
-  if($('chkAuto').checked)timer=setInterval(()=>{if(inSession())load(false);},20000); }
+  // nguồn tick DNSE tự đẩy dữ liệu (vòng 5s riêng) nên không cần quét lại nến
+  if($('chkAuto').checked)timer=setInterval(()=>{if(inSession()&&SOURCE===SRC_MINUTE)load(false);},20000); }
 
 $('segSide').querySelectorAll('button').forEach(b=>b.onclick=()=>{
   $('segSide').querySelectorAll('button').forEach(x=>x.classList.remove('on','b','s'));
@@ -677,6 +748,24 @@ $('segBig').querySelectorAll('button').forEach(b=>b.onclick=()=>{
 $('segCum').querySelectorAll('button').forEach(b=>b.onclick=()=>{
   $('segCum').querySelectorAll('button').forEach(x=>x.classList.remove('on'));
   b.classList.add('on'); cumMode=b.dataset.m; drawCum();});
+$('segSrc').querySelectorAll('button').forEach(b=>b.onclick=async()=>{
+  $('segSrc').querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  const dnse=b.dataset.x==='dnse';
+  $('dnseBox').className='hrow'+(dnse?'':' hide');
+  SOURCE=dnse?SRC_DNSE:SRC_MINUTE;
+  prevKeys=new Set();
+  await load(true);
+});
+$('btnDnse').onclick=async()=>{
+  const u=$('dUser').value.trim(), p=$('dPass').value;
+  if(!u||!p){$('dStat').textContent='⚠ nhập tài khoản và mật khẩu';return;}
+  $('btnDnse').disabled=true;
+  const ok=await SRC_DNSE.connect(u,p,s=>{$('dStat').textContent=s;});
+  $('btnDnse').disabled=false;
+  $('dPass').value='';                       // xoá mật khẩu khỏi ô nhập ngay sau khi dùng
+  if(ok){ if(liveT)clearInterval(liveT); liveT=setInterval(()=>{if(SOURCE===SRC_DNSE)load(false);},5000); }
+};
 $('btnFilt').onclick=e=>{e.stopPropagation();$('filtMenu').classList.toggle('open');};
 document.addEventListener('click',e=>{if(!$('filtMenu').contains(e.target)&&e.target!==$('btnFilt'))$('filtMenu').classList.remove('open');});
 $('btnPause').onclick=()=>{paused=!paused;$('btnPause').classList.toggle('on',!paused);$('btnPause').textContent=paused?'▶':'❚❚';};
