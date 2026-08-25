@@ -436,13 +436,20 @@ const SRC_DNSE=(function(){
     async connect(user,pass,onStat){
       if(typeof mqtt==='undefined'){onStat('⚠ chưa tải được thư viện MQTT');return false;}
       onStat('⏳ đang đăng nhập DNSE…');
+      // api.dnse.com.vn chỉ trả CORS cho localhost:* và origin của chính DNSE.
+      // → chạy ở localhost thì gọi thẳng; chạy trên domain thật thì đi vòng /api/proxy.
+      // (Luồng tick sau đó luôn chạy thẳng qua WebSocket, không đụng proxy.)
+      const direct=location.hostname==='localhost';
+      const U=u=>direct?u:'/api/proxy?url='+encodeURIComponent(u);
       try{
-        let r=await fetch('https://api.dnse.com.vn/user-service/api/auth',{method:'POST',
+        let r=await fetch(U('https://api.dnse.com.vn/user-service/api/auth'),{method:'POST',
           headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user,password:pass})});
         if(!r.ok)throw new Error('đăng nhập thất bại ('+r.status+')');
         const token=(await r.json()).token;
-        r=await fetch('https://api.dnse.com.vn/user-service/api/me',{headers:{Authorization:'Bearer '+token}});
+        if(!token)throw new Error('không nhận được token');
+        r=await fetch(U('https://api.dnse.com.vn/user-service/api/me'),{headers:{Authorization:'Bearer '+token}});
         const inv=(await r.json()).investorId;
+        if(!inv)throw new Error('không lấy được investorId');
         onStat('⏳ đang nối luồng tick…');
         const cid='dnse-price-json-mqtt-ws-sub-'+inv+'-'+Math.random().toString(16).slice(2,8);
         client=mqtt.connect('wss://datafeed-lts-krx.dnse.com.vn/wss',
