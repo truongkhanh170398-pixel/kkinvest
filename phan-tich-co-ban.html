@@ -154,6 +154,14 @@
   .ncard-ft{padding:11px 18px;font-size:11.2px;color:var(--muted);line-height:1.55;background:#0b1220;
     border-top:1px solid var(--line)}
   .ncard-ft b{color:#c3cee4}
+  .nload{padding:26px 22px;text-align:center}
+  .nload-t{font-size:15px;font-weight:800;color:#e8edf7}
+  .nload-t b{color:var(--accent)}
+  .nload-s{font-size:12.4px;color:var(--muted);margin:7px auto 0;max-width:62ch;line-height:1.55}
+  .nload-bar{height:3px;width:min(320px,80%);margin:15px auto 0;background:#16203a;border-radius:2px;overflow:hidden}
+  .nload-bar i{display:block;height:100%;width:38%;border-radius:2px;background:var(--accent);animation:nlx 1.15s ease-in-out infinite}
+  @keyframes nlx{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
+  @media(prefers-reduced-motion:reduce){.nload-bar i{animation:none;width:100%;opacity:.55}}
   .ndet{margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
   .ndet>summary{cursor:pointer;padding:12px 18px;font-size:13px;font-weight:700;color:#9cc0ff;list-style:none}
   .ndet>summary::-webkit-details-marker{display:none}
@@ -322,8 +330,8 @@
 <div class="wrap noteWrap">
   <div class="noteBar">
     <span class="lbl">📋 Investment Note</span>
-    <button id="noteBtn" class="btn-acc">Tạo note cho mã đang xem</button>
-    <span class="nst" id="noteSt">FA (BCTC 24hMoney) + Stage Analysis · CANSLIM · TIGERS — tính live từ giá VNDirect</span>
+    <button id="noteBtn">↻ Dựng lại note</button>
+    <span class="nst" id="noteSt">FA (BCTC 24hMoney) + Stage Analysis · CANSLIM · TIGERS — tự chạy khi nạp mã</span>
   </div>
   <div class="note" id="noteBox" hidden></div>
 </div>
@@ -650,7 +658,7 @@ const FAQ={
 };
 
 // ----- dchart + cache -----
-const _BARS={};
+let _BARS={};
 async function dbars(tk,ngay){
   if(_BARS[tk])return _BARS[tk];
   const to=Math.floor(Date.now()/1000),from=to-(ngay||1100)*86400;
@@ -809,7 +817,7 @@ const TEN_STAGE={11:'Stage 1A — nền đáy, MA còn dốc xuống',12:'Stage 
   41:'Stage 4A — thủng đáy kèm volume lớn',42:'Stage 4B — xu hướng giảm, MA10 &lt; MA21 &lt; MA50',43:'Stage 4 — suy giảm'};
 
 // ============ SỨC MẠNH NHÓM NGÀNH ============
-const _GRP={};
+let _GRP={};
 async function groupStrength(tk,ib){
   const key=nhomCua(tk); if(!key)return null;
   if(_GRP[key])return {..._GRP[key],cua:_GRP[key].xh.find(x=>x.s===tk)};
@@ -840,7 +848,7 @@ async function breadth(){
   return _BR;
 }
 // ============ BCTC (24hMoney) ============
-const _FIN={};
+let _FIN={};
 async function finData(tk){
   if(_FIN[tk])return _FIN[tk];
   const [idx,isQ,isY]=await Promise.all([
@@ -981,7 +989,7 @@ function maLadder(ta){
 let _noteTk=null;
 async function renderNote(tk,sectKey){
   const box=$('noteBox'),st=$('noteSt'); if(!box)return;
-  _noteTk=tk; box.innerHTML='';
+  _noteTk=tk;
   const step=m=>{if(st&&_noteTk===tk)st.textContent=m;};
   step('⏳ đang tải giá & VNINDEX…');
   const [bar,ibar]=await Promise.all([dbars(tk),dbars('VNINDEX')]);
@@ -997,6 +1005,18 @@ async function renderNote(tk,sectKey){
   const CS=canslim(tk,ta,F,gs,br);
   box.innerHTML=noteHTML(tk,sectKey,ta,F,gs,br,CS);
   step('● số thật · BCTC 24hMoney + giá VNDirect');
+}
+function moNote(tk,sectKey,cuon){
+  const nb=$('noteBox'); if(!nb)return;
+  nb.hidden=false;
+  nb.innerHTML='<div class="nload"><div class="nload-t">📋 Đang dựng Investment Note cho <b>'+tk+'</b></div>'+
+    '<div class="nload-s">Tải giá &amp; VNINDEX → BCTC 24hMoney → sức mạnh nhóm ngành → độ rộng thị trường. Mất khoảng 5–25 giây cho mã đầu tiên, các mã sau nhanh hơn nhờ cache.</div>'+
+    '<div class="nload-bar"><i></i></div></div>';
+  if(cuon)nb.scrollIntoView({behavior:'smooth',block:'start'});
+  renderNote(tk,sectKey).catch(e=>{ if(_noteTk!==tk)return;
+    nb.innerHTML='<div class="nload"><div class="nload-t">⚠ Không dựng được note cho '+tk+'</div>'+
+      '<div class="nload-s">'+(e&&e.message?e.message:'lỗi không xác định')+' — bấm “Dựng lại note” để thử lại.</div></div>';
+    const st=$('noteSt'); if(st)st.textContent='⚠ lỗi: '+(e&&e.message||'');});
 }
 function noteHTML(tk,sectKey,ta,F,gs,br,CS){
   const q=FAQ[tk]||null, i=F.idx||{};
@@ -1335,7 +1355,7 @@ function load(sectKey,tk){
   highlightTabs(sectKey);
   tkEl.value=tk;
   renderThesis(tk,sectKey);
-  {const nb=$('noteBox');if(nb){nb.hidden=true;nb.innerHTML='';}const ns=$('noteSt');if(ns)ns.textContent='FA (BCTC 24hMoney) + Stage Analysis · CANSLIM · TIGERS — bấm nút để tạo note cho '+tk;}
+  moNote(tk,sectKey);
   const u=(s.list.includes(tk))?(' — đã nạp '+tk):(' — '+tk+' chưa có dữ liệu trong nhóm này');
   statusEl.textContent='● '+s.name.replace(/^[^ ]+ /,'')+u;
   statusEl.style.color=s.list.includes(tk)?'#6fe3ab':'#f0c26b';
@@ -1357,7 +1377,9 @@ function analyze(){
   }
 }
 $('analyzeBtn').addEventListener('click',analyze);
-$('noteBtn').addEventListener('click',()=>{const b=$('noteBox');if(!curTk){$('noteSt').textContent='⚠ Hãy nạp một mã trước';return;}b.hidden=false;b.scrollIntoView({behavior:'smooth',block:'start'});renderNote(curTk,curSect).catch(e=>{$('noteSt').textContent='⚠ lỗi: '+e.message});});
+$('noteBtn').addEventListener('click',()=>{if(!curTk){$('noteSt').textContent='⚠ Hãy nạp một mã trước';return;}
+  _BARS={};_GRP={};_BR=null;_FIN={};   // xoá cache để lấy lại số mới nhất
+  moNote(curTk,curSect,true);});
 tkEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();analyze();}});
 
 // "Lấy giá hiện tại" → bấm hộ nút ↻ trong khung định giá của ngành (mỗi trang con đều có #fetchPx)
