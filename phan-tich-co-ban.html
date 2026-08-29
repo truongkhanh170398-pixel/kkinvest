@@ -76,6 +76,94 @@
   .repbtn{text-decoration:none;font-size:12px;font-weight:700;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:#0b1220;white-space:nowrap}
   .repbtn.dnse{color:#9be3c6}.repbtn.h24{color:#f3cd84}.repbtn:hover{border-color:var(--accent2)}
   .ctck .disc{font-size:10.8px;color:var(--muted);margin-top:6px}
+  /* ===== INVESTMENT NOTE ===== */
+  .noteWrap{margin-top:12px}
+  .noteBar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);
+    border-radius:12px;padding:10px 14px}
+  .noteBar .lbl{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+  .noteBar .nst{font-size:12px;color:var(--muted)}
+  .noteBar button{padding:7px 13px}
+  .note{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-top:10px;overflow:hidden}
+  .note .nhead{padding:16px 18px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#101b31,#0e1525)}
+  .note .ntitle{font-size:21px;font-weight:900;letter-spacing:.3px}
+  .note .ntitle span{color:var(--accent)}
+  .note .nsub{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .verdict{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:13px}
+  .vc{background:#0b1220;border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+  .vc .k{font-size:10.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+  .vc .v{font-size:22px;font-weight:900;margin:3px 0 2px;line-height:1.1}
+  .vc .d{font-size:12.3px;color:#c3cee4;line-height:1.45}
+  .vc .bar{height:5px;border-radius:3px;background:#16203a;margin-top:8px;overflow:hidden}
+  .vc .bar i{display:block;height:100%;border-radius:3px}
+  .vc.good .v{color:var(--good)} .vc.good .bar i{background:var(--good)}
+  .vc.mid  .v{color:#f0c26b}     .vc.mid .bar i{background:#f0c26b}
+  .vc.bad  .v{color:var(--danger)} .vc.bad .bar i{background:var(--danger)}
+  .nthesis{margin-top:12px;border-left:3px solid var(--accent);background:#0b1220;border-radius:0 9px 9px 0;
+    padding:11px 15px;font-size:13.6px;line-height:1.55;color:#dbe3f4}
+  .nthesis b{color:var(--accent)}
+  .nsec{padding:16px 18px;border-bottom:1px solid var(--line)}
+  .nsec:last-child{border-bottom:none}
+  .nsec h3{display:flex;align-items:center;gap:9px;font-size:15.5px;font-weight:800;margin-bottom:9px}
+  .nsec h3 .n{font-size:11.5px;font-weight:800;color:var(--accent);background:#0b1220;border:1px solid var(--line);
+    border-radius:5px;padding:2px 7px;letter-spacing:.5px}
+  .nsec h4{font-size:11.5px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);margin:13px 0 6px}
+  .npart{display:flex;align-items:center;gap:11px;padding:11px 18px;background:#0b1220;border-bottom:1px solid var(--line)}
+  .npart .tag{font-size:10.5px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;background:var(--accent);
+    color:#04122b;padding:4px 10px;border-radius:5px}
+  .npart .t{font-size:12.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--muted)}
+  .npart .rule{flex:1;height:1px;background:var(--line)}
+  .nsec ul{margin:0;padding-left:17px}
+  .nsec li{font-size:13.4px;color:#c7d0e4;margin:5px 0;line-height:1.5}
+  .nsec li b{color:#e3e9f6}
+  .note .m{font-family:ui-monospace,Consolas,monospace;font-size:.94em;color:#9cc0ff;font-weight:600}
+  .n2col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .ntbl{width:100%;border-collapse:collapse;font-size:12.9px}
+  .ntbl th,.ntbl td{text-align:left;padding:7px 9px;border-bottom:1px solid #16203a;vertical-align:top}
+  .ntbl thead th{font-size:10.5px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);
+    background:#0b1220;white-space:nowrap}
+  .ntbl tbody tr:last-child td{border-bottom:none}
+  .ntbl td.k{font-weight:700;white-space:nowrap;color:#e3e9f6}
+  .ntbl td.k i{font-style:normal;color:var(--accent);font-weight:900;margin-right:6px}
+  .ntbl td.num,.ntbl th.num{text-align:right;font-family:ui-monospace,Consolas,monospace;white-space:nowrap}
+  .ntbl tfoot td{background:#0b1220;font-weight:800;border-top:1px solid var(--line)}
+  .ntw{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+  .pill{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;
+    padding:2px 8px;border-radius:4px;white-space:nowrap}
+  .pill.ok{background:rgba(59,167,118,.16);color:#7fe3b0}
+  .pill.no{background:rgba(226,92,92,.16);color:#f1a3a3}
+  .pill.mid{background:rgba(240,194,107,.16);color:#f0c26b}
+  .ladder{border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:6px}
+  .ladder .r{display:grid;grid-template-columns:96px 84px 1fr 68px;align-items:center;gap:10px;padding:6px 13px;
+    border-bottom:1px solid #16203a;font-size:12.7px}
+  .ladder .r:last-child{border-bottom:none}
+  .ladder .nm{font-weight:700;color:#e3e9f6}
+  .ladder .vl{font-family:ui-monospace,Consolas,monospace;color:var(--muted)}
+  .ladder .tr{position:relative;height:7px;background:#16203a;border-radius:4px}
+  .ladder .tr .mid{position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:#243252}
+  .ladder .tr i{position:absolute;top:0;height:7px;border-radius:4px;background:var(--danger)}
+  .ladder .tr i.up{background:var(--good)}
+  .ladder .pc{font-family:ui-monospace,Consolas,monospace;font-weight:700;text-align:right}
+  .ladder .pc.neg{color:#f1a3a3}.ladder .pc.pos{color:#7fe3b0}
+  .nchart{border:1px solid var(--line);border-radius:10px;background:#0b1220;padding:10px 10px 4px;overflow-x:auto}
+  .nchart svg{display:block;width:100%;min-width:520px;height:auto}
+  .nlegend{display:flex;flex-wrap:wrap;gap:12px;font-size:11.5px;color:var(--muted);padding:7px 3px 0}
+  .nlegend span{display:inline-flex;align-items:center;gap:5px}
+  .nlegend i{width:13px;height:2.5px;border-radius:2px;display:inline-block}
+  .ncap{font-size:11.6px;color:var(--muted);margin-top:6px;line-height:1.5}
+  .ngrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:6px}
+  .ngrid>div{background:#0b1220;border:1px solid var(--line);border-radius:9px;padding:10px 12px}
+  .ngrid .h{font-size:10.5px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--muted)}
+  .ngrid .v{font-family:ui-monospace,Consolas,monospace;font-size:16px;font-weight:700;margin:2px 0 3px}
+  .ngrid p{margin:0;font-size:12.2px;color:#c7d0e4;line-height:1.45}
+  .ncall{border:1px solid var(--line);border-left:3px solid var(--danger);background:#0b1220;border-radius:0 10px 10px 0;
+    padding:12px 15px;margin-top:10px}
+  .ncall.ok{border-left-color:var(--good)}
+  .ncall .h{font-size:10.5px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .ncall ul{padding-left:17px;margin:0}
+  .nfoot{padding:13px 18px;font-size:11.6px;color:var(--muted);line-height:1.55;background:#0b1220}
+  .nfoot b{color:#c3cee4}
+  @media(max-width:820px){.n2col{grid-template-columns:1fr}.verdict{grid-template-columns:1fr}
+    .ladder .r{grid-template-columns:86px 1fr 62px}.ladder .vl{display:none}}
   .loginGate{position:fixed;inset:0;background:radial-gradient(1200px 700px at 50% -260px,#0c1730,#080b13);z-index:1000;display:flex;align-items:center;justify-content:center}
   .loginGate.hidden{display:none}
   .loginBox{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:32px 30px;width:min(360px,92vw);display:flex;flex-direction:column;gap:12px}
@@ -142,6 +230,15 @@
 </div></header>
 
 <div class="wrap"><div class="thesis" id="thesisBox"></div></div>
+
+<div class="wrap noteWrap">
+  <div class="noteBar">
+    <span class="lbl">📋 Investment Note</span>
+    <button id="noteBtn" class="btn-acc">Tạo note cho mã đang xem</button>
+    <span class="nst" id="noteSt">FA (BCTC 24hMoney) + Stage Analysis · CANSLIM · TIGERS — tính live từ giá VNDirect</span>
+  </div>
+  <div class="note" id="noteBox" hidden></div>
+</div>
 
 <div class="wrap framewrap">
   <iframe id="frame" src="about:blank" title="Module định giá ngành"></iframe>
@@ -398,6 +495,637 @@ function renderThesis(tk,sectKey){
     up.innerHTML=`Giá ${kk(px)} · Upside TB <b>${(pct>=0?'+':'')+pct.toFixed(1)}%</b>`;
   }).catch(()=>{});}
 }
+/* ============================================================================
+   INVESTMENT NOTE — FA (BCTC 24hMoney) + TA (Stage Analysis · CANSLIM · TIGERS)
+   Toàn bộ phần B tính LIVE từ dchart VNDirect, benchmark VNINDEX.
+   ========================================================================== */
+
+// ----- Nhóm ngành để đo Group Strength (mã cùng ngành thật, không phải nhóm định giá) -----
+const NHOM={
+  dien:['POW','NT2','PPC','PC1','REE','GEX','HND','QTP','BTP','VSH','TMP','SBA','GEG','TTA','PGV','NBP','DTK','SJD','CHP'],
+  nuoc:['BWE','TDM','VCW','NNT'],
+  thep:['HPG','HSG','NKG','SMC','TLH','VGS','POM'],
+  nganhang:['VCB','BID','CTG','TCB','MBB','ACB','VPB','STB','HDB','LPB','VIB','SHB','TPB','SSB','EIB','OCB','MSB','NAB'],
+  chungkhoan:['SSI','VND','VCI','HCM','VIX','SHS','MBS','FTS','BSI','CTS','VDS','AGR','ORS','APS'],
+  baohiem:['BVH','PVI','BMI','MIG','PTI','PGI','BIC'],
+  taichinh:['EVF','TCH'],
+  bds:['VHM','VIC','VRE','KDH','NLG','DXG','PDR','NVL','DIG','HDC','SJS','CEO','VPI','NTL','DXS','KOS','TCH'],
+  kcn:['KBC','IDC','SZC','SIP','BCM','VGC','LHG','TIP','D2D','SNZ'],
+  xaydung:['CTD','VCG','HHV','CII','DPG','C4G','LCG','FCN','HBC'],
+  daukhi:['GAS','PLX','BSR','PVS','PVD','PVT','PVC','OIL','PVB'],
+  banle:['MWG','FRT','DGW','PNJ','PET','MSN','VNM','SAB','KDC','QNS'],
+  congnghe:['FPT','CMG','ELC','ITD','CTR','SAM'],
+  thuysan:['VHC','ANV','FMC','IDI','ACL','CMX'],
+  hoachat:['DGC','DCM','DPM','CSV','LAS','BFC','DDV'],
+  cangbien:['GMD','VSC','HAH','VOS','SCS','PHP'],
+  hangkhong:['ACV','VJC','HVN','SCS'],
+  duoc:['DHG','IMP','DBD','TRA','DVN','DMC'],
+  nongnghiep:['DBC','HAG','PAN','SBT','BAF','LTG'],
+  vlxd:['BMP','HT1','DHC','VCS','PTB','NTP','AAA'],
+  cosokhac:['GVR','TLG','DRC','GEX']
+};
+const TEN_NHOM={dien:'Điện',nuoc:'Nước & tiện ích',thep:'Thép',nganhang:'Ngân hàng',chungkhoan:'Chứng khoán',
+  baohiem:'Bảo hiểm',taichinh:'Tài chính',bds:'Bất động sản',kcn:'Khu công nghiệp',xaydung:'Xây dựng & hạ tầng',
+  daukhi:'Dầu khí',banle:'Bán lẻ & tiêu dùng',congnghe:'Công nghệ',thuysan:'Thủy sản',hoachat:'Hóa chất',
+  cangbien:'Cảng biển & vận tải biển',hangkhong:'Hàng không',duoc:'Dược',nongnghiep:'Nông nghiệp',
+  vlxd:'Vật liệu xây dựng',cosokhac:'Sản xuất khác'};
+function nhomCua(tk){for(const k in NHOM)if(NHOM[k].includes(tk))return k;return null;}
+// Rổ đo độ rộng thị trường (M của CANSLIM)
+const RO_TT=['VCB','BID','CTG','TCB','MBB','ACB','VPB','STB','HDB','VIB','SHB','TPB','VHM','VIC','VRE','MSN','MWG',
+  'FPT','HPG','GAS','PLX','POW','SAB','VNM','SSI','GVR','BCM','VJC','ACV','REE','DGC','PNJ','KDH','NLG','GMD'];
+
+// ----- Luận điểm định tính (mục 1-2-5). Mã chưa có → tự sinh từ BCTC + ghi rõ phần thiếu -----
+const FAQ={
+  POW:{
+    ten:'Tổng Công ty Điện lực Dầu khí Việt Nam (PV Power)',
+    bm:['<b>Cốt lõi:</b> sản xuất và bán buôn điện năng — nhà phát điện lớn thứ hai cả nước sau EVN, thành viên Tập đoàn Dầu khí (PVN).',
+        '<b>Cơ cấu nguồn:</b> trục chính là nhiệt điện khí (Cà Mau 1&2, Nhơn Trạch 1&2 và Nhơn Trạch 3&4 chạy LNG), bổ trợ bằng nhiệt điện than Vũng Áng 1 và cụm thủy điện Hủa Na – Đakđrinh.',
+        '<b>Khách hàng:</b> gần như một khách duy nhất — EVN/EPTC qua hợp đồng mua bán điện dài hạn (PPA), phần còn lại chào trên thị trường phát điện cạnh tranh. Rủi ro tập trung rất cao, bù lại dòng tiền mang tính hợp đồng.',
+        '<b>Vị trí chuỗi giá trị:</b> khâu phát điện, nằm giữa đầu vào nhiên liệu (khí/LNG từ PVN–PV GAS) và khâu truyền tải/phân phối độc quyền của EVN. Biên lợi nhuận là phần chênh giữa giá PPA và chi phí nhiên liệu → rất nhạy với giá khí.',
+        '<b>Dịch chuyển:</b> từ khí nội địa đang suy giảm sang LNG nhập khẩu. POW là doanh nghiệp đầu tiên vận hành thương mại nhà máy LNG quy mô lớn tại Việt Nam.',
+        '<b>Chính sách:</b> Quy hoạch Điện VIII ưu tiên điện khí LNG làm nguồn chạy nền thay than; giá bán bị điều tiết qua khung giá phát điện do Bộ Công Thương ban hành hằng năm.'],
+    moat:['<b>Rào cản gia nhập rất cao:</b> mỗi nhà máy cần vốn hàng chục nghìn tỷ, 5–7 năm phát triển và phải nằm trong quy hoạch điện quốc gia.',
+        '<b>Vị trí hạ tầng:</b> nhà máy đặt cạnh hệ thống đường ống khí và kho cảng LNG hiện hữu (Thị Vải, Cà Mau) — lợi thế địa điểm không nhân bản được.',
+        '<b>Hệ sinh thái PVN:</b> nguồn khí/LNG và hạ tầng nhập khẩu đến từ trong tập đoàn, giảm rủi ro đứt gãy nhiên liệu so với nhà đầu tư độc lập.',
+        '<b>Switching cost đầu ra gần bằng 0</b> — điện là hàng hóa đồng nhất, EVN mua theo giá và thứ tự huy động. Moat nằm ở tài sản và giấy phép, <i>không</i> ở quan hệ khách hàng.',
+        '<b>Điểm yếu:</b> lợi nhuận phụ thuộc cơ chế giá và sản lượng huy động do bên thứ ba quyết định — moat không bảo vệ được biên trong pha bất lợi.'],
+    thesis:['<b>Bối cảnh ngành:</b> Việt Nam thiếu nguồn điện chạy nền, quy hoạch đẩy mạnh LNG thay than. POW hưởng lợi trực tiếp và sớm nhất từ trục chính sách này.',
+        '<b>Lý do hưởng lợi:</b> công suất Nhơn Trạch 3&4 đã chạy và đã ghi nhận vào báo cáo — không còn là kỳ vọng.',
+        '<b>Rủi ro cơ chế:</b> giá bán và sản lượng do EVN/Bộ Công Thương quyết định; POW không có quyền định giá.',
+        '<b>Rủi ro dòng tiền:</b> nợ vay dài hạn tăng mạnh để tài trợ dự án; công nợ phải thu từ EVN là rủi ro kinh điển của nhóm phát điện.',
+        '<b>Rủi ro cơ cấu:</b> free-float thấp khiến giá dễ biến động khi xuất hiện cung lớn.'],
+    monitor:['<b>Tính bền của biên gộp</b> — cần thêm ít nhất một quý để biết là mặt bằng mới hay đỉnh chu kỳ.',
+        '<b>Giá LNG nhập khẩu và cơ chế chuyển ngang vào giá điện</b> — biến số quyết định lợi nhuận Nhơn Trạch 3&4.',
+        '<b>Sản lượng huy động (Qc)</b> do A0/EVN phân bổ theo từng năm.',
+        '<b>Công nợ phải thu từ EVN</b> và tiến độ thu tiền.']
+  }
+};
+
+// ----- dchart + cache -----
+const _BARS={};
+async function dbars(tk,ngay){
+  if(_BARS[tk])return _BARS[tk];
+  const to=Math.floor(Date.now()/1000),from=to-(ngay||1100)*86400;
+  const u=`https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=${tk}&from=${from}&to=${to}`;
+  for(let lan=0;lan<2;lan++)for(const p of PXPROX){try{const c=new AbortController(),t=setTimeout(()=>c.abort(),12000);
+    const r=await fetch(p(u),{cache:'no-store',signal:c.signal});clearTimeout(t);
+    if(r.ok){const j=await r.json();
+      if(j&&j.s==='ok'&&j.c&&j.c.length>60){const b={t:j.t,o:j.o,h:j.h,l:j.l,c:j.c,v:j.v};_BARS[tk]=b;return b;}}}catch(e){}}
+  _BARS[tk]=null;return null;
+}
+// ----- tiện ích chuỗi số -----
+const _sma=(a,p)=>a.map((_,i)=>i<p-1?null:a.slice(i-p+1,i+1).reduce((s,x)=>s+x,0)/p);
+const _ema=(a,p)=>{const k=2/(p+1);let e=null;return a.map((x,i)=>{e=e==null?x:x*k+e*(1-k);return i<p-1?null:e;});};
+const _hh=(a,w,k)=>{let m=-1e18;for(let q=Math.max(0,k-w+1);q<=k;q++)if(a[q]!=null&&a[q]>m)m=a[q];return m;};
+const _ll=(a,w,k)=>{let m=1e18;for(let q=Math.max(0,k-w+1);q<=k;q++)if(a[q]!=null&&a[q]<m)m=a[q];return m;};
+const _ds=t=>new Date(t*1000).toISOString().slice(0,10);
+const _wk=d=>{const x=new Date(d);x.setUTCDate(x.getUTCDate()-((x.getUTCDay()+6)%7));return x.toISOString().slice(0,10);};
+const _mo=d=>d.slice(0,7);
+function _agg(R,kf){const m=new Map();for(const r of R){const k=kf(r.d);
+  if(!m.has(k))m.set(k,{k,o:r.o,h:r.h,l:r.l,c:r.c,v:0});
+  const g=m.get(k);g.h=Math.max(g.h,r.h);g.l=Math.min(g.l,r.l);g.c=r.c;g.v+=r.v;}return [...m.values()];}
+function _slope(a,p,i){if(i<p-1)return null;let sx=0,sy=0,sxy=0,sxx=0;
+  for(let k=0;k<p;k++){const x=k,y=a[i-p+1+k];sx+=x;sy+=y;sxy+=x*y;sxx+=x*x;}
+  return (p*sxy-sx*sy)/(p*sxx-sx*sx)/(sy/p)*100;}
+const fmt0=n=>(n==null||!isFinite(n))?'—':Math.round(n).toLocaleString('vi-VN');
+const pct=(n,d)=>(n==null||!isFinite(n))?'—':((n>=0?'+':'')+n.toFixed(d==null?1:d)+'%');
+
+// ============ ĐỘNG CƠ KỸ THUẬT (port từ sheet Weinstein + DuckMan + PDF VSLRT) ============
+function taScan(bar,ibar){
+  const R=bar.t.map((t,i)=>({d:_ds(t),o:bar.o[i],h:bar.h[i],l:bar.l[i],c:bar.c[i],v:bar.v[i]}));
+  const n=R.length,i=n-1; if(n<210)return null;
+  const C=R.map(r=>r.c),H=R.map(r=>r.h),L=R.map(r=>r.l),V=R.map(r=>r.v),D=R.map(r=>r.d);
+  const IR=ibar.t.map((t,k)=>({d:_ds(t),o:ibar.o[k],h:ibar.h[k],l:ibar.l[k],c:ibar.c[k],v:ibar.v[k]}));
+  const imap={};IR.forEach(r=>imap[r.d]=r.c);const idt=IR.map(r=>r.d);
+  const iAt=d=>{if(imap[d]!=null)return imap[d];let lo=0,hi=idt.length-1,res=null;
+    while(lo<=hi){const m=(lo+hi)>>1;if(idt[m]<=d){res=imap[idt[m]];lo=m+1;}else hi=m-1;}return res;};
+  const E5=_ema(C,5),E8=_ema(C,8),E21=_ema(C,21),S10=_sma(C,10),S21=_sma(C,21),S50=_sma(C,50),
+        S65=_sma(C,65),S150=_sma(C,150),S200=_sma(C,200),AV20=_sma(V,20),AV50=_sma(V,50),AV5=_sma(V,5);
+  const rs=C.map((c,k)=>{const v=iAt(D[k]);return v?c/v*100:null;});
+  const rsMA=_sma(rs.map(x=>x==null?0:x),50);
+  const wa=[];let c0=0;for(let k=0;k<n;k++){if(S50[k]!=null&&C[k]>S50[k])c0++;else c0=0;wa.push(Math.min(c0,60));}
+  const obv=Array(n).fill(0);for(let k=1;k<n;k++)obv[k]=obv[k-1]+(C[k]>C[k-1]?V[k]:C[k]<C[k-1]?-V[k]:0);
+  const obvMA=_sma(obv,20);
+  const atr=[];{let av=null;for(let k=0;k<n;k++){const tr=k?Math.max(H[k]-L[k],Math.abs(H[k]-C[k-1]),Math.abs(L[k]-C[k-1])):H[k]-L[k];
+    av=av==null?tr:(av*13+tr)/14;atr.push(av);}}
+  const atrMA=_sma(atr,20);
+  // --- Stage theo từng phiên ---
+  const code=Array(n).fill(0);
+  for(let k=0;k<n;k++){ if(S200[k]==null||S150[k]==null)continue;
+    const sl=(S150[k]-(k>=5?S150[k-5]:S150[k]))/5;
+    const sUp=sl>0,sFlat=Math.abs(sl)<0.001*S150[k],sDown=sl<0,dst=(C[k]-S150[k])/S150[k]*100;
+    const rsDiv=(C[k]>=_hh(C,20,k)*0.99999)&&rs[k]!=null&&rs[k]<_hh(rs,20,k);
+    const kmaE=S10[k]>S21[k]&&S21[k]>S50[k];
+    const s4=sDown&&C[k]<S150[k]&&C[k]<S200[k]&&S10[k]<S21[k]&&S21[k]<S50[k];
+    const s3=!s4&&(sFlat||(sUp&&dst>25&&rsDiv));
+    const s2=C[k]>S150[k]&&C[k]>S200[k]&&sUp&&!s3&&!s4;
+    code[k]=s4?((C[k]<_ll(C,20,k)*1.02&&V[k]>AV50[k]*1.5)?41:((sDown&&S10[k]<S21[k])?42:43))
+      :s3?((rsDiv&&sFlat)?31:(((S150[k]>C[k]&&S150[k-1]<=C[k-1])||(C[k]<S150[k]&&C[k-1]>S150[k-1]))?32:33))
+      :s2?((dst<15&&wa[k]<=8&&kmaE)?21:((dst>25||wa[k]>20)?22:20))
+      :((sDown||(sFlat&&C[k]<S150[k]))?11:12);
+  }
+  const stage=code[i], dist150=(C[i]-S150[i])/S150[i]*100;
+  const relVol=V[i]/AV50[i], volDry=V[i]<AV50[i]*0.7;
+  const rsNH=rs[i]>=_hh(rs,50,i)*0.99999, rsNH252=rs[i]>=_hh(rs,252,i)*0.999;
+  const rsDivBear=(C[i]>=_hh(C,20,i)*0.99999)&&rs[i]<_hh(rs,20,i);
+  const kmaBull=S10[i]>S21[i]&&S21[i]>S50[i]&&S50[i]>S150[i]&&S150[i]>S200[i];
+  const kmaEarly=S10[i]>S21[i]&&S21[i]>S50[i];
+  const varsPos=obv[i]>obvMA[i];
+  // --- Classic 8 tiêu chí ---
+  const c1=(stage===21&&(code[i-5]||99)<=12)?15:(stage===21?12:(stage===20?8:0));
+  const c2=(stage===21&&dist150<12)?10:(stage===21?7:(stage===20?5:(stage===22?3:0)));
+  const c3=(rsNH&&!rsDivBear)?15:((rs[i]>rs[i-10])?8:0);
+  const c4=relVol>=2?15:(relVol>=1.5?10:(relVol>=1.2?5:0));
+  const c5=(volDry&&atr[i]<atrMA[i])?10:(volDry?6:3);
+  const c6=kmaBull?10:(kmaEarly?6:0);
+  const c7=(varsPos&&relVol>1.3)?10:(varsPos?6:0);
+  const c8=stage===21?12:((stage>=20&&stage<=22)?8:4);
+  const pristine=(stage===21||stage===12)&&rsNH&&volDry, weak=rsDivBear||(relVol>2&&(C[i]/C[i-1]-1)*100<0.5);
+  const mod=pristine?5:(weak?-5:0);
+  const classic=Math.max(0,Math.min(100,c1+c2+c3+c4+c5+c6+c7+c8+mod));
+  // --- Ranking ---
+  const vni=iAt(D[i]),vn63=iAt(D[i-63]);
+  const roc63=(C[i]/C[i-63]-1)*100, roc63v=(vni/vn63-1)*100;
+  const r1=stage===21?10:(stage===20?6:(stage===22?3:0));
+  const r2=rs[i]>=_hh(rs,60,i)*0.99999?15:(rs[i]>=_hh(rs,30,i)*0.99999?10:5);
+  const r4=roc63>roc63v+10?10:(roc63>roc63v?6:3), r5=wa[i]>=12?10:(wa[i]>=6?6:3);
+  const r6=(stage===20||stage===22)?6:3, r7=(varsPos&&relVol>1.2)?10:5, r9=AV50[i]>1e5?5:3;
+  const rank=Math.max(0,Math.min(100,r1+r2+6+r4+r5+r6+r7+c8+r9+2));
+  // --- DuckMan 9 ---
+  const dMA=E5[i]>E8[i]&&E8[i]>S10[i]&&S10[i]>E21[i];
+  let mxC=-1e18;for(let k=0;k<n;k++)mxC=Math.max(mxC,C[k]);
+  const isATH=C[i]>=mxC*0.999;
+  const wk=_agg(R,_wk),wn=wk.length,wi=wn-1,wC=wk.map(x=>x.c),wH=wk.map(x=>x.h);
+  const iw=_agg(IR,_wk);iw.forEach((g,k)=>{let mh=-1e18;for(let q=Math.max(0,k-51);q<=k;q++)mh=Math.max(mh,iw[q].h);
+    g.h52=mh;g.prevL=k>0?iw[k-1].l:g.l;});
+  const iwK={};iw.forEach(g=>iwK[g.k]=g);
+  let w52=-1e18;for(let k=Math.max(0,wn-52);k<wn;k++)w52=Math.max(w52,wH[k]);
+  const idxW=iwK[wk[wi].k], off=(w52-wC[wi])/w52;
+  const wOut=idxW?off<((idxW.h52-idxW.c)/idxW.h52):false;
+  const wDiv=idxW?(wi>0&&wH[wi]>wk[wi-1].h&&idxW.l<idxW.prevL):false;
+  const w5g=wn>=5&&wk.slice(wn-5).every(x=>x.c>x.o);
+  const l4=wC.slice(wn-4),wTight=(Math.max.apply(null,l4)-Math.min.apply(null,l4))/Math.min.apply(null,l4)<0.05;
+  const mk=_agg(R,_mo),mn2=mk.length,mi=mn2-1,mC=mk.map(x=>x.c);
+  const big=[1,2,3,6].some(q=>mi>=q&&mC[mi]/mC[mi-q]>1.5);
+  const ms10=_sma(mC,10),ms50=_sma(mC,Math.min(50,mn2));
+  const mOrd=ms10[mi]!=null&&ms50[mi]!=null&&ms10[mi]>ms50[mi];
+  const duck=[['ATH',isATH],['RS 52W',rsNH252],['D: MA Order',dMA],['W: RS Drop',wOut],['W: RS Div',wDiv],
+              ['W: 5+ Green',w5g],['W: Tight',wTight],['M: >50%',big],['M: MA Order',mOrd]];
+  // --- VSLRT + VARS ---
+  const slLT=_slope(C,50,i),slST=_slope(C,20,i),slSTp=_slope(C,20,i-5);
+  const udv=w=>{let u=0,d=0;for(let k=i-w+1;k<=i;k++){if(C[k]>C[k-1])u+=V[k];else if(C[k]<C[k-1])d+=V[k];}return u/(d||1);};
+  const exc=[];for(let k=1;k<n;k++){const a=iAt(D[k]),b=iAt(D[k-1]);exc.push(a&&b?(C[k]/C[k-1]-1)-(a/b-1):0);}
+  const vAt=k=>{const w=exc.slice(k-21,k),m=w.reduce((s,x)=>s+x,0)/21;
+    const sd=Math.sqrt(w.reduce((s,x)=>s+(x-m)*(x-m),0)/21);return sd?m/sd*Math.sqrt(21):0;};
+  const vS=[];for(let k=0;k<exc.length;k++)vS.push(k>=21?vAt(k):0);
+  const vMA=_sma(vS,10),vl=vS.length-1;
+  const VS=[
+    {t:'VSLRT Long-Term (50) dương & volume xác nhận',ok:slLT>0&&udv(50)>1,
+     d:`Hệ số hồi quy <span class="m">${slLT.toFixed(3)}%/phiên</span> · up/down vol 50 phiên ${udv(50).toFixed(2)}`},
+    {t:'VSLRT Short-Term (20) dương, tăng dần, volume xác nhận',ok:slST>0&&slST>slSTp&&udv(20)>1&&AV5[i]>AV20[i],
+     d:`Hệ số <span class="m">${slST.toFixed(3)}%/phiên</span>${slST>slSTp?', đang tăng dần':', không tăng dần'} · up/down vol 20 phiên ${udv(20).toFixed(2)}`},
+    {t:'RS Line cắt lên MA của nó',ok:rs[i]>rsMA[i],
+     d:`RS <span class="m">${rs[i].toFixed(3)}</span> ${rs[i]>rsMA[i]?'trên':'dưới'} MA50 của RS ${rsMA[i].toFixed(3)}`},
+    {t:'RS Line tạo đỉnh cao mới',ok:rsNH,
+     d:`${rsNH?'Có đỉnh RS mới 50 phiên':'Không có đỉnh mới ở cả 50 và 252 phiên'} · RS 10 phiên ${pct((rs[i]/rs[i-10]-1)*100)}`},
+    {t:'VARS (so VNINDEX) > 0',ok:vS[vl]>0,d:`VARS <span class="m">${vS[vl].toFixed(2)}</span> — ${vS[vl]>0?'outperform':'underperform'} sau hiệu chỉnh biến động`},
+    {t:'VARS cắt lên MA của nó',ok:vS[vl]>vMA[vl],d:`VARS ${vS[vl].toFixed(2)} ${vS[vl]>vMA[vl]?'trên':'dưới'} MA10 ${vMA[vl].toFixed(2)}`}
+  ];
+  // --- mốc mất MA ---
+  let lastA50=null,lastA150=null,lastA200=null;
+  for(let k=i;k>=1;k--){ if(lastA50==null&&S50[k]!=null&&C[k]>S50[k])lastA50=D[k];
+    if(lastA150==null&&S150[k]!=null&&C[k]>S150[k])lastA150=D[k];
+    if(lastA200==null&&S200[k]!=null&&C[k]>S200[k])lastA200=D[k];
+    if(lastA50&&lastA150&&lastA200)break;}
+  let cross=null;for(let k=i;k>=1;k--){if(S50[k]!=null&&S150[k]!=null&&S50[k]>=S150[k]){cross=D[Math.min(k+1,i)];break;}}
+  const wS10=_sma(wC,10)[wi],wS30=_sma(wC,30)[wi];
+  let pk=-1e18,pkD=null;for(let k=Math.max(0,i-251);k<=i;k++)if(C[k]>pk){pk=C[k];pkD=D[k];}
+  return {D,C,H,L,V,S50,S150,S200,E8,S10,S21,S65,rs,rsMA,n,i,
+    ngay:D[i],gia:C[i],pctPhien:(C[i]/C[i-1]-1)*100,
+    h52:_hh(H,252,i),l52:_ll(L,252,i),dinhDongCua:pk,ngayDinh:pkD,
+    stage,code,dist150,relVol,volDry,rsNH,rsNH252,rsDivBear,kmaBull,kmaEarly,varsPos,
+    wa:wa[i],AV20:AV20[i],AV50:AV50[i],udv20:udv(20),udv50:udv(50),
+    classic:{c1,c2,c3,c4,c5,c6,c7,c8,mod,tong:classic,tier:classic>=85?'T1':(classic>=70?'T2':'T3')},
+    rank,group:rank>=75?'A':(rank>=50?'B':'C'),
+    duck,duckDiem:duck.filter(x=>x[1]).length,
+    VS,vsDiem:VS.filter(x=>x.ok).length,
+    MA:{E8:E8[i],S10:S10[i],S21:S21[i],S50:S50[i],S65:S65[i],S150:S150[i],S200:S200[i],W10:wS10,W30:wS30},
+    ma50Doc:S50[i]>S50[i-10],
+    lastA50,lastA150,lastA200,cross,
+    ret:{m1:(C[i]/C[i-21]-1)*100,m3:(C[i]/C[i-63]-1)*100,m6:(C[i]/C[i-126]-1)*100,m12:(C[i]/C[i-252]-1)*100},
+    vnRet:{m3:roc63v,m6:(vni/iAt(D[i-126])-1)*100,m12:(vni/iAt(D[i-252])-1)*100}};
+}
+const TEN_STAGE={11:'Stage 1A — nền đáy, MA còn dốc xuống',12:'Stage 1B — nền đã phẳng, chuẩn bị bứt',
+  20:'Stage 2 — tăng giá',21:'Stage 2A — đầu sóng, gần MA150 (vùng mua chuẩn)',22:'Stage 2B — cuối sóng, giá đã giãn xa',
+  31:'Stage 3A — phân phối, RS phân kỳ âm',32:'Stage 3B — vừa đánh mất MA150',33:'Stage 3 — phân phối, MA đi ngang',
+  41:'Stage 4A — thủng đáy kèm volume lớn',42:'Stage 4B — xu hướng giảm, MA10 &lt; MA21 &lt; MA50',43:'Stage 4 — suy giảm'};
+
+// ============ SỨC MẠNH NHÓM NGÀNH ============
+const _GRP={};
+async function groupStrength(tk,ib){
+  const key=nhomCua(tk); if(!key)return null;
+  if(_GRP[key])return {..._GRP[key],cua:_GRP[key].xh.find(x=>x.s===tk)};
+  const list=NHOM[key];
+  const res=await Promise.all(list.map(async s=>{const b=await dbars(s,420);if(!b||b.c.length<140)return null;
+    const c=b.c,m=c.length-1,s50=_sma(c,50),s150=_sma(c,150);
+    const r=k=>c.length>k?(c[m]/c[m-k]-1)*100:null;
+    return {s,r3:r(63),r6:r(126),tren50:s50[m]!=null&&c[m]>s50[m],tren150:s150[m]!=null&&c[m]>s150[m]};}));
+  const rows=res.filter(x=>x&&x.r3!=null);
+  if(rows.length<4)return null;
+  const md=a=>{const b=a.filter(x=>x!=null).sort((x,y)=>x-y);return b.length?(b.length%2?b[(b.length-1)/2]:(b[b.length/2-1]+b[b.length/2])/2):null;};
+  const xh=[...rows].sort((a,b)=>b.r3-a.r3);
+  const o={key,ten:TEN_NHOM[key],n:rows.length,md3:md(rows.map(x=>x.r3)),md6:md(rows.map(x=>x.r6)),
+    tren50:rows.filter(x=>x.tren50).length,tren150:rows.filter(x=>x.tren150).length,
+    xh:xh.map((x,k)=>({...x,hang:k+1}))};
+  _GRP[key]=o; return {...o,cua:o.xh.find(x=>x.s===tk)};
+}
+// ============ ĐỘ RỘNG THỊ TRƯỜNG ============
+let _BR=null;
+async function breadth(){
+  if(_BR)return _BR;
+  const res=await Promise.all(RO_TT.map(async s=>{const b=await dbars(s,420);if(!b||b.c.length<210)return null;
+    const c=b.c,m=c.length-1,s50=_sma(c,50),s200=_sma(c,200);
+    return {tren50:c[m]>s50[m],tren200:c[m]>s200[m],tang:c[m]>c[m-1],giam:c[m]<c[m-1]};}));
+  const r=res.filter(Boolean); if(r.length<10)return null;
+  _BR={n:r.length,tren50:r.filter(x=>x.tren50).length,tren200:r.filter(x=>x.tren200).length,
+    tang:r.filter(x=>x.tang).length,giam:r.filter(x=>x.giam).length};
+  return _BR;
+}
+// ============ BCTC (24hMoney) ============
+const _FIN={};
+async function finData(tk){
+  if(_FIN[tk])return _FIN[tk];
+  const [idx,isQ,isY]=await Promise.all([
+    j24(F24+'index-with-price?symbol='+tk),
+    j24(F24+`financial-report?symbol=${tk}&type=1&period=2&view=2&expanded=false`),
+    j24(F24+`financial-report?symbol=${tk}&type=1&period=1&view=2&expanded=false`)]);
+  const pick=(rs,ks)=>{if(!rs)return null;for(const k of ks){const r=rs.find(x=>x.key===k);
+    if(r&&r.values&&r.values.some(v=>v!=null))return r.values.map(v=>v==null?null:+v);}return null;};
+  const o={idx,
+    hdQ:(isQ&&isQ.headers)||[],hdY:(isY&&isY.headers)||[],
+    revQ:pick(isQ&&isQ.rows,['isa3','total_revenue','isi64']),lnQ:pick(isQ&&isQ.rows,['isa20','isa22']),
+    gpQ:pick(isQ&&isQ.rows,['isa5','isi87']),
+    revY:pick(isY&&isY.rows,['isa3','total_revenue','isi64']),lnY:pick(isY&&isY.rows,['isa20','isa22'])};
+  _FIN[tk]=o;return o;
+}
+
+// ============ CANSLIM ============
+function canslim(tk,ta,F,gs,br){
+  const S=[],add=(k,t,d,v)=>S.push({k,t,d,v});   // v: 2 đạt · 1 một nửa · 0 không
+  const sum4=a=>a?a.slice(0,4).reduce((s,x)=>s+(x||0),0):null;
+  const qh=F.hdQ[0]?`Q${F.hdQ[0].quarter}/${String(F.hdQ[0].year).slice(2)}`:'quý gần nhất';
+  // C
+  if(F.lnQ){const q=F.lnQ[0],b=F.lnQ[4];
+    let d,v;
+    if(b==null){d=`LNST ${qh} <span class="m">${fmt0(q)} tỷ</span> — thiếu quý cùng kỳ để so sánh`;v=1;}
+    else if(b<=0){d=`LNST ${qh} <span class="m">${fmt0(q)} tỷ</span>, cùng kỳ ${b<0?'lỗ '+fmt0(-b):'hòa vốn'} — đảo chiều từ nền âm`;v=q>0?1:0;}
+    else{const g=(q/b-1)*100;
+      d=`LNST ${qh} <span class="m">${fmt0(q)} tỷ</span> so với ${fmt0(b)} tỷ cùng kỳ (<span class="m">${pct(g,0)}</span>)`;
+      if(F.revQ&&F.revQ[4]>0)d+=` · doanh thu ${pct((F.revQ[0]/F.revQ[4]-1)*100,0)}`;
+      v=g>=25?2:(g>=10?1:0);}
+    add('C','Lợi nhuận quý',d,v);
+  } else add('C','Lợi nhuận quý','[cần bổ sung dữ liệu BCTC quý]',0);
+  // A
+  if(F.lnY&&F.lnY.length>=4){
+    const y=F.hdY.map(h=>h.year), L=F.lnY;
+    const chuoi=L.slice(0,Math.min(6,L.length)).map((v,k)=>`${y[k]}: ${fmt0(v)}`).reverse().join(' → ');
+    const n3=Math.min(3,L.length-1), a=L[0], b=L[n3];
+    const cagr=(a>0&&b>0)?((Math.pow(a/b,1/n3)-1)*100):null;
+    let d=`LNST theo năm (tỷ): ${chuoi}.`;
+    d+=cagr!=null?` CAGR ${n3} năm <span class="m">${pct(cagr)}</span>.`:' Có năm lỗ hoặc thiếu dữ liệu nên không tính được CAGR.';
+    add('A','Tăng trưởng năm',d,cagr==null?0:(cagr>=25?2:(cagr>=12?1:0)));
+  } else add('A','Tăng trưởng năm','[cần bổ sung dữ liệu BCTC năm]',0);
+  // N
+  {const off=(ta.h52-ta.gia)/ta.h52*100;
+   const rev=(F.revQ&&F.revQ[4]>0)?(F.revQ[0]/F.revQ[4]-1)*100:null;
+   let d=`Giá cách đỉnh 52 tuần <span class="m">${pct(-off)}</span> (đỉnh ${fmt0(ta.h52*1000)}đ).`;
+   if(rev!=null)d+=` Doanh thu ${qh} ${pct(rev,0)} YoY — catalyst ${rev>20?'đã hiện hình trong số liệu':'chưa rõ nét'}.`;
+   const gan=off<=5, cat=rev!=null&&rev>20;
+   add('N','Cái mới / giá đỉnh mới',d,gan&&cat?2:((gan||cat)?1:0));}
+  // S
+  {const ff=F.idx&&F.idx.free_float_rate!=null?F.idx.free_float_rate*100:null;
+   let d=ff!=null?`Free-float <span class="m">${ff.toFixed(0)}%</span>. `:'';
+   d+=`Up/down volume 20 phiên <span class="m">${ta.udv20.toFixed(2)}</span> · KL TB20 ${fmt0(ta.AV20)} so với TB50 ${fmt0(ta.AV50)} (${(ta.AV20/ta.AV50).toFixed(2)} lần).`;
+   add('S','Cung & cầu',d,ta.udv20>=1.2?2:(ta.udv20>=0.9?1:0));}
+  // L
+  {const tren=ta.rs[ta.i]>ta.rsMA[ta.i];
+   const hon6=ta.ret.m6>ta.vnRet.m6;
+   let d=`RS Line <span class="m">${ta.rs[ta.i].toFixed(3)}</span> ${tren?'trên':'dưới'} MA50 của nó (${ta.rsMA[ta.i].toFixed(3)}), ${ta.rsNH?'có':'không có'} đỉnh RS mới. `;
+   d+=`Hiệu suất 6 tháng <span class="m">${pct(ta.ret.m6)}</span> so với VNINDEX ${pct(ta.vnRet.m6)}.`;
+   if(gs&&gs.cua)d+=` Xếp <span class="m">${gs.cua.hang}/${gs.n}</span> trong nhóm ${gs.ten} theo 3 tháng.`;
+   add('L','Dẫn dắt hay tụt hậu',d,(tren&&hon6&&ta.rsNH)?2:((tren&&hon6)?1:0));}
+  // I
+  {const i=F.idx||{};
+   const so=i.foreign_current_room_percent, rong=(+i.buy_foreign_qtty||0)-(+i.sell_foreign_qtty||0);
+   let d=so!=null?`Sở hữu nước ngoài <span class="m">${(+so).toFixed(2)}%</span>. `:'[thiếu dữ liệu sở hữu] ';
+   d+=`Phiên gần nhất khối ngoại ${rong>=0?'mua ròng':'bán ròng'} <span class="m">${fmt0(Math.abs(rong))} CP</span>.`;
+   add('I','Sở hữu tổ chức / khối ngoại',d,(so>=15&&rong>0)?2:((so>=5||rong>0)?1:0));}
+  // M
+  {let d='',v=0;
+   if(br){const p50=br.tren50/br.n*100,p200=br.tren200/br.n*100,adr=br.tang/(br.giam||1);
+     d=`Rổ ${br.n} mã vốn hóa lớn: <span class="m">${p50.toFixed(0)}%</span> trên MA50, <span class="m">${p200.toFixed(0)}%</span> trên MA200. `+
+       `ADR phiên gần nhất <span class="m">${adr.toFixed(2)}</span> (${br.tang} tăng / ${br.giam} giảm). `+
+       `VNINDEX 3 tháng ${pct(ta.vnRet.m3)}, 12 tháng ${pct(ta.vnRet.m12)}.`;
+     v=(p50>=60&&adr>=1)?2:((p50>=45)?1:0);
+   } else {d='[cần bổ sung dữ liệu độ rộng thị trường]';v=0;}
+   add('M','Xu hướng thị trường',d,v);}
+  const diem=S.reduce((s,x)=>s+x.v,0)/2;
+  return {S,diem};
+}
+
+// ============ VẼ ĐỒ THỊ MINI (giá + MA + RS) ============
+function noteChart(ta){
+  const N=Math.min(252,ta.n),s=ta.n-N,W=1000,PT=10,PB=0,HH=210,VB=250,RT=266,RH=76;
+  const seg=[ta.C,ta.S50,ta.S150,ta.S200].map(a=>a.slice(s));
+  let mn=1e9,mx=-1e9;seg.forEach(a=>a.forEach(v=>{if(v!=null){mn=Math.min(mn,v);mx=Math.max(mx,v);}}));
+  const pd=(mx-mn)*0.08;mn-=pd;mx+=pd;
+  const X=k=>+(k/(N-1)*W).toFixed(1), Y=v=>+(PT+(1-(v-mn)/(mx-mn))*(HH-PT)).toFixed(1);
+  const path=a=>{let d='',up=false;a.forEach((v,k)=>{if(v==null){up=false;return;}d+=(up?'L':'M')+X(k)+' '+Y(v)+' ';up=true;});return d.trim();};
+  const rr=ta.rs.slice(s),base=rr.find(x=>x!=null);
+  const rn=rr.map(x=>x==null?null:x/base*100);
+  let rmn=1e9,rmx=-1e9;rn.forEach(v=>{if(v!=null){rmn=Math.min(rmn,v);rmx=Math.max(rmx,v);}});
+  const RY=v=>+(RT+8+(1-(v-rmn)/(rmx-rmn))*(RH-16)).toFixed(1);
+  let rp='',up=false;rn.forEach((v,k)=>{if(v==null){up=false;return;}rp+=(up?'L':'M')+X(k)+' '+RY(v)+' ';up=true;});
+  const vseg=ta.V.slice(s),vmx=Math.max.apply(null,vseg);
+  const bars=vseg.map((v,k)=>`<rect x="${(X(k)-1.5).toFixed(1)}" y="${(VB-v/vmx*28).toFixed(1)}" width="3" height="${(v/vmx*28).toFixed(1)}" fill="${k&&ta.C[s+k]>=ta.C[s+k-1]?'#3ba776':'#e25c5c'}" opacity=".35"/>`).join('');
+  const D=ta.D;let lm='',tk='';
+  for(let k=0;k<N;k++){const m=D[s+k].slice(0,7);if(m!==lm){lm=m;if(+m.slice(5)%3===1)
+    tk+=`<text x="${X(k)}" y="${VB+15}" text-anchor="middle">T${+m.slice(5)}/${m.slice(2,4)}</text>`;}}
+  const mark=(d,lab,col)=>{const k=D.indexOf(d);if(k<s)return '';const x=X(k-s),y=Y(ta.C[k]);
+    const an=x>870?'end':(x<80?'start':'middle');
+    return `<g><circle cx="${x}" cy="${y}" r="3.2" fill="#0b1220" stroke="${col}" stroke-width="2"/>`+
+      `<line x1="${x}" y1="${y+5}" x2="${x}" y2="${y+15}" stroke="${col}" stroke-width="1" opacity=".55"/>`+
+      `<text x="${x}" y="${y+26}" text-anchor="${an}" fill="${col}" font-size="11">${lab}</text></g>`;};
+  const dd=v=>v?v.split('-').reverse().slice(0,2).join('/'):'';
+  return `<div class="nchart"><svg viewBox="0 0 1000 ${RT+RH+6}" role="img" aria-label="Đồ thị giá, MA và RS Line">
+   <g stroke="#1a2440" stroke-width="1"><line x1="0" y1="${Y(mn+pd)}" x2="1000" y2="${Y(mn+pd)}"/><line x1="0" y1="${Y(mx-pd)}" x2="1000" y2="${Y(mx-pd)}"/></g>
+   <g fill="#7e8db0" font-size="11" font-family="ui-monospace,Consolas,monospace">
+     <text x="4" y="${Y(mx-pd)-4}">${(mx-pd).toFixed(1)}</text><text x="4" y="${Y(mn+pd)-4}">${(mn+pd).toFixed(1)}</text></g>
+   ${bars}
+   <path d="${path(seg[3])}" fill="none" stroke="#7e8db0" stroke-width="1.3" stroke-dasharray="4 3" opacity=".8"/>
+   <path d="${path(seg[2])}" fill="none" stroke="#4f8cff" stroke-width="1.7"/>
+   <path d="${path(seg[1])}" fill="none" stroke="#e2a33b" stroke-width="1.4" opacity=".9"/>
+   <path d="${path(seg[0])}" fill="none" stroke="#e8edf7" stroke-width="2"/>
+   ${ta.ngayDinh?mark(ta.ngayDinh,'Đỉnh '+fmt0(ta.dinhDongCua*1000)+'đ · '+dd(ta.ngayDinh),'#e2b33b'):''}
+   ${ta.lastA150?mark(ta.lastA150,'Mất MA150 · '+dd(ta.lastA150),'#e25c5c'):''}
+   <g fill="#7e8db0" font-size="11" font-family="ui-monospace,Consolas,monospace">${tk}</g>
+   <rect x="0" y="${RT}" width="1000" height="${RH}" fill="#0e1525" rx="5"/>
+   <path d="${rp}" fill="none" stroke="#e2b33b" stroke-width="1.8"/>
+   <text x="9" y="${RT+14}" fill="#7e8db0" font-size="10" letter-spacing="1.2" font-weight="700">RS LINE VS VNINDEX</text>
+  </svg></div>
+  <div class="nlegend"><span><i style="background:#e8edf7"></i>Giá</span><span><i style="background:#e2a33b"></i>MA50</span>
+   <span><i style="background:#4f8cff"></i>MA150 ≈ MA30 tuần</span><span><i style="background:#7e8db0"></i>MA200</span>
+   <span><i style="background:#e2b33b"></i>RS Line</span></div>`;
+}
+// thang MA
+function maLadder(ta){
+  const P=ta.gia,M=ta.MA,rows=[['8 EMA',M.E8],['10 DSMA',M.S10],['21 DSMA',M.S21],['50 DSMA',M.S50],
+    ['65 DSMA',M.S65],['10W SMA',M.W10],['150 DSMA',M.S150],['30W SMA',M.W30],['200 DSMA',M.S200]];
+  return '<div class="ladder">'+rows.filter(r=>r[1]!=null).map(([nm,v])=>{
+    const p=(P/v-1)*100,w=Math.min(Math.abs(p)/6,1)*50;
+    const st=p<0?`right:50%;width:${w.toFixed(1)}%`:`left:50%;width:${w.toFixed(1)}%`;
+    return `<div class="r"><span class="nm">${nm}</span><span class="vl">${fmt0(v*1000)}đ</span>`+
+      `<span class="tr"><span class="mid"></span><i class="${p>=0?'up':''}" style="${st}"></i></span>`+
+      `<span class="pc ${p<0?'neg':'pos'}">${pct(p)}</span></div>`;}).join('')+'</div>';
+}
+
+// ============ DỰNG NOTE ============
+let _noteTk=null;
+async function renderNote(tk,sectKey){
+  const box=$('noteBox'),st=$('noteSt'); if(!box)return;
+  _noteTk=tk; box.innerHTML='';
+  const step=m=>{if(st&&_noteTk===tk)st.textContent=m;};
+  step('⏳ đang tải giá & VNINDEX…');
+  const [bar,ibar]=await Promise.all([dbars(tk),dbars('VNINDEX')]);
+  if(_noteTk!==tk)return;
+  if(!bar||!ibar){step('⚠ không lấy được dữ liệu giá cho '+tk);return;}
+  const ta=taScan(bar,ibar);
+  if(!ta){step('⚠ '+tk+' chưa đủ 210 phiên lịch sử để chạy Stage Analysis');return;}
+  step('⏳ đang tải BCTC…');
+  const F=await finData(tk); if(_noteTk!==tk)return;
+  step('⏳ đang đo sức mạnh ngành & độ rộng thị trường…');
+  const [gs,br]=await Promise.all([groupStrength(tk,ibar).catch(()=>null),breadth().catch(()=>null)]);
+  if(_noteTk!==tk)return;
+  const CS=canslim(tk,ta,F,gs,br);
+  box.innerHTML=noteHTML(tk,sectKey,ta,F,gs,br,CS);
+  step('● số thật · BCTC 24hMoney + giá VNDirect');
+}
+function noteHTML(tk,sectKey,ta,F,gs,br,CS){
+  const q=FAQ[tk]||null, i=F.idx||{};
+  const qh=F.hdQ[0]?`Q${F.hdQ[0].quarter}/${String(F.hdQ[0].year).slice(2)}`:'quý gần nhất';
+  const sum4=a=>a?a.slice(0,4).reduce((s,x)=>s+(x||0),0):null;
+  const revT=sum4(F.revQ),lnT=sum4(F.lnQ);
+  const n=(k,d)=>{const v=+i[k];return isFinite(v)&&v!==0?(d==null?v:+v.toFixed(d)):null;};
+  const meth={bds:'RNAV / quỹ đất',sx:'DCF + EV/EBITDA + P/E',ck:'P/B theo ROE'}[sectKey]||'';
+  const cons=CTCK[tk];
+  // ---- verdict ----
+  const dgTot=(n('pe4Q')>0&&n('pe4Q')<12&&n('pb4Q')<2&&n('roe4Q')>12)?2:((n('pe4Q')>0&&n('pe4Q')<18&&n('roe4Q')>10)?1:0);
+  const roeTot=n('roe4Q')>20?2:(n('roe4Q')>15?1:0);
+  const faScore=CS.S[0].v*2+CS.S[1].v*2+dgTot+roeTot; // C×2 + A×2 + định giá + ROE, tối đa 12
+  const faCls=faScore>=7?'good':(faScore>=5?'mid':'bad');
+  const faTxt=faScore>=9?'Rất mạnh':(faScore>=7?'Mạnh':(faScore>=5?'Khá':'Yếu'));
+  const taCls=ta.classic.tong>=70?'good':(ta.classic.tong>=45?'mid':'bad');
+  const st=TEN_STAGE[ta.stage]||('Stage '+ta.stage);
+  let h='';
+  h+=`<div class="nhead">
+    <div class="ntitle"><span>${tk}</span> — Investment Note</div>
+    <div class="nsub">${q?q.ten+' · ':''}${i.company_name&&!q?i.company_name.trim()+' · ':''}${i.floor||''} ${i.group_name?'· '+i.group_name:''} · Chốt dữ liệu ${ta.ngay.split('-').reverse().join('/')}</div>
+    <div class="verdict">
+      <div class="vc ${faCls}"><div class="k">Phần A · Cơ bản</div><div class="v">${faTxt}</div>
+        <div class="d">LNST ${qh} <b>${fmt0(F.lnQ?F.lnQ[0]:null)} tỷ</b> · LNST TTM ${fmt0(lnT)} tỷ · ROE ${n('roe4Q',1)??'—'}% · P/E ${n('pe4Q',1)??'—'} · P/B ${n('pb4Q',2)??'—'}</div>
+        <div class="bar"><i style="width:${Math.round(faScore/12*100)}%"></i></div></div>
+      <div class="vc ${taCls}"><div class="k">Phần B · Kỹ thuật</div><div class="v">${st.split('—')[0].trim()}</div>
+        <div class="d">Classic <b>${ta.classic.tong}/100</b> (${ta.classic.tier}) · Ranking <b>${ta.rank}/100</b> (Group ${ta.group}) · DuckMan <b>${ta.duckDiem}/9</b> · VSLRT <b>${ta.vsDiem}/6</b></div>
+        <div class="bar"><i style="width:${ta.classic.tong}%"></i></div></div>
+    </div>
+    <div class="nthesis">${luanDiem(tk,ta,F,CS,qh)}</div>
+  </div>`;
+  // ---- PHẦN A ----
+  h+=`<div class="npart"><span class="tag">Phần A</span><span class="t">Fundamental</span><span class="rule"></span></div>`;
+  h+=sec('01','Business Model', q?ul(q.bm):ul(autoBM(tk,ta,F,revT,lnT,qh)));
+  h+=sec('02','Moat', q?ul(q.moat):`<p style="font-size:13.2px;color:#c7d0e4;margin:0">[cần bổ sung dữ liệu định tính về lợi thế cạnh tranh của ${tk} — phần này không suy ra được từ BCTC]</p>`);
+  h+=`<div class="nsec"><div class="n2col">
+    <div><h3><span class="n">03</span>Growth Drivers</h3>${ul(q&&q.drivers?q.drivers:autoDrivers(ta,F,revT,lnT,qh,cons))}</div>
+    <div><h3><span class="n">04</span>Key Monitorables</h3>${ul(q?q.monitor.concat(autoMonitor(ta,F,qh,true)):autoMonitor(ta,F,qh,false))}</div>
+  </div></div>`;
+  h+=sec('05','Investment Thesis', ul((q?q.thesis:[]).concat(autoThesis(tk,ta,F,revT,lnT,cons,meth))));
+  // ---- PHẦN B ----
+  h+=`<div class="npart"><span class="tag">Phần B</span><span class="t">Technical Setup</span><span class="rule"></span></div>`;
+  h+=`<div class="nsec"><h3><span class="n">06</span>Stage Analysis</h3>
+    ${noteChart(ta)}
+    <div class="ncap">252 phiên gần nhất, benchmark VNINDEX. RS Line = giá ÷ VNINDEX, chuẩn hóa về 100 tại đầu kỳ.</div>
+    <h4>Kết luận Stage</h4>${ul(stageBullets(ta))}
+    <h4>Vị trí giá so với các đường trung bình</h4>${maLadder(ta)}
+    <h4>Đặc điểm khối lượng</h4>${ul(volBullets(ta))}
+  </div>`;
+  h+=`<div class="nsec"><h3><span class="n">07</span>CANSLIM Checklist</h3>
+    <div class="ntw"><table class="ntbl"><thead><tr><th style="width:168px">Tiêu chí</th><th>Số liệu thực tế</th><th style="width:92px">Đánh giá</th></tr></thead><tbody>
+    ${CS.S.map(x=>`<tr><td class="k"><i>${x.k}</i>${x.t}</td><td>${x.d}</td><td>${pill(x.v)}</td></tr>`).join('')}
+    </tbody><tfoot><tr><td class="k">Tổng</td><td>${CS.S.filter(x=>x.v===2).length} đạt · ${CS.S.filter(x=>x.v===1).length} một nửa · ${CS.S.filter(x=>x.v===0).length} không đạt</td>
+    <td><span class="pill ${CS.diem>=5?'ok':(CS.diem>=3.5?'mid':'no')}">${CS.diem.toFixed(1)}/7</span></td></tr></tfoot></table></div></div>`;
+  h+=`<div class="nsec"><h3><span class="n">08</span>TIGERS Setup — VSLRT + RS Line + VARS + KMAs</h3>
+    ${buoc0(ta)}
+    <h4>Điểm hội tụ vào lệnh (ngưỡng ≥ 4/6)</h4>
+    <div class="ntw"><table class="ntbl"><thead><tr><th style="width:34px" class="num">#</th><th>Điều kiện</th><th>Đo được</th><th style="width:70px" class="num">Điểm</th></tr></thead><tbody>
+    ${ta.VS.map((x,k)=>`<tr><td class="num">${k+1}</td><td>${x.t}</td><td>${x.d}</td><td class="num">${x.ok?1:0}</td></tr>`).join('')}
+    </tbody><tfoot><tr><td colspan="3">Điểm hội tụ</td><td class="num">${ta.vsDiem} / 6</td></tr></tfoot></table></div>
+    <div class="ncap">VARS là bản triển khai proxy: z-score chuỗi lợi suất vượt trội so với VNINDEX trên cửa sổ 21 phiên, so với MA10 của chính nó.</div>
+    <h4>Trend theo KMAs · Sức mạnh nhóm ngành</h4>${ul(trendBullets(ta,gs))}
+    <h4>Entry · Risk · Sell</h4>${plan(ta)}
+  </div>`;
+  h+=`<div class="nsec"><h3><span class="n">09</span>Tổng hợp điểm số — checklist 8 tiêu chí, 3 tier</h3>
+    <div class="ntw"><table class="ntbl"><thead><tr><th style="width:30px" class="num">#</th><th>Tiêu chí (Weinstein Classic)</th><th class="num" style="width:74px">Điểm</th><th style="width:86px">Đạt</th></tr></thead><tbody>
+    ${classicRows(ta)}
+    </tbody><tfoot><tr><td colspan="2">Classic Score${ta.classic.mod?` (đã ${ta.classic.mod>0?'+':''}${ta.classic.mod} điều chỉnh)`:''}</td>
+      <td class="num">${ta.classic.tong} / 100</td><td><span class="pill ${ta.classic.tier==='T1'?'ok':(ta.classic.tier==='T2'?'mid':'no')}">Tier ${ta.classic.tier}</span></td></tr></tfoot></table></div>
+    <div class="ncap">Ngưỡng tier: T1 ≥ 85 · T2 ≥ 70 · T3 &lt; 70. Thang Ranking: Group A ≥ 75 · B 50–74 · C &lt; 50.</div>
+    <h4>Đối chiếu chéo các hệ thống</h4>
+    <div class="ntw"><table class="ntbl"><thead><tr><th>Hệ thống</th><th class="num" style="width:88px">Điểm</th><th class="num" style="width:84px">Ngưỡng</th><th>Kết luận</th></tr></thead><tbody>
+      ${xrow('Weinstein Classic (8 tiêu chí)',ta.classic.tong+' / 100','≥ 70',ta.classic.tong>=70,'Tier '+ta.classic.tier)}
+      ${xrow('Weinstein Ranking',ta.rank+' / 100','≥ 75',ta.rank>=75,'Group '+ta.group)}
+      ${xrow('DuckMan Score (9 tiêu chí RS)',ta.duckDiem+' / 9','≥ 4',ta.duckDiem>=4,ta.duck.filter(x=>x[1]).map(x=>x[0]).join(', ')||'không đạt tiêu chí nào')}
+      ${xrow('VSLRT + RS + VARS',ta.vsDiem+' / 6','≥ 4',ta.vsDiem>=4,ta.vsDiem>=4?'đủ điều kiện vào lệnh':'chưa đủ điểm hội tụ')}
+      ${xrow('CANSLIM',CS.diem.toFixed(1)+' / 7','≥ 5',CS.diem>=5,CS.S.filter(x=>x.v===2).map(x=>x.k).join('')||'không tiêu chí nào đạt trọn')}
+    </tbody></table></div>
+    ${ketLuan(tk,ta,F,CS,gs)}
+  </div>`;
+  h+=`<div class="nfoot"><b>Nguồn.</b> BCTC & chỉ số TTM: 24hMoney (kỳ mới nhất đã công bố). Giá/khối lượng/VNINDEX: VNDirect, ${Math.min(252,ta.n)} phiên đến ${ta.ngay.split('-').reverse().join('/')}.
+    <b>Phương pháp.</b> Stage · Classic · Ranking dùng đúng thuật toán sheet Weinstein; DuckMan theo 9 tiêu chí RS; điểm hội tụ theo tài liệu VSLRT + Pristine RS Line + VARS + TL's KMAs.
+    <b>Miễn trừ.</b> Tham khảo, không phải khuyến nghị đầu tư.</div>`;
+  return h;
+}
+// --- helper dựng khối ---
+const sec=(n,t,inner)=>`<div class="nsec"><h3><span class="n">${n}</span>${t}</h3>${inner}</div>`;
+const ul=a=>'<ul>'+a.map(x=>`<li>${x}</li>`).join('')+'</ul>';
+const pill=v=>`<span class="pill ${v===2?'ok':(v===1?'mid':'no')}">${v===2?'Đạt':(v===1?'Một nửa':'Không đạt')}</span>`;
+const xrow=(t,d,ng,ok,kl)=>`<tr><td class="k">${t}</td><td class="num">${d}</td><td class="num">${ng}</td><td><span class="pill ${ok?'ok':'no'}">${ok?'Đạt':'Trượt'}</span> ${kl}</td></tr>`;
+function classicRows(ta){
+  const c=ta.classic,R=[['Vị thế Stage — breakout 1B → 2A',c.c1,15],['Extension — còn gần MA150',c.c2,10],
+    ['RS Line đỉnh mới, không phân kỳ âm',c.c3,15],['Volume breakout ≥ 1,5–2× TB50',c.c4,15],
+    ['Volume dry-up & ATR co trong nền',c.c5,10],['KMAs xếp đúng thứ tự tăng',c.c6,10],
+    ['Dòng tiền OBV trên MA20',c.c7,10],['Chất lượng Stage nền',c.c8,12]];
+  return R.map(([t,v,m],k)=>`<tr><td class="num">${k+1}</td><td>${t}</td><td class="num">${v} / ${m}</td>
+    <td>${v>=m*0.8?'<span class="pill ok">Đạt</span>':(v>0?'<span class="pill mid">Một phần</span>':'<span class="pill no">Không</span>')}</td></tr>`).join('');
+}
+function stageBullets(ta){
+  const dd=v=>v?v.split('-').reverse().join('/'):'—';
+  const b=[`<b>${TEN_STAGE[ta.stage]||('Stage '+ta.stage)}</b> — mã trạng thái <span class="m">${ta.stage}</span> theo bộ lọc Weinstein.`];
+  b.push(`Giá <span class="m">${fmt0(ta.gia*1000)}đ</span>, cách đỉnh 52 tuần <span class="m">${pct(-(ta.h52-ta.gia)/ta.h52*100)}</span>, trên đáy 52 tuần <span class="m">${pct((ta.gia/ta.l52-1)*100)}</span>.`);
+  b.push(`Phiên cuối cùng đóng cửa trên MA50: <span class="m">${dd(ta.lastA50)}</span> · trên MA150: <span class="m">${dd(ta.lastA150)}</span> · trên MA200: <span class="m">${dd(ta.lastA200)}</span>.`+
+    (ta.cross?` MA50 cắt xuống MA150 ngày <span class="m">${dd(ta.cross)}</span>.`:' MA50 vẫn nằm trên MA150.'));
+  b.push(`Độ dốc MA150 60 phiên <span class="m">${pct((ta.S150[ta.i]/ta.S150[ta.i-60]-1)*100)}</span> · MA200 <span class="m">${pct((ta.S200[ta.i]/ta.S200[ta.i-60]-1)*100)}</span>. Giá ${ta.dist150>=0?'trên':'dưới'} MA150 <span class="m">${Math.abs(ta.dist150).toFixed(1)}%</span>.`);
+  b.push(`Số phiên liên tục đóng cửa trên MA50: <span class="m">${ta.wa}</span>. KMAs ${ta.kmaBull?'xếp đúng thứ tự tăng đầy đủ':(ta.kmaEarly?'mới xếp đúng ở nhóm ngắn hạn':'đã đảo thứ tự')}.`);
+  return b;
+}
+function volBullets(ta){
+  const b=[];
+  b.push(`KL trung bình 20 phiên <span class="m">${fmt0(ta.AV20)}</span> so với TB50 <span class="m">${fmt0(ta.AV50)}</span> (${(ta.AV20/ta.AV50).toFixed(2)} lần) — ${ta.AV20<ta.AV50*0.8?'khối lượng đang co lại':'khối lượng duy trì'}.`);
+  b.push(`Tỷ lệ khối lượng phiên tăng / phiên giảm: 20 phiên <span class="m">${ta.udv20.toFixed(2)}</span>, 50 phiên <span class="m">${ta.udv50.toFixed(2)}</span> — `+
+    (ta.udv20>=1.2?'dòng tiền nghiêng về bên mua.':(ta.udv20>=0.9?'cân bằng, chưa có lực mua áp đảo.':'<b>dấu vân tay phân phối</b>: khối lượng bán áp đảo.')));
+  b.push(`relVol phiên gần nhất <span class="m">${ta.relVol.toFixed(2)}</span>${ta.volDry?' — volume cạn (dry-up)':''}. `+
+    (ta.relVol>=1.5?'Có phiên bùng nổ khối lượng.':'Chưa có phiên bùng nổ khối lượng xác nhận.'));
+  b.push(`Giá trị giao dịch trung bình 20 phiên ≈ <span class="m">${fmt0(ta.AV20*ta.gia*1000/1e9)} tỷ/phiên</span>.`);
+  return b;
+}
+function trendBullets(ta,gs){
+  const M=ta.MA,duoi=[['8EMA',M.E8],['10DSMA',M.S10],['21DSMA',M.S21],['50DSMA',M.S50],['65DSMA',M.S65],
+    ['150DSMA',M.S150],['200DSMA',M.S200],['10WSMA',M.W10]].filter(x=>x[1]!=null&&ta.gia<x[1]).map(x=>x[0]);
+  const b=[`<b>Trend:</b> giá ${duoi.length===0?'nằm trên toàn bộ KMAs':(duoi.length>=7?'nằm dưới toàn bộ KMAs':'nằm dưới '+duoi.join(', '))}. Thứ tự KMAs ${ta.kmaBull?'đúng chiều tăng':'chưa/không còn đúng chiều tăng'}.`];
+  if(gs){
+    b.push(`<b>Group strength — ${gs.ten}:</b> trung vị 3 tháng <span class="m">${pct(gs.md3)}</span>, 6 tháng <span class="m">${pct(gs.md6)}</span> so với VNINDEX ${pct(ta.vnRet.m3)} / ${pct(ta.vnRet.m6)}. Chỉ <span class="m">${gs.tren50}/${gs.n}</span> mã trên MA50, ${gs.tren150}/${gs.n} trên MA150.`);
+    if(gs.cua)b.push(`<b>Vị trí trong nhóm:</b> xếp <span class="m">${gs.cua.hang}/${gs.n}</span> theo hiệu suất 3 tháng. `+
+      (gs.md3>ta.vnRet.m3&&gs.cua.hang<=Math.ceil(gs.n/3)?'Mã mạnh của nhóm mạnh — đúng chuẩn TIGERS.':'TIGERS yêu cầu mua mã mạnh nhất của nhóm mạnh nhất; điều kiện này chưa thỏa.'));
+  } else b.push('<b>Group strength:</b> [chưa có nhóm ngành khai báo cho mã này — cần bổ sung vào bảng NHOM]');
+  b.push(`<b>Hiệu suất tương đối:</b> 1T ${pct(ta.ret.m1)} · 3T ${pct(ta.ret.m3)} · 6T ${pct(ta.ret.m6)} · 12T ${pct(ta.ret.m12)}, so với VNINDEX 3T ${pct(ta.vnRet.m3)} · 6T ${pct(ta.vnRet.m6)} · 12T ${pct(ta.vnRet.m12)}.`);
+  return b;
+}
+function buoc0(ta){
+  const ok=ta.gia>ta.MA.S21&&ta.gia>ta.MA.S50&&ta.ma50Doc;
+  return `<div class="ncall ${ok?'ok':''}"><div class="h">Bước 0 — Bộ lọc nền tảng</div>
+   Điều kiện vào watchlist: giá &gt; 21DSMA <i>và</i> &gt; 50DSMA, với 50DSMA dốc lên.<br>
+   Thực tế: giá <span class="m">${fmt0(ta.gia*1000)}đ</span> ${ta.gia>ta.MA.S21?'trên':'dưới'} 21DSMA (${fmt0(ta.MA.S21*1000)}) và ${ta.gia>ta.MA.S50?'trên':'dưới'} 50DSMA (${fmt0(ta.MA.S50*1000)}); 50DSMA đang ${ta.ma50Doc?'dốc lên':'đi xuống'}.<br>
+   <b>${ok?'Qua được bộ lọc nền tảng — đủ điều kiện vào danh sách theo dõi mua.':'Chưa qua bộ lọc nền tảng — chưa đủ điều kiện vào danh sách theo dõi mua.'}</b></div>`;
+}
+function plan(ta){
+  const ok=ta.vsDiem>=4&&ta.gia>ta.MA.S21&&ta.gia>ta.MA.S50;
+  const thoat=ta.gia<ta.MA.S21&&ta.rs[ta.i]<ta.rsMA[ta.i];
+  return `<div class="ngrid">
+   <div><div class="h">Entry</div><div class="v">${ok?'Có setup':'Không có'}</div>
+     <p>${ok?`Điểm hội tụ ${ta.vsDiem}/6 và giá trên 21/50DSMA. Vào lệnh kiểu <b>Confirmed</b>: chờ điểm giữ ≥4/6 hai phiên liên tiếp kèm breakout khỏi pivot gần nhất.`
+       :`Không có setup breakout/pullback hợp lệ. Mốc cần lấy lại: đóng cửa trên <b>${fmt0(ta.MA.S21*1000)}đ</b> (21DSMA), sau đó <b>${fmt0(ta.MA.S50*1000)}đ</b> (50DSMA) với 50DSMA dốc lên.`}</p></div>
+   <div><div class="h">Xác nhận cần chờ</div><div class="v">${ta.vsDiem} → 4/6</div>
+     <p>${ta.rs[ta.i]>ta.rsMA[ta.i]?'RS Line đã trên MA của nó. ':'RS Line cắt lên MA của nó là điều kiện phải có trước tiên. '}Kèm một phiên tăng relVol ≥ 1,5 để bù cho tỷ lệ up/down volume ${ta.udv20.toFixed(2)} hiện tại.</p></div>
+   <div><div class="h">Risk control</div><div class="v">10 EMA / 21DSMA</div>
+     <p>Stop dưới đáy pivot gần nhất hoặc dưới 21DSMA (<b>${fmt0(ta.MA.S21*1000)}đ</b>), rủi ro tối đa 1–2% tài khoản. Giá hiện ${ta.gia>ta.MA.E8?'trên':'dưới'} 8EMA (${fmt0(ta.MA.E8*1000)}đ), extension ${pct((ta.gia/ta.MA.E8-1)*100)}.</p></div>
+   <div><div class="h">Sell rules</div><div class="v">${thoat?'Đã kích hoạt':'Chưa kích hoạt'}</div>
+     <p>Tầng 3 cần đồng thời: giá &lt; 21DSMA ${ta.gia<ta.MA.S21?'✓':'✗'}, RS Line dưới MA ${ta.rs[ta.i]<ta.rsMA[ta.i]?'✓':'✗'}, VARS dưới 0/MA ${!ta.VS[4].ok?'✓':'✗'}. Override tuần: đóng cửa dưới 10WSMA (${fmt0(ta.MA.W10*1000)}đ) ${ta.gia<ta.MA.W10?'✓ đã bật':'✗ chưa'}.
+     ${ta.gia>ta.MA.E8&&(ta.gia/ta.MA.E8-1)*100>=15?' <b>Extension ≥15% so 8EMA → cân nhắc chốt 1/3–1/2 vị thế.</b>':''}</p></div>
+  </div>`;
+}
+// --- nội dung FA tự sinh từ BCTC khi chưa có luận điểm viết tay ---
+function autoBM(tk,ta,F,revT,lnT,qh){
+  const i=F.idx||{},b=[];
+  b.push(`<b>Ngành:</b> ${i.group_name||'—'}${i.group_count?` (${i.group_count} mã cùng nhóm trên 24hMoney)`:''}. Sàn ${i.floor||'—'}.`);
+  b.push(`<b>Quy mô:</b> doanh thu TTM <span class="m">${fmt0(revT)} tỷ</span>, LNST TTM <span class="m">${fmt0(lnT)} tỷ</span>, vốn hóa <span class="m">${fmt0((+i.market_cap||0)/1e9)} tỷ</span>.`);
+  b.push(`<b>Cơ cấu sở hữu:</b> ${fmt0((+i.listed_share_vol||0)/1e6)} triệu CP niêm yết, free-float ${i.free_float_rate!=null?(i.free_float_rate*100).toFixed(0)+'%':'—'}, sở hữu nước ngoài ${i.foreign_current_room_percent!=null?(+i.foreign_current_room_percent).toFixed(2)+'%':'—'}.`);
+  b.push(`<b>Chất lượng lợi nhuận ${qh}:</b> ${F.gpQ&&F.revQ&&F.revQ[0]?'biên gộp '+((F.gpQ[0]/F.revQ[0])*100).toFixed(1)+'%, ':''}biên ròng ${F.lnQ&&F.revQ&&F.revQ[0]?((F.lnQ[0]/F.revQ[0])*100).toFixed(1)+'%':'—'}, ROE TTM ${i.roe4Q?(+i.roe4Q).toFixed(1)+'%':'—'}, ROA ${i.roa4Q?(+i.roa4Q).toFixed(1)+'%':'—'}.`);
+  b.push(`<i>[Mô tả mảng kinh doanh, khách hàng và vị trí chuỗi giá trị của ${tk} cần bổ sung thủ công — không suy ra được từ BCTC.]</i>`);
+  return b;
+}
+function autoDrivers(ta,F,revT,lnT,qh,cons){
+  const i=F.idx||{},b=[];
+  if(F.lnQ&&F.lnQ[4]>0)b.push(`<b>Đà lợi nhuận:</b> LNST ${qh} <span class="m">${fmt0(F.lnQ[0])} tỷ</span>, ${pct((F.lnQ[0]/F.lnQ[4]-1)*100,0)} so với cùng kỳ.`);
+  else if(F.lnQ)b.push(`<b>Đà lợi nhuận:</b> LNST ${qh} <span class="m">${fmt0(F.lnQ[0])} tỷ</span> (cùng kỳ ${F.lnQ[4]<0?'lỗ':'không so sánh được'}).`);
+  if(F.revQ&&F.revQ[4]>0)b.push(`<b>Doanh thu:</b> ${qh} đạt <span class="m">${fmt0(F.revQ[0])} tỷ</span>, ${pct((F.revQ[0]/F.revQ[4]-1)*100,0)} YoY; TTM ${fmt0(revT)} tỷ.`);
+  if(F.gpQ&&F.revQ&&F.revQ[0]&&F.revQ[4]){const m0=F.gpQ[0]/F.revQ[0]*100,m4=F.gpQ[4]/F.revQ[4]*100;
+    b.push(`<b>Biên gộp:</b> ${m0.toFixed(1)}% ở ${qh} so với ${m4.toFixed(1)}% cùng kỳ — ${m0>m4?'đang mở rộng':'đang thu hẹp'}.`);}
+  if(F.lnY&&F.lnY[0]&&lnT)b.push(`<b>So với cả năm gần nhất:</b> LNST TTM ${fmt0(lnT)} tỷ so với ${fmt0(F.lnY[0])} tỷ năm ${F.hdY[0]?F.hdY[0].year:''} (${pct((lnT/F.lnY[0]-1)*100,0)}).`);
+  b.push(`<b>Định giá:</b> P/E ${i.pe4Q?(+i.pe4Q).toFixed(1):'—'} · P/B ${i.pb4Q?(+i.pb4Q).toFixed(2):'—'} · EV/EBITDA ${i.ev_per_ebitda4Q?(+i.ev_per_ebitda4Q).toFixed(1):'—'}.`+
+    (cons?` Giá mục tiêu đồng thuận CTCK <span class="m">${fmt0(cons[1])}đ</span> (${pct((cons[1]/(ta.gia*1000)-1)*100,0)} so giá hiện tại).`:''));
+  return b;
+}
+function autoMonitor(ta,F,qh,boQuaBien){
+  const b=[];
+  if(!boQuaBien&&F.gpQ&&F.revQ&&F.revQ[0]){const m=F.gpQ[0]/F.revQ[0]*100;
+    b.push(`<b>Tính bền của biên gộp ${m.toFixed(1)}% ở ${qh}</b> — cần thêm ít nhất một quý để phân biệt mặt bằng mới với đỉnh chu kỳ.`);}
+  if(F.lnQ&&F.lnQ.length>=8){const nen=F.lnQ.slice(4,8).reduce((s,x)=>s+(x||0),0);
+    b.push(`<b>Nền so sánh 4 quý kế tiếp:</b> cùng kỳ năm trước đạt tổng <span class="m">${fmt0(nen)} tỷ</span> — nền ${nen<F.lnQ.slice(0,4).reduce((s,x)=>s+(x||0),0)/2?'rất thấp, còn hỗ trợ tăng trưởng YoY':'không còn thấp, tăng trưởng YoY sẽ khó duy trì'}.`);}
+  b.push(`<b>Phản ứng của giá với tin cơ bản:</b> lợi nhuận đang ${F.lnQ&&F.lnQ[4]>0&&F.lnQ[0]>F.lnQ[4]?'tăng':'biến động'} nhưng giá 6 tháng ${pct(ta.ret.m6)} so với VNINDEX ${pct(ta.vnRet.m6)} — theo dõi xem dòng tiền có xác nhận không.`);
+  return b;
+}
+function autoThesis(tk,ta,F,revT,lnT,cons,meth){
+  const i=F.idx||{},b=[];
+  b.push(`<b>Định giá hiện tại:</b> EPS TTM <span class="m">${fmt0(i.eps4Q)}đ</span>, BVPS <span class="m">${fmt0(i.book_value4Q||i.book_value)}đ</span>, ROE ${i.roe4Q?(+i.roe4Q).toFixed(1):'—'}% → P/E ${i.pe4Q?(+i.pe4Q).toFixed(1):'—'} · P/B ${i.pb4Q?(+i.pb4Q).toFixed(2):'—'}.`+
+    (cons?` CTCK đồng thuận ${fmt0(cons[1])}đ (dải ${fmt0(cons[0])}–${fmt0(cons[2])}).`:''));
+  if(meth)b.push(`<b>Phương pháp định giá áp theo ngành:</b> ${meth} — chạy chi tiết trong khung định giá bên dưới.`);
+  b.push(`<b>Rủi ro thị trường đang bỏ phiếu:</b> giá ${ta.ret.m6>=0?'tăng':'giảm'} <span class="m">${Math.abs(ta.ret.m6).toFixed(1)}%</span> trong 6 tháng, RS Line ${ta.rs[ta.i]>ta.rsMA[ta.i]?'trên':'dưới'} MA của nó. `+
+    (ta.ret.m6<ta.vnRet.m6?'Khi giá không phản ứng với nền tảng cải thiện, thường là dấu hiệu dòng tiền lớn chưa vào hoặc đang thoát.':'Dòng tiền đang xác nhận câu chuyện cơ bản.'));
+  return b;
+}
+const dongTuStage=s=>s>=40?'đã rơi về':(s>=30?'đã chuyển sang':(s>=20?'đang ở':'đang nằm trong'));
+function luanDiem(tk,ta,F,CS,qh){
+  const lnQ=F.lnQ?F.lnQ[0]:null,ln4=F.lnQ?F.lnQ[4]:null;
+  const g=(ln4>0&&lnQ!=null)?((lnQ/ln4-1)*100):null;
+  const faTot=CS.S[0].v>=2;
+  const taXau=ta.classic.tong<45;
+  let s='';
+  if(faTot&&taXau)s=`<b>Cơ bản và đồ thị đang nói hai câu chuyện ngược nhau.</b> LNST ${qh} đạt <b>${fmt0(lnQ)} tỷ</b>${g!=null?` (${pct(g,0)} YoY)`:''} nhưng giá ${dongTuStage(ta.stage)} <b>${(TEN_STAGE[ta.stage]||('Stage '+ta.stage)).split(' — ')[0]}</b> và CANSLIM chỉ đạt ${CS.diem.toFixed(1)}/7. Luận điểm cơ bản có thật; điểm mua thì chưa — đây là note theo dõi, không phải lệnh mua.`;
+  else if(faTot&&!taXau)s=`<b>Cơ bản và kỹ thuật cùng hướng.</b> LNST ${qh} <b>${fmt0(lnQ)} tỷ</b>${g!=null?` (${pct(g,0)} YoY)`:''}, đồ thị ở ${TEN_STAGE[ta.stage]||('Stage '+ta.stage)} với Classic ${ta.classic.tong}/100. Đây là trường hợp đáng bám sát nhất: nền tảng xác nhận bằng dòng tiền.`;
+  else if(!faTot&&!taXau)s=`<b>Kỹ thuật đi trước cơ bản.</b> Đồ thị ở ${TEN_STAGE[ta.stage]||('Stage '+ta.stage)} (Classic ${ta.classic.tong}/100) trong khi lợi nhuận ${qh} mới đạt ${fmt0(lnQ)} tỷ. Cần xác minh dòng tiền đang chiết khấu điều gì trước khi mua.`;
+  else s=`<b>Cả hai vế đều yếu.</b> Lợi nhuận ${qh} ${fmt0(lnQ)} tỷ${g!=null?` (${pct(g,0)} YoY)`:''} và đồ thị ở ${TEN_STAGE[ta.stage]||('Stage '+ta.stage)} với Classic ${ta.classic.tong}/100 — không có lý do để ưu tiên mã này ở thời điểm hiện tại.`;
+  return s;
+}
+function ketLuan(tk,ta,F,CS,gs){
+  const mua=ta.classic.tong>=70&&ta.vsDiem>=4&&CS.diem>=5;
+  const b=[];
+  if(mua)b.push('<b>Đủ điều kiện mua theo hệ thống.</b> Cả bốn thang điểm kỹ thuật và CANSLIM đều qua ngưỡng.');
+  else b.push(`<b>Chưa mua.</b> ${[['Classic',ta.classic.tong>=70],['Ranking',ta.rank>=75],['DuckMan',ta.duckDiem>=4],['VSLRT',ta.vsDiem>=4],['CANSLIM',CS.diem>=5]].filter(x=>!x[1]).map(x=>x[0]).join(', ')} chưa đạt ngưỡng.`);
+  if(CS.S[0].v>=2)b.push(`<b>Giữ trong danh sách theo dõi cơ bản.</b> Tiêu chí C của CANSLIM đang mạnh — nếu giá tạo được nền và quay lại Stage 2 thì đây là mã có luận điểm đủ để mua.`);
+  b.push(`<b>Điều kiện kích hoạt xem lại:</b> đóng cửa trên <span class="m">${fmt0(ta.MA.S50*1000)}đ</span> (50DSMA) với 50DSMA dốc lên, RS Line cắt lên MA của nó${gs?`, và nhóm ${gs.ten} có hơn nửa số mã trên MA50 (hiện ${gs.tren50}/${gs.n})`:''}.`);
+  if(ta.gia<ta.MA.S21&&ta.rs[ta.i]<ta.rsMA[ta.i])b.push('<b>Nếu đang nắm giữ:</b> quy tắc thoát Tầng 3 của hệ thống đã kích hoạt — xem chi tiết ở mục 08.');
+  return `<div class="ncall ${mua?'ok':''}" style="margin-top:14px"><div class="h">Kết luận & hành động</div>${ul(b)}</div>`;
+}
+
 const $=id=>document.getElementById(id);
 const frame=$('frame'), statusEl=$('status'), tkEl=$('ticker');
 let curSect=null, curTk=null, resizeTimer=null;
@@ -436,6 +1164,7 @@ function load(sectKey,tk){
   highlightTabs(sectKey);
   tkEl.value=tk;
   renderThesis(tk,sectKey);
+  {const nb=$('noteBox');if(nb){nb.hidden=true;nb.innerHTML='';}const ns=$('noteSt');if(ns)ns.textContent='FA (BCTC 24hMoney) + Stage Analysis · CANSLIM · TIGERS — bấm nút để tạo note cho '+tk;}
   const u=(s.list.includes(tk))?(' — đã nạp '+tk):(' — '+tk+' chưa có dữ liệu trong nhóm này');
   statusEl.textContent='● '+s.name.replace(/^[^ ]+ /,'')+u;
   statusEl.style.color=s.list.includes(tk)?'#6fe3ab':'#f0c26b';
@@ -457,6 +1186,7 @@ function analyze(){
   }
 }
 $('analyzeBtn').addEventListener('click',analyze);
+$('noteBtn').addEventListener('click',()=>{const b=$('noteBox');if(!curTk){$('noteSt').textContent='⚠ Hãy nạp một mã trước';return;}b.hidden=false;b.scrollIntoView({behavior:'smooth',block:'start'});renderNote(curTk,curSect).catch(e=>{$('noteSt').textContent='⚠ lỗi: '+e.message});});
 tkEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();analyze();}});
 
 // "Lấy giá hiện tại" → bấm hộ nút ↻ trong khung định giá của ngành (mỗi trang con đều có #fetchPx)
