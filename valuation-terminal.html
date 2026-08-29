@@ -480,38 +480,38 @@ recalc();
 </script>
 <script>
 // ===== Nhập mã → tự nạp toàn bộ dữ liệu & phân tích (BĐS) =====
-// Giá/P-E/P-B: simplize 13/06/2026. landBook = quỹ đất THẬT. eps = LỢI NHUẬN DỰ PHÓNG 2026F. uplift theo SOTP/chất lượng đất. cons = giá mục tiêu ĐỒNG THUẬN CTCK (T5–6/2026).
+// SỐ THẬT BCTC Q2/2026 (24hMoney, cập nhật 29/08/2026): price/eps(TTM)/bvps/bookEq/assets/netDebt/landBook(tồn kho). uplift theo SOTP/chất lượng đất. cons = giá mục tiêu ĐỒNG THUẬN CTCK (T5–6/2026).
 const DATA={
-  KDH:{price:23000,shares:1122,netDebt:11523,bookEq:18804, landBook:29126, eps:1110, bvps:16757,tpb:1.7,tpe:17,uplift:60,ownEff:90,wRNAV:55,wPB:35,wPE:10,cons:34100, assets:39862}, // 24hmoney: EPS TTM 1.110, LNST TTM 1.842 tỷ (Q4/25 mạnh)
-  DXG:{price:13250,shares:1268,netDebt:6000,  bookEq:14238, landBook:13400, eps:183,  bvps:11253,tpb:1.4,tpe:15,uplift:55,ownEff:90,wRNAV:60,wPB:35,wPE:5, cons:19250, assets:29130}, // 24hmoney: LNST TTM 731 tỷ (lợi ích CĐ thiểu số lớn → EPS mẹ thấp ~250)
-  NVL:{price:13000,shares:2402,netDebt:55000, bookEq:46608, landBook:155000,eps:1397, bvps:19320,tpb:0.9,tpe:14,uplift:0, ownEff:80,wRNAV:30,wPB:40,wPE:30,cons:16000, assets:253000},
-  NLG:{price:27050,shares:485, netDebt:3000,  bookEq:12702, landBook:8400,  eps:1600, bvps:26243,tpb:1.5,tpe:14,uplift:60,ownEff:85,wRNAV:55,wPB:35,wPE:10,cons:42500, assets:25900}, // 24hmoney: EPS TTM 1.401, DT TTM 5.633 tỷ
-  VHM:{price:136500,shares:4364,netDebt:30000,bookEq:278500,landBook:125608,eps:15766,bvps:63801,tpb:2.1,tpe:9, uplift:15,ownEff:95,wRNAV:20,wPB:30,wPE:50,cons:103600,assets:600000}, // EPS/ROE thật Q1/26: ROE 27.8%, P/B 2.14
-  VIC:{price:196600,shares:3823,netDebt:200000,bookEq:74630,landBook:150000,eps:1506,bvps:19520,tpb:9.5,tpe:30,uplift:10,ownEff:90,wRNAV:15,wPB:35,wPE:50,cons:0,     assets:1179000}, // EPS thật Q1/26 1.506đ, P/B 10.07x (premium VinFast)
-  PDR:{price:14900,shares:998, netDebt:5000,  bookEq:12493, landBook:12854, eps:607,  bvps:12521,tpb:1.4,tpe:14,uplift:40,ownEff:95,wRNAV:55,wPB:35,wPE:10,cons:21000, assets:24000},
-  HDC:{price:17700,shares:200, netDebt:2000,  bookEq:2946,  landBook:1481,  eps:2973, bvps:12828,tpb:1.4,tpe:8, uplift:45,ownEff:95,wRNAV:45,wPB:30,wPE:25,cons:19500, assets:5500},
-  IDC:{price:43500,shares:380, netDebt:8000,  bookEq:6738,  landBook:8200,  eps:4899, bvps:17755,tpb:2.5,tpe:9, uplift:30,ownEff:95,wRNAV:15,wPB:35,wPE:50,cons:52000, assets:22000},
+  KDH:{price:18200,shares:1122,netDebt:14054,bookEq:19976,landBook:29488,eps:1565,bvps:16580,tpb:1.7,tpe:17,uplift:60,ownEff:90,wRNAV:55,wPB:35,wPE:10,cons:34100,assets:39481}, // Q2/26: DT TTM 3,357 tỷ · LNST TTM 2,418 tỷ · LNST Q2 +293% YoY · ROE 9.5% · P/E 11.6 · P/B 1.1
+  DXG:{price:12100,shares:1270,netDebt:3295,bookEq:21113,landBook:15985,eps:157,bvps:11281,tpb:1.4,tpe:15,uplift:55,ownEff:90,wRNAV:60,wPB:35,wPE:5,cons:19250,assets:39769}, // Q2/26: DT TTM 4,673 tỷ · LNST TTM 497 tỷ · LNST Q2 -87% YoY · ROE 1.4% · P/E 77.2 · P/B 1.07
+  NVL:{price:13050,shares:2402,netDebt:68032,bookEq:65238,landBook:157712,eps:1850,bvps:20189,tpb:0.9,tpe:14,uplift:0,ownEff:80,wRNAV:30,wPB:40,wPE:30,cons:16000,assets:258658}, // Q2/26: DT TTM 8,346 tỷ · LNST TTM 4,257 tỷ · Q2 lãi 912 tỷ (cùng kỳ lỗ 190) · ROE 9.5% · P/E 7.1 · P/B 0.65
+  NLG:{price:24300,shares:485,netDebt:1428,bookEq:14544,landBook:8599,eps:1408,bvps:25764,tpb:1.5,tpe:14,uplift:60,ownEff:85,wRNAV:55,wPB:35,wPE:10,cons:42500,assets:25476}, // Q2/26: DT TTM 5,276 tỷ · LNST TTM 915 tỷ · LNST Q2 -32% YoY · ROE 5.2% · P/E 17.3 · P/B 0.94
+  VHM:{price:73000,shares:8215,netDebt:162274,bookEq:274005,landBook:206728,eps:9718,bvps:31620,tpb:2.1,tpe:9,uplift:15,ownEff:95,wRNAV:20,wPB:30,wPE:50,cons:103600,assets:1110736}, // Q2/26: DT TTM 236,434 tỷ · LNST TTM 84,549 tỷ · LNST Q2 +222% YoY · ROE 32.7% · P/E 7.5 · P/B 2.31
+  VIC:{price:236000,shares:7762,netDebt:279360,bookEq:180707,landBook:261745,eps:2920,bvps:21889,tpb:9.5,tpe:30,uplift:10,ownEff:90,wRNAV:15,wPB:35,wPE:50,cons:0,assets:1308938}, // Q2/26: DT TTM 424,583 tỷ · LNST TTM 26,981 tỷ · LNST Q2 +543% YoY · ROE 14.8% · P/E 80.8 · P/B 10.78
+  PDR:{price:12400,shares:998,netDebt:2485,bookEq:12610,landBook:13556,eps:619,bvps:12601,tpb:1.4,tpe:14,uplift:40,ownEff:95,wRNAV:55,wPB:35,wPE:10,cons:21000,assets:28607}, // Q2/26: DT TTM 1,025 tỷ · LNST TTM 617 tỷ · LNST Q2 +24% YoY · ROE 5% · P/E 20 · P/B 0.98
+  HDC:{price:12100,shares:230,netDebt:1458,bookEq:2957,landBook:1465,eps:2909,bvps:12664,tpb:1.4,tpe:8,uplift:45,ownEff:95,wRNAV:45,wPB:30,wPE:25,cons:19500,assets:5745}, // Q2/26: DT TTM 620 tỷ · LNST TTM 671 tỷ · LNST Q2 -25% YoY · ROE 23% · P/E 4.2 · P/B 0.96
+  IDC:{price:32500,shares:417,netDebt:4701,bookEq:8830,landBook:7737,eps:5201,bvps:16200,tpb:2.5,tpe:9,uplift:30,ownEff:95,wRNAV:15,wPB:35,wPE:50,cons:52000,assets:23546}, // Q2/26: DT TTM 8,787 tỷ · LNST TTM 2,522 tỷ · LNST Q2 +59% YoY · ROE 32.7% · P/E 6.2 · P/B 2.01
   // ===== EPS thật TTM (24hmoney); bookEq/landBook (quỹ đất) ước tính từ hồ sơ — RNAV là neo, chỉnh tay nếu có BCĐKT =====
-  DIG:{price:13000,shares:610, netDebt:4000,  bookEq:10000, landBook:8000,  eps:900,  bvps:12616,tpb:1.2,tpe:14,uplift:30,ownEff:90,wRNAV:50,wPB:35,wPE:15,cons:22000, assets:30000}, // LNST TTM 695 tỷ (lumpy); quỹ đất lớn, đòn bẩy cao
-  KBC:{price:30450,shares:768, netDebt:5000,  bookEq:21000, landBook:12000, eps:1770, bvps:27344,tpb:1.3,tpe:15,uplift:40,ownEff:90,wRNAV:50,wPB:30,wPE:20,cons:32000, assets:42000}, // EPS TTM 1.770; KCN hưởng FDI, P/B ~1.1x
-  HDG:{price:21100,shares:305, netDebt:6000,  bookEq:8000,  landBook:3000,  eps:1635, bvps:16529,tpb:1.2,tpe:9, uplift:30,ownEff:95,wRNAV:35,wPB:30,wPE:35,cons:32000, assets:18000}, // EPS TTM 2.920; có thủy điện → weight P/E cao, P/B ~0.8x
-  CTD:{price:73000,shares:101, netDebt:-2000, bookEq:9000,  landBook:0,      eps:7565, bvps:84972,tpb:1.0,tpe:11,uplift:0, ownEff:100,wRNAV:10,wPB:30,wPE:60,cons:90000, assets:25000}, // NHÀ THẦU XD (không có quỹ đất) → định giá P/E; EPS TTM 8.337, P/E ~8.8x, P/B ~0.8x
-  VGC:{price:43800,shares:448, netDebt:8000,  bookEq:12000, landBook:6000,  eps:2898, bvps:19807,tpb:1.5,tpe:12,uplift:40,ownEff:90,wRNAV:40,wPB:30,wPE:30,cons:50000, assets:25000}, // EPS TTM 2.898; VLXD + KCN cho thuê
-  SZC:{price:23300,shares:217, netDebt:3000,  bookEq:3000,  landBook:4000,  eps:1309, bvps:17890,tpb:1.5,tpe:18,uplift:50,ownEff:90,wRNAV:45,wPB:25,wPE:30,cons:30000, assets:9000}, // KCN Châu Đức; EPS TTM 1.088 (Q1 yếu), quỹ đất giá rẻ
-  SIP:{price:51200,shares:262, netDebt:-3000, bookEq:6000,  landBook:5000,  eps:5106, bvps:22901,tpb:1.8,tpe:11,uplift:40,ownEff:95,wRNAV:35,wPB:25,wPE:40,cons:65000, assets:20000}, // KCN + điện nước; EPS TTM 5.106, dòng tiền tiện ích mạnh, P/E ~10x
-  VRE:{price:30100,shares:2272,netDebt:-5000, bookEq:40000, landBook:10000, eps:3026, bvps:21993,tpb:1.4,tpe:11,uplift:10,ownEff:100,wRNAV:15,wPB:30,wPE:55,cons:32000, assets:50000}, // TTTM cho thuê; EPS TTM 3.026, P/E ~10x
-  SJS:{price:48500,shares:114, netDebt:2000,  bookEq:5000,  landBook:4000,  eps:1580, bvps:12133,tpb:1.2,tpe:12,uplift:40,ownEff:90,wRNAV:45,wPB:25,wPE:30,cons:60000, assets:9000}, // Sudico Nam An Khánh; EPS TTM ~4.074, quỹ đất giá trị
-  BCM:{price:53300,shares:1035,netDebt:15000, bookEq:20000, landBook:35000, eps:3232, bvps:21135,tpb:2.5,tpe:16,uplift:210,ownEff:95,wRNAV:70,wPB:20,wPE:10,cons:70000, assets:55000}, // ASSET PLAY: RNAV neo (70%) — quỹ đất 950ha KCN+1.200ha đô thị + 49% VSIP (~11.000ha) mua giá vốn rẻ; landBook 35k×uplift 210% → RNAV/cp ~73k khớp GMT CTCK 73.6k-85k. P/E ít ý nghĩa (LN JV lumpy) nên hạ weight
-  TCH:{price:14850,shares:1006,netDebt:-2000, bookEq:10000, landBook:5000,  eps:193,  bvps:12603,tpb:1.3,tpe:18,uplift:40,ownEff:90,wRNAV:50,wPB:30,wPE:20,cons:18000, assets:15000}, // Hoàng Huy; EPS TTM thấp 193 (dự án chưa ghi nhận) → RNAV neo
-  CII:{price:17500,shares:960, netDebt:20000, bookEq:12000, landBook:3000,  eps:205,  bvps:14003,tpb:1.2,tpe:20,uplift:20,ownEff:90,wRNAV:30,wPB:40,wPE:30,cons:18000, assets:35000}, // hạ tầng BOT, đòn bẩy cao; EPS TTM 205, định giá theo book
-  VCG:{price:19800,shares:600, netDebt:8000,  bookEq:12000, landBook:3000,  eps:1935, bvps:20000,tpb:1.2,tpe:12,uplift:30,ownEff:90,wRNAV:30,wPB:30,wPE:40,cons:24000, assets:35000}, // Vinaconex; EPS lõi ~1.935 (loại 3.186 tỷ thu nhập TC bất thường Q3)
-  DXS:{price:7430, shares:890, netDebt:3000,  bookEq:6000,  landBook:0,      eps:826,  bvps:11286,tpb:1.0,tpe:11,uplift:0, ownEff:90,wRNAV:10,wPB:35,wPE:55,cons:9000,  assets:12000}, // Đất Xanh Services (môi giới) → P/E; EPS TTM 826, P/E ~9x
-  HHV:{price:11400,shares:570, netDebt:25000, bookEq:8000,  landBook:2000,  eps:1260, bvps:20638,tpb:0.9,tpe:9, uplift:10,ownEff:90,wRNAV:20,wPB:40,wPE:40,cons:14000, assets:38000}, // Đèo Cả BOT, đòn bẩy cao, thu phí ổn định; EPS TTM 1.260
-  VPI:{price:58900,shares:322, netDebt:5000,  bookEq:5000,  landBook:3000,  eps:865,  bvps:15528,tpb:2.0,tpe:14,uplift:40,ownEff:90,wRNAV:45,wPB:25,wPE:30,cons:60000, assets:15000}, // Văn Phú; EPS lumpy 865 → RNAV neo
-  NTL:{price:15450,shares:122, netDebt:-1000, bookEq:3000,  landBook:2500,  eps:200,  bvps:13318,tpb:0.7,tpe:10,uplift:40,ownEff:95,wRNAV:50,wPB:35,wPE:15,cons:20000, assets:5000}, // Lideco; giữa chu kỳ dự án (EPS thấp), quỹ đất giá vốn rẻ, P/B 0.6x
-  CEO:{price:15400,shares:514, netDebt:3000,  bookEq:7000,  landBook:5000,  eps:381,  bvps:10528,tpb:1.1,tpe:14,uplift:30,ownEff:90,wRNAV:45,wPB:35,wPE:20,cons:16000, assets:12000}, // BĐS nghỉ dưỡng Vân Đồn, đầu cơ chu kỳ; EPS TTM 381
-  DPG:{price:39000,shares:154, netDebt:3000,  bookEq:4000,  landBook:2000,  eps:3214, bvps:24655,tpb:1.5,tpe:12,uplift:30,ownEff:90,wRNAV:30,wPB:30,wPE:40,cons:50000, assets:10000}, // Đạt Phương (thủy điện+XD+BĐS); EPS TTM 2.839, dòng tiền điện ổn
-  KOS:{price:36500,shares:225, netDebt:4000,  bookEq:5000,  landBook:3000,  eps:86,   bvps:10776,tpb:1.4,tpe:10,uplift:30,ownEff:90,wRNAV:40,wPB:50,wPE:10,cons:30000, assets:12000}  // Kosy; EPS gần như 0 (P/E vô nghĩa) → định giá theo book/đất
+  DIG:{price:11400,shares:796,netDebt:-915,bookEq:10173,landBook:8000,eps:1052,bvps:12640,tpb:1.2,tpe:14,uplift:30,ownEff:90,wRNAV:50,wPB:35,wPE:15,cons:22000,assets:20486}, // Q2/26: DT TTM 5,036 tỷ · LNST TTM 742 tỷ · LNST Q2 +84% YoY · ROE 8% · P/E 10.8 · P/B 0.9 — quỹ đất lớn, đòn bẩy cao
+  KBC:{price:27400,shares:942,netDebt:27154,bookEq:26970,landBook:12000,eps:1227,bvps:26589,tpb:1.3,tpe:15,uplift:40,ownEff:90,wRNAV:50,wPB:30,wPE:20,cons:32000,assets:74072}, // Q2/26: DT TTM 4,920 tỷ · LNST TTM 1,236 tỷ · LNST Q2 -94% YoY · ROE 4.7% · P/E 22.3 · P/B 1.03
+  HDG:{price:16650,shares:407,netDebt:4129,bookEq:8318,landBook:3000,eps:1803,bvps:16682,tpb:1.2,tpe:9,uplift:30,ownEff:95,wRNAV:35,wPB:30,wPE:35,cons:32000,assets:14290}, // Q2/26: DT TTM 2,769 tỷ · LNST TTM 967 tỷ · LNST Q2 +282% YoY · ROE 10.9% · P/E 9.2 · P/B 1
+  CTD:{price:62800,shares:114,netDebt:2007,bookEq:9652,landBook:0,eps:7046,bvps:86308,tpb:1,tpe:11,uplift:0,ownEff:100,wRNAV:10,wPB:30,wPE:60,cons:90000,assets:38751}, // Q2/26: DT TTM 34,340 tỷ · LNST TTM 788 tỷ · LNST Q2 -27% YoY · ROE 8.3% · P/E 8.9 · P/B 0.73 — NHÀ THẦU XD (không có quỹ đất) → định giá P/E
+  VGC:{price:40450,shares:448,netDebt:3440,bookEq:11741,landBook:6000,eps:3174,bvps:18740,tpb:1.5,tpe:12,uplift:40,ownEff:90,wRNAV:40,wPB:30,wPE:30,cons:50000,assets:27670}, // Q2/26: DT TTM 14,969 tỷ · LNST TTM 1,910 tỷ · LNST Q2 +54% YoY · ROE 16.2% · P/E 12.7 · P/B 2.16 — VLXD + KCN cho thuê
+  SZC:{price:19700,shares:180,netDebt:2034,bookEq:3211,landBook:4000,eps:887,bvps:17840,tpb:1.5,tpe:18,uplift:50,ownEff:90,wRNAV:45,wPB:25,wPE:30,cons:30000,assets:8463}, // Q2/26: DT TTM 700 tỷ · LNST TTM 160 tỷ · LNST Q2 -80% YoY · ROE 5% · P/E 22.2 · P/B 1.1 — KCN Châu Đức
+  SIP:{price:49450,shares:242,netDebt:4039,bookEq:5375,landBook:5000,eps:5924,bvps:20013,tpb:1.8,tpe:11,uplift:40,ownEff:95,wRNAV:35,wPB:25,wPE:40,cons:65000,assets:30073}, // Q2/26: DT TTM 9,100 tỷ · LNST TTM 1,586 tỷ · LNST Q2 +41% YoY · ROE 27.9% · P/E 8.3 · P/B 2.47 — KCN + điện nước
+  VRE:{price:26100,shares:2329,netDebt:698,bookEq:49311,landBook:10000,eps:3191,bvps:21701,tpb:1.4,tpe:11,uplift:10,ownEff:100,wRNAV:15,wPB:30,wPE:55,cons:32000,assets:62806}, // Q2/26: DT TTM 9,231 tỷ · LNST TTM 7,250 tỷ · LNST Q2 +30% YoY · ROE 15% · P/E 8.2 · P/B 1.2 — TTTM cho thuê
+  SJS:{price:56200,shares:297,netDebt:1272,bookEq:3859,landBook:4000,eps:2051,bvps:12949,tpb:1.2,tpe:12,uplift:40,ownEff:90,wRNAV:45,wPB:25,wPE:30,cons:60000,assets:8411}, // Q2/26: DT TTM 1,168 tỷ · LNST TTM 606 tỷ · LNST Q2 +135% YoY · ROE 17.3% · P/E 27.4 · P/B 4.34 — Sudico Nam An Khánh
+  BCM:{price:43350,shares:1035,netDebt:24815,bookEq:22454,landBook:35000,eps:2066,bvps:21112,tpb:2.5,tpe:16,uplift:210,ownEff:95,wRNAV:70,wPB:20,wPE:10,cons:70000,assets:62606}, // Q2/26: DT TTM 4,201 tỷ · LNST TTM 2,169 tỷ · LNST Q2 -86% YoY · ROE 9.7% · P/E 21 · P/B 2.05 — ASSET PLAY: RNAV neo (70%) — quỹ đất 950ha KCN+1.200ha đô thị + 49% VSIP (~11.000ha) mua giá vốn rẻ
+  TCH:{price:13400,shares:912,netDebt:-608,bookEq:14529,landBook:5000,eps:345,bvps:12741,tpb:1.3,tpe:18,uplift:40,ownEff:90,wRNAV:50,wPB:30,wPE:20,cons:18000,assets:22278}, // Q2/26: DT TTM 1,508 tỷ · LNST TTM 367 tỷ · LNST Q2 +191% YoY · ROE 2.6% · P/E 38.8 · P/B 1.05 — Hoàng Huy
+  CII:{price:14700,shares:672,netDebt:22916,bookEq:12956,landBook:3000,eps:171,bvps:14400,tpb:1.2,tpe:20,uplift:20,ownEff:90,wRNAV:30,wPB:40,wPE:30,cons:18000,assets:43467}, // Q2/26: DT TTM 3,124 tỷ · LNST TTM 287 tỷ · LNST Q2 -39% YoY · ROE 1.2% · P/E 85.9 · P/B 1.02 — hạ tầng BOT, đòn bẩy cao
+  VCG:{price:16000,shares:698,netDebt:3974,bookEq:12426,landBook:3000,eps:5821,bvps:16284,tpb:1.2,tpe:12,uplift:30,ownEff:90,wRNAV:30,wPB:30,wPE:40,cons:24000,assets:27899}, // Q2/26: DT TTM 16,349 tỷ · LNST TTM 4,248 tỷ · LNST Q2 -30% YoY · ROE 35.3% · P/E 2.7 · P/B 0.98 — Vinaconex
+  DXS:{price:6070,shares:579,netDebt:2599,bookEq:9062,landBook:0,eps:402,bvps:11183,tpb:1,tpe:11,uplift:0,ownEff:90,wRNAV:10,wPB:35,wPE:55,cons:9000,assets:16223}, // Q2/26: DT TTM 4,504 tỷ · LNST TTM 384 tỷ · Q2 lỗ 45 tỷ (cùng kỳ lãi 316) · ROE 3.6% · P/E 15.1 · P/B 0.54 — Đất Xanh Services (môi giới) → P/E
+  HHV:{price:10050,shares:575,netDebt:17381,bookEq:13038,landBook:2000,eps:1164,bvps:19874,tpb:0.9,tpe:9,uplift:10,ownEff:90,wRNAV:20,wPB:40,wPE:40,cons:14000,assets:41116}, // Q2/26: DT TTM 3,997 tỷ · LNST TTM 736 tỷ · LNST Q2 +13% YoY · ROE 5.7% · P/E 8.6 · P/B 0.51 — Đèo Cả BOT, đòn bẩy cao, thu phí ổn định
+  VPI:{price:68100,shares:320,netDebt:7134,bookEq:5728,landBook:3000,eps:1250,bvps:16883,tpb:2,tpe:14,uplift:40,ownEff:90,wRNAV:45,wPB:25,wPE:30,cons:60000,assets:15855}, // Q2/26: DT TTM 2,685 tỷ · LNST TTM 446 tỷ · LNST Q2 +9952% YoY · ROE 7.6% · P/E 54.5 · P/B 4.03 — Văn Phú
+  NTL:{price:12500,shares:122,netDebt:-60,bookEq:1648,landBook:2500,eps:237,bvps:13511,tpb:0.7,tpe:10,uplift:40,ownEff:95,wRNAV:50,wPB:35,wPE:15,cons:20000,assets:2060}, // Q2/26: DT TTM 17 tỷ · LNST TTM 32 tỷ · LNST Q2 +228% YoY · ROE 1.7% · P/E 52.7 · P/B 0.93 — Lideco
+  CEO:{price:13000,shares:596,netDebt:1277,bookEq:6549,landBook:5000,eps:322,bvps:10524,tpb:1.1,tpe:14,uplift:30,ownEff:90,wRNAV:45,wPB:35,wPE:20,cons:16000,assets:10754}, // Q2/26: DT TTM 1,317 tỷ · LNST TTM 252 tỷ · LNST Q2 +35% YoY · ROE 3.1% · P/E 40.4 · P/B 1.24 — BĐS nghỉ dưỡng Vân Đồn, đầu cơ chu kỳ
+  DPG:{price:29650,shares:119,netDebt:3992,bookEq:3675,landBook:2000,eps:3443,bvps:24969,tpb:1.5,tpe:12,uplift:30,ownEff:90,wRNAV:30,wPB:30,wPE:40,cons:50000,assets:9719}, // Q2/26: DT TTM 5,170 tỷ · LNST TTM 465 tỷ · LNST Q2 +25% YoY · ROE 14.5% · P/E 8.6 · P/B 1.19 — Đạt Phương (thủy điện+XD+BĐS)
+  KOS:{price:34100,shares:216,netDebt:1985,bookEq:2354,landBook:3000,eps:124,bvps:10838,tpb:1.4,tpe:10,uplift:30,ownEff:90,wRNAV:40,wPB:50,wPE:10,cons:30000,assets:5079} // Q2/26: DT TTM 1,615 tỷ · LNST TTM 27 tỷ · LNST Q2 +181% YoY · ROE 1.1% · P/E 275.3 · P/B 3.15 — Kosy
 };
 // FV của tôi = định giá hợp lý tổng hợp (50% mô hình thận trọng + 35% đồng thuận CTCK + 15% chu kỳ/thị trường)
 const FV={KDH:30500,NLG:38000,DXG:17000,PDR:18500,NVL:15000,IDC:46500,HDC:19000,VHM:110000,VIC:0,
@@ -520,35 +520,35 @@ const FV={KDH:30500,NLG:38000,DXG:17000,PDR:18500,NVL:15000,IDC:46500,HDC:19000,
   HHV:14000,VPI:60000,NTL:20000,CEO:16000,DPG:50000,KOS:30000};
 // Hàng tồn kho theo dự án: [tên, sổ sách (tỷ), GIÁ THỊ TRƯỜNG KHU VỰC (tr/m², tham chiếu batdongsan.com T6/2026)]
 const INV={
-  KDH:{tot:29126,note:'Tồn kho 29.126 tỷ (BCTC Q1/2026). Giá TT theo khu vực: Bình Trưng Đông/Cát Lái ~80, Tân Tạo/Bình Tân ~55, Bình Chánh ~50.',rows:[
-    ['Khang Phúc – Tân Tạo (Bình Tân)',8925,60],['An Lập – Bình Trưng Đông (Cát Lái)',5445,85],['Bình Trưng – Bình Trưng Đông',4887,85],
-    ['Đoàn Nguyên – Bình Trưng Đông',3446,85],['Khang Phúc – Bình Hưng 11A (Bình Chánh)',2067,58],['Khang Phúc – Phong Phú 2 (Bình Chánh)',1918,55],
-    ['Bình Trưng Mới (Thủ Đức)',969,85],['Dự án khác',1469,55]]},
-  NLG:{tot:8400,note:'Tồn kho ~8.400 tỷ. Giá TT: Waterpoint/Long An ~28, Izumi/Đồng Nai ~40, Akari/Mizuki HCM ~52-55, Cần Thơ ~28.',rows:[
-    ['Waterpoint (Long An)',4500,32],['Izumi City (Đồng Nai)',1800,50],['Central Lake – Cần Thơ',700,32],
-    ['Akari City (Bình Tân)',600,58],['Mizuki Park (Bình Chánh)',500,60],['Dự án khác',300,45]]},
-  NVL:{tot:155000,note:'Tồn kho ~155.000 tỷ. Giá TT: Phan Thiết ~32, Aqua/Đồng Nai ~42, Hồ Tràm ~38, Grand Manhattan Q1 ~180.',rows:[
-    ['NovaWorld Phan Thiết',48000,38],['Aqua City (Đồng Nai)',42000,50],['NovaWorld Hồ Tràm',32000,45],
-    ['The Grand Manhattan (Q1 HCM)',13000,200],['Sunrise Riverside + khác',20000,55]]},
-  VHM:{tot:125608,note:'Tồn kho 125.608 tỷ (Q1/2026) là số THẬT; chia 12 đại dự án ƯỚC TÍNH. Giá TT = giá SƠ CẤP/mở bán (gồm thấp tầng premium), KHÔNG phải giá căn hộ rẻ thứ cấp.',rows:[
-    ['Green Paradise (Cần Giờ)',28000,110],['Ocean Park 2&3 (Hưng Yên)',22000,75],['Royal Island (Vũ Yên, Hải Phòng)',18000,110],
-    ['Smart City (Nam Từ Liêm, HN)',10000,85],['Grand Park (Thủ Đức)',9000,80],['Cổ Loa / Global Gate (Đông Anh, HN)',9000,100],
-    ['Wonder City (Đan Phượng, HN)',8000,80],['Đại An / Dream City (Hưng Yên)',7000,65],['Phước Vĩnh Tây (Long An)',6000,45],
-    ['Golden Avenue (Móng Cái, QN)',3000,60],['Hải Vân Bay (Đà Nẵng)',3000,80],['Dự án khác',2608,65]]},
-  VIC:{tot:150000,note:'Tồn kho hợp nhất ~Vinhomes + BĐS khác (VinFast ở TSCĐ, không phải tồn kho). Giá TT như VHM.',rows:[
-    ['Vinhomes – Green Paradise (Cần Giờ)',35000,110],['Vinhomes – Ocean Park 2&3 (Hưng Yên)',30000,75],['Vinhomes – Royal Island (Hải Phòng)',25000,110],
-    ['Vinhomes – Grand Park + khác',35000,80],['BĐS khác (Vinpearl…)',25000,60]]},
-  DXG:{tot:13400,note:'Tồn kho ~13.400 tỷ. Giá TT: Gem Sky World/Long Thành ~32, Gem Riverside/Thủ Đức ~65, Opal/Bình Dương ~45.',rows:[
-    ['Gem Sky World (Long Thành, Đồng Nai)',4500,38],['Gem Riverside (Thủ Đức)',2300,70],['Opal Boulevard / Skyline (Bình Dương)',1800,48],
-    ['DXH Park City',1500,45],['Dự án khác',3300,48]]},
-  PDR:{tot:12854,note:'Tồn kho ~12.854 tỷ. Giá TT: Bình Dương ~42-45, Quy Nhơn/Bình Định ~32, Nha Trang ~48.',rows:[
-    ['Bình Dương Tower',3500,48],['Bắc Hà Thanh – Quy Nhơn Iconic',2600,38],['Astral City (Bình Dương)',2000,48],
-    ['Phước Hải (Nha Trang)',1500,55],['Dự án khác',3254,45]]},
-  HDC:{tot:1481,note:'Tồn kho ~1.481 tỷ, phần lớn The Light City. Giá TT Vũng Tàu ~38-45.',rows:[
-    ['The Light City (Vũng Tàu)',976,48],['Ngọc Tước 2 (Vũng Tàu)',230,52],['Khu nhà ở West 3/2',150,42],['Khác',125,45]]},
-  IDC:{tot:8200,note:'KCN — "quỹ đất" ở dở dang. Giá đất KCN/dân cư khu vực thấp: Hựu Thạnh/Long An ~18-22, Phú Mỹ 2/BR-VT ~25, Cầu Nghìn/Thái Bình ~16.',rows:[
-    ['KCN Hựu Thạnh (XDCB, Long An)',3061,22],['KDC nhà ở CN Hựu Thạnh',847,18],['KCN Phú Mỹ 2 mở rộng (BR-VT)',545,25],
-    ['KCN Cầu Nghìn (Thái Bình)',457,16],['Dở dang / tồn kho khác',3290,20]]}
+  KDH:{tot:29488,note:'Tồn kho 29.488 tỷ (BCTC Q2/2026). Giá TT theo khu vực: Bình Trưng Đông/Cát Lái ~80, Tân Tạo/Bình Tân ~55, Bình Chánh ~50.',rows:[
+    ['Khang Phúc – Tân Tạo (Bình Tân)',9036,60],['An Lập – Bình Trưng Đông (Cát Lái)',5513,85],['Bình Trưng – Bình Trưng Đông',4948,85],
+    ['Đoàn Nguyên – Bình Trưng Đông',3489,85],['Khang Phúc – Bình Hưng 11A (Bình Chánh)',2093,58],['Khang Phúc – Phong Phú 2 (Bình Chánh)',1942,55],
+    ['Bình Trưng Mới (Thủ Đức)',981,85],['Dự án khác',1487,55]]},
+  NLG:{tot:8599,note:'Tồn kho 8.599 tỷ. Giá TT: Waterpoint/Long An ~28, Izumi/Đồng Nai ~40, Akari/Mizuki HCM ~52-55, Cần Thơ ~28.',rows:[
+    ['Waterpoint (Long An)',4607,32],['Izumi City (Đồng Nai)',1843,50],['Central Lake – Cần Thơ',717,32],
+    ['Akari City (Bình Tân)',614,58],['Mizuki Park (Bình Chánh)',512,60],['Dự án khác',307,45]]},
+  NVL:{tot:157712,note:'Tồn kho 157.712 tỷ. Giá TT: Phan Thiết ~32, Aqua/Đồng Nai ~42, Hồ Tràm ~38, Grand Manhattan Q1 ~180.',rows:[
+    ['NovaWorld Phan Thiết',48840,38],['Aqua City (Đồng Nai)',42735,50],['NovaWorld Hồ Tràm',32560,45],
+    ['The Grand Manhattan (Q1 HCM)',13228,200],['Sunrise Riverside + khác',20350,55]]},
+  VHM:{tot:206728,note:'Tồn kho 206.728 tỷ (Q2/2026) là số THẬT; chia 12 đại dự án ƯỚC TÍNH. Giá TT = giá SƠ CẤP/mở bán (gồm thấp tầng premium), KHÔNG phải giá căn hộ rẻ thứ cấp.',rows:[
+    ['Green Paradise (Cần Giờ)',46082,110],['Ocean Park 2&3 (Hưng Yên)',36208,75],['Royal Island (Vũ Yên, Hải Phòng)',29624,110],
+    ['Smart City (Nam Từ Liêm, HN)',16458,85],['Grand Park (Thủ Đức)',14812,80],['Cổ Loa / Global Gate (Đông Anh, HN)',14812,100],
+    ['Wonder City (Đan Phượng, HN)',13166,80],['Đại An / Dream City (Hưng Yên)',11521,65],['Phước Vĩnh Tây (Long An)',9875,45],
+    ['Golden Avenue (Móng Cái, QN)',4937,60],['Hải Vân Bay (Đà Nẵng)',4937,80],['Dự án khác',4292,65]]},
+  VIC:{tot:261745,note:'Tồn kho hợp nhất ~Vinhomes + BĐS khác (VinFast ở TSCĐ, không phải tồn kho). Giá TT như VHM.',rows:[
+    ['Vinhomes – Green Paradise (Cần Giờ)',61075,110],['Vinhomes – Ocean Park 2&3 (Hưng Yên)',52350,75],['Vinhomes – Royal Island (Hải Phòng)',43625,110],
+    ['Vinhomes – Grand Park + khác',61075,80],['BĐS khác (Vinpearl…)',43625,60]]},
+  DXG:{tot:15985,note:'Tồn kho 15.985 tỷ. Giá TT: Gem Sky World/Long Thành ~32, Gem Riverside/Thủ Đức ~65, Opal/Bình Dương ~45.',rows:[
+    ['Gem Sky World (Long Thành, Đồng Nai)',5368,38],['Gem Riverside (Thủ Đức)',2744,70],['Opal Boulevard / Skyline (Bình Dương)',2147,48],
+    ['DXH Park City',1789,45],['Dự án khác',3937,48]]},
+  PDR:{tot:13556,note:'Tồn kho 13.556 tỷ. Giá TT: Bình Dương ~42-45, Quy Nhơn/Bình Định ~32, Nha Trang ~48.',rows:[
+    ['Bình Dương Tower',3691,48],['Bắc Hà Thanh – Quy Nhơn Iconic',2742,38],['Astral City (Bình Dương)',2109,48],
+    ['Phước Hải (Nha Trang)',1582,55],['Dự án khác',3432,45]]},
+  HDC:{tot:1465,note:'Tồn kho 1.465 tỷ, phần lớn The Light City. Giá TT Vũng Tàu ~38-45.',rows:[
+    ['The Light City (Vũng Tàu)',965,48],['Ngọc Tước 2 (Vũng Tàu)',228,52],['Khu nhà ở West 3/2',148,42],['Khác',124,45]]},
+  IDC:{tot:7737,note:'KCN — "quỹ đất" ở dở dang. Giá đất KCN/dân cư khu vực thấp: Hựu Thạnh/Long An ~18-22, Phú Mỹ 2/BR-VT ~25, Cầu Nghìn/Thái Bình ~16.',rows:[
+    ['KCN Hựu Thạnh (XDCB, Long An)',2888,22],['KDC nhà ở CN Hựu Thạnh',799,18],['KCN Phú Mỹ 2 mở rộng (BR-VT)',514,25],
+    ['KCN Cầu Nghìn (Thái Bình)',431,16],['Dở dang / tồn kho khác',3104,20]]}
 };
 // Năm BÀN GIAO (book lợi nhuận) từng dự án — khớp thứ tự rows của INV. BĐS ghi nhận LN khi bàn giao.
 const TIMELINE={
@@ -715,10 +715,10 @@ const HIST={
     gross:[1325,1582,1754,2767,3598],
     npat:[1082,716,810,1045,1489],
     eps:[1513,860,820,885,1260],
-    assets:[21632,26481,30758,34074,39862],
-    equity:[11140,15523,19453,21164,21524],
-    inv:[12000,16208,18787,23260,29126],
-    note:'2022–2025: số THỰC (báo cáo năm). 2026F: dự phóng ACBS — LNST mẹ 1.489 gồm ~285 tỷ lãi mua rẻ An Lập (một lần). Tổng TS & VCSH & tồn kho 2026 = số THỰC Q1/2026 (39.862 / 21.524 / 29.126).'}
+    assets:[21632,26481,30758,34074,39481],
+    equity:[11140,15523,19453,21164,19976],
+    inv:[12000,16208,18787,23260,29488],
+    note:'2022–2025: số THỰC (báo cáo năm). 2026F: dự phóng ACBS — LNST mẹ 1.489 gồm ~285 tỷ lãi mua rẻ An Lập (một lần). Tổng TS & VCSH & tồn kho 2026 = số THỰC Q2/2026 (39.481 / 19.976 / 29.488); LNST TTM tới Q2/26 đã đạt 2.418 tỷ.'}
 };
 let histChart=null;
 function renderHist(tk){
@@ -798,7 +798,7 @@ function renderSize(tk){
   }
   async function applyFund(tk){
     const d=await fetchFund(tk); if(!d)return;
-    const eps=d.eps4Q,bvps=d.book_value; let msg='';
+    const eps=d.eps4Q,bvps=(d.book_value4Q||d.book_value); let msg='';
     if(eps>0){setV('eps',Math.round(eps));msg+=' · EPS(TTM) <b>'+fmt(eps)+'</b>';}
     if(bvps>0){setV('bvps',Math.round(bvps));msg+=' · BVPS <b>'+fmt(bvps)+'</b>';}
     recalc(); if(window.refreshUpside)window.refreshUpside();
@@ -837,7 +837,7 @@ function renderSize(tk){
     if(typeof renderHist==='function')renderHist(tk);
     if(typeof loadPriceChart==='function')loadPriceChart(tk);
     refreshUpside();
-    st.textContent='● Đã nạp '+tk+' (13/06/2026) — '+(d.landBook>0?'RNAV quỹ đất + P/B':'P/B + P/E')+' · đang phân tích';
+    st.textContent='● Đã nạp '+tk+' (BCTC Q2/2026) — '+(d.landBook>0?'RNAV quỹ đất + P/B':'P/B + P/E')+' · đang phân tích';
     st.style.color='#6fe3ab';
     if(typeof fetchPrice==='function')fetchPrice();   // ghi đè giá cứng bằng GIÁ THỊ TRƯỜNG thật (tự động)
     applyFund(tk);   // ghi đè EPS/BVPS bằng số liệu THẬT mới nhất 24hMoney

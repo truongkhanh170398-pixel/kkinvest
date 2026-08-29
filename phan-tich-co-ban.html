@@ -51,6 +51,18 @@
   .thesis li{font-size:13px;color:#c7d0e4;margin:3px 0;line-height:1.45}
   .thesis .meth{font-size:11.8px;color:var(--muted);margin-top:8px;border-top:1px solid var(--line);padding-top:7px}
   .thesis .meth b{color:#9cbcff}
+  .fin{margin-top:9px;border-top:1px solid var(--line);padding-top:9px}
+  .fin .lbl{font-size:11.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px}
+  .fin .lbl b{color:#f3cd84}
+  .fin .st24{font-weight:600;text-transform:none;letter-spacing:0;color:var(--muted)}
+  .fingrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(122px,1fr));gap:7px}
+  .fcell{background:#0b1220;border:1px solid var(--line);border-radius:9px;padding:7px 10px;line-height:1.3}
+  .fcell .k{font-size:10.5px;color:var(--muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fcell .v{font-size:15px;font-weight:800;color:#e8edf7;margin-top:1px}
+  .fcell .v small{font-size:10px;color:var(--muted);font-weight:600;margin-left:2px}
+  .fcell .d{font-size:11px;font-weight:700;margin-top:1px}
+  .fcell .d.pos{color:#7fe3b0}.fcell .d.neg{color:#f1a3a3}.fcell .d.neu{color:var(--muted)}
+  .fcell.hi{border-color:#3a4a2a;background:#111a10}
   .ctck{margin-top:9px;border-top:1px solid var(--line);padding-top:9px}
   .ctck .lbl{font-size:11.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
   .tgtrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -117,9 +129,9 @@
     <a class="ns" href="weinstein.html">📈 Weinstein</a>
     <a class="ns" href="danh-muc.html">💼 Danh mục KH</a>
   </div>
-  <span class="tag">Phân tích cơ bản · Định giá theo ngành · RNAV / DCF-comps / P/B-ROE</span>
+  <span class="tag">Phân tích cơ bản · Định giá theo ngành · RNAV / DCF-comps / P/B-ROE</span> <span class="tag" style="background:#3ba776;color:#04122b">Số liệu BCTC Q2/2026</span>
   <h1>Phân tích cơ bản — Nhập mã → tự nhận diện ngành & định giá</h1>
-  <div class="sub"><b>Nhập mã + Enter</b> → tự nhận ngành (BĐS / Sản xuất / Chứng khoán) và chạy đúng phương pháp định giá. Hoặc bấm tab ngành bên dưới để duyệt từng nhóm.</div>
+  <div class="sub"><b>Nhập mã + Enter</b> → tự nhận ngành (BĐS / Sản xuất / Chứng khoán) và chạy đúng phương pháp định giá. Hoặc bấm tab ngành bên dưới để duyệt từng nhóm.<br>📑 Chỉ số BCTC lấy <b>trực tiếp từ 24hMoney</b> — luôn là quý gần nhất đã công bố (hiện tại: <b>Q2/2026</b>). Dữ liệu nền trong khung định giá đã cập nhật theo BCTC Q2/2026.</div>
   <div class="tickbar">
     <input class="tk" id="ticker" placeholder="KDH" autocomplete="off">
     <button class="btn-acc" id="analyzeBtn">🔍 Phân tích mã</button>
@@ -147,59 +159,59 @@ const SECT={
 // ===== Luận điểm đầu tư 2026 (note nhanh) — h: headline, b: gạch đầu dòng =====
 const NOTES={
   // Ngân hàng
-  VCB:{h:'NH quốc doanh đầu ngành — chất lượng tài sản tốt nhất',b:['ROE 16%, NIM ổn định, nợ xấu thấp nhất hệ thống','Top pick Yuanta/ACBS nửa sau 2026 khi lãi suất tạo đỉnh','P/B ~2.2x cao nhưng xứng đáng với chất lượng']},
-  CTG:{h:'NH quốc doanh định giá rẻ, ROE bứt phá',b:['ROE 21.7%, P/E chỉ 6.9x — rẻ nhất nhóm NH lớn','ACBS ưu tiên; NIM & thu ngoài lãi cải thiện','Giá mục tiêu 40.2k (NHSV), upside ~20%']},
-  BID:{h:'NH quốc doanh lớn nhất tổng tài sản',b:['ROE 17.8%; hưởng lợi đầu tư công & bán lẻ','Áp lực tăng vốn để mở rộng tín dụng']},
-  TCB:{h:'NH tư nhân — hệ sinh thái BĐS & trái phiếu',b:['HSC nâng MUA, mục tiêu 46k (+36%)','CASA cao, bancassurance mạnh; P/B 1.27x thấp so lịch sử','Rủi ro: tập trung tín dụng BĐS']},
-  MBB:{h:'NH tư nhân ROE cao, CASA mạnh',b:['ROE 20%, P/E 7.3x; HSC nâng MUA 30.4k','Hệ sinh thái quân đội, tăng trưởng tín dụng tốt']},
-  ACB:{h:'NH bán lẻ thận trọng, tài sản sạch',b:['ROE 17.5%, nợ xấu thấp, ít trái phiếu DN','Yuanta ưu tiên; tăng trưởng đều']},
-  HDB:{h:'ROE cao nhất nhóm NH',b:['ROE 23.2%; tăng trưởng nhanh','NHSV mục tiêu 32.2k; câu chuyện nới room/đối tác']},
-  VPB:{h:'Vốn dày sau thương vụ SMBC',b:['ROE phục hồi 15.5%, FE Credit hồi phục','P/B 1.2x rẻ; NHSV 34k']},
-  SHB:{h:'Rẻ nhất nhóm — P/B 0.91x dưới giá trị sổ sách',b:['ROE 18%; câu chuyện thoái vốn SHBFinance','Định giá chiết khấu sâu']},
+  VCB:{h:'NH quốc doanh đầu ngành — chất lượng tài sản tốt nhất',b:['ROE TTM 17.9%, LNST Q2/26 14.542 tỷ (+65% YoY) — NIM & nợ xấu tốt nhất hệ thống','Top pick Yuanta/ACBS nửa sau 2026 khi lãi suất tạo đỉnh','P/B 2.02x cao nhất nhóm nhưng xứng với chất lượng tài sản']},
+  CTG:{h:'NH quốc doanh định giá rẻ, ROE bứt phá',b:['ROE TTM 21.8%, P/E 6.2x — rẻ nhất nhóm NH quốc doanh','ACBS ưu tiên; NIM & thu ngoài lãi cải thiện','Giá mục tiêu 40.2k (NHSV), upside ~20%']},
+  BID:{h:'NH quốc doanh lớn nhất tổng tài sản',b:['ROE TTM 17.7%, LNST TTM 32.256 tỷ; hưởng lợi đầu tư công & bán lẻ','Áp lực tăng vốn để mở rộng tín dụng']},
+  TCB:{h:'NH tư nhân — hệ sinh thái BĐS & trái phiếu',b:['HSC nâng MUA, mục tiêu 46k (+36%)','CASA cao, bancassurance mạnh; P/B 1.32x vẫn thấp so lịch sử, ROE 14.8%','Rủi ro: tập trung tín dụng BĐS']},
+  MBB:{h:'NH tư nhân ROE cao, CASA mạnh',b:['ROE TTM 20.7%, P/E 6.5x; LNST Q2/26 8.229 tỷ (+40% YoY)','Hệ sinh thái quân đội, tăng trưởng tín dụng tốt']},
+  ACB:{h:'NH bán lẻ thận trọng, tài sản sạch',b:['ROE TTM 16.3%; LNST Q2/26 4.292 tỷ (-12% YoY) — nợ xấu thấp, ít TPDN','Yuanta ưu tiên; tăng trưởng đều']},
+  HDB:{h:'ROE cao nhất nhóm NH',b:['ROE TTM 23.9% — cao nhất nhóm; LNST Q2/26 5.555 tỷ (+58% YoY)','NHSV mục tiêu 32.2k; câu chuyện nới room/đối tác']},
+  VPB:{h:'Vốn dày sau thương vụ SMBC',b:['ROE TTM 16.6%; LNST Q2/26 8.385 tỷ (+72% YoY) — FE Credit hồi phục','P/B 1.24x rẻ; NHSV 34k']},
+  SHB:{h:'Rẻ nhất nhóm — P/B 0.77x dưới giá trị sổ sách',b:['ROE TTM 17.2%, P/E 4.8x; câu chuyện thoái vốn SHBFinance','Định giá chiết khấu sâu']},
   STB:{h:'Hồi phục sau tái cơ cấu, sạch nợ tồn đọng',b:['Xử lý xong tài sản tồn đọng → bứt tốc lợi nhuận','Câu chuyện đấu giá cổ phần & cổ tức trở lại']},
   // Chứng khoán
-  SSI:{h:'Đầu ngành CK — hưởng lợi nâng hạng FTSE 2026',b:['"Must Buy" cho câu chuyện nâng hạng thị trường','Q1/26 LNST +52% YoY, dẫn đầu ngành','Thị phần & quy mô vốn lớn nhất']},
+  SSI:{h:'Đầu ngành CK — hưởng lợi nâng hạng FTSE 2026',b:['"Must Buy" cho câu chuyện nâng hạng thị trường','LNST Q2/26 1.231 tỷ (+43% YoY), TTM 4.802 tỷ — dẫn đầu ngành','Thị phần & quy mô vốn lớn nhất']},
   VND:{h:'CK bán lẻ, đòn bẩy thanh khoản thị trường',b:['Hồi phục sau biến cố trái phiếu','Beta cao — nhạy với dòng tiền & nâng hạng']},
   VCI:{h:'CK khối tổ chức/ngoại, hưởng lợi vốn ngoại',b:['Mạnh mảng môi giới tổ chức & tư vấn','Đòn bẩy câu chuyện nâng hạng FTSE']},
   HCM:{h:'CK chuyển hướng margin & trái phiếu',b:['Rút ~4.000 tỷ tự doanh, tập trung margin','LN mục tiêu 2.302 tỷ (+56% YoY)']},
-  VIX:{h:'ROE cao nhờ tự doanh — biến động mạnh',b:['Lợi nhuận phụ thuộc tự doanh, kém ổn định','Cẩn trọng P/E khi tự doanh lãi đột biến']},
+  VIX:{h:'ROE cao nhờ tự doanh — biến động mạnh',b:['LNST Q2/26 chỉ 76 tỷ (-94% YoY) — tự doanh hụt, lợi nhuận kém ổn định','Cẩn trọng P/E khi tự doanh lãi đột biến']},
   // Bất động sản
-  VHM:{h:'Backlog bàn giao khổng lồ 2026',b:['Kế hoạch DT 285k tỷ (+86%), LN 60k tỷ (+38%)','HSC nâng dự phóng 2026/27; bán buôn khởi sắc','ROE 27.8% — định giá P/E hợp lý hơn RNAV thuần']},
-  VIC:{h:'Holding — định giá theo SOTP, premium VinFast',b:['P/E 130x, P/B 10x: market định giá kỳ vọng VinFast','Rủi ro dòng tiền tài trợ VinFast; theo dõi nợ vay']},
+  VHM:{h:'Backlog bàn giao khổng lồ 2026',b:['DT TTM 236.434 tỷ, LNST TTM 84.549 tỷ; LNST Q2/26 26.467 tỷ (+222% YoY)','HSC nâng dự phóng 2026/27; bán buôn khởi sắc','ROE TTM 32.7%, P/E 7.5x — định giá P/E hợp lý hơn RNAV thuần']},
+  VIC:{h:'Holding — định giá theo SOTP, premium VinFast',b:['P/E 80.8x, P/B 10.8x: thị trường định giá kỳ vọng VinFast','Rủi ro dòng tiền tài trợ VinFast; theo dõi nợ vay']},
   KDH:{h:'Quỹ đất sạch TP.HCM — chiết khấu RNAV sâu',b:['Giao dịch chiết khấu ~44% so RNAV','LN 2026 mục tiêu +50–150% (Gladia, Privia, Clarita)','LD Keppel — bàn giao cao tầng ~2027']},
-  NLG:{h:'Nhà ở vừa túi tiền — dòng tiền tốt, ít đòn bẩy',b:['Waterpoint/Izumi/Akari bàn giao đều','Q1/26 LN tăng 2 chữ số; quỹ đất lớn sạch']},
-  DXG:{h:'Phục hồi — chờ Gem Riverside/Sky World',b:['Q1/26 LN ~130 tỷ; đòn bẩy giảm dần','Catalyst: mở bán Gem Riverside (Thủ Đức)']},
+  NLG:{h:'Nhà ở vừa túi tiền — dòng tiền tốt, ít đòn bẩy',b:['Waterpoint/Izumi/Akari bàn giao đều','LNST Q2/26 chỉ 66 tỷ (-32% YoY) — bàn giao dồn về nửa cuối năm; quỹ đất lớn sạch']},
+  DXG:{h:'Phục hồi — chờ Gem Riverside/Sky World',b:['LNST Q2/26 chỉ 35 tỷ (-87% YoY), TTM 497 tỷ; đòn bẩy giảm dần','Catalyst: mở bán Gem Riverside (Thủ Đức)']},
   PDR:{h:'Tái cấu trúc nợ, mở bán trở lại',b:['Giảm nợ vay mạnh; quỹ đất Bình Dương/Quy Nhơn','Rủi ro pha loãng từ phát hành cổ phiếu']},
   NVL:{h:'Tái cơ cấu nợ — rủi ro cao, đòn bẩy lớn',b:['Quỹ đất khổng lồ (Aqua, NovaWorld) nhưng kẹt pháp lý/dòng tiền','Định giá theo P/B; chỉ hợp khẩu vị rủi ro cao']},
   DIG:{h:'Đầu cơ chu kỳ — quỹ đất lớn, đòn bẩy cao',b:['Nhạy với chu kỳ & dòng tiền; pháp lý dự án chậm']},
-  KBC:{h:'KCN hưởng lợi FDI & dịch chuyển chuỗi cung',b:['Quỹ đất KCN lớn (Bắc Ninh, Long An)','Dòng vốn FDI điện tử là động lực 2026']},
+  KBC:{h:'KCN hưởng lợi FDI & dịch chuyển chuỗi cung',b:['Quỹ đất KCN lớn (Bắc Ninh, Long An); LNST Q2/26 chỉ 26 tỷ (-94% YoY) — bàn giao lô đất dồn cục','Dòng vốn FDI điện tử là động lực 2026']},
   IDC:{h:'KCN cho thuê — dòng tiền đều, cổ tức cao',b:['Hưởng lợi FDI; quỹ đất Hựu Thạnh/Phú Mỹ 2','ROE cao, cổ tức tiền mặt hấp dẫn']},
-  HDG:{h:'BĐS + thủy điện — dòng tiền điện ổn định',b:['Mảng điện bù dòng tiền cho BĐS','Q1/26 tăng trưởng 2 chữ số']},
+  HDG:{h:'BĐS + thủy điện — dòng tiền điện ổn định',b:['Mảng điện bù dòng tiền cho BĐS','LNST Q2/26 104 tỷ (+282% YoY), TTM 967 tỷ']},
   BCM:{h:'Ông lớn KCN Bình Dương (VSIP)',b:['Quỹ đất KCN & đô thị khổng lồ','Liên doanh VSIP; định giá cao theo tài sản']},
   // Sản xuất / Tiêu dùng / Năng lượng
-  HPG:{h:'Thép đầu ngành — Dung Quất 2 ramp công suất',b:['DQ2 nâng công suất ~2x giai đoạn 2025–26','Hưởng lợi đầu tư công & thép HRC nội địa','Chu kỳ thép hồi phục; ROE 16.4%']},
+  HPG:{h:'Thép đầu ngành — Dung Quất 2 ramp công suất',b:['DQ2 nâng công suất ~2x giai đoạn 2025–26','Hưởng lợi đầu tư công & thép HRC nội địa','Chu kỳ thép hồi phục; ROE TTM 17.4%, LNST Q2/26 6.424 tỷ (+51% YoY)']},
   HSG:{h:'Tôn mạ chu kỳ — đòn bẩy giá thép & xuất khẩu',b:['Lợi nhuận biến động theo giá HRC','Định giá quanh P/B do tính chu kỳ']},
   NKG:{h:'Tôn mạ xuất khẩu — nhạy thuế CBPG & giá thép',b:['Rủi ro thuế chống bán phá giá EU/US','Chu kỳ — định giá P/B sàn']},
   GVR:{h:'Cao su → KCN: câu chuyện chuyển đổi quỹ đất',b:['Chuyển đất cao su sang KCN giá trị cao','LN cốt lõi thấp; định giá premium kỳ vọng đất']},
   DGC:{h:'Hóa chất phốt pho đầu ngành — bảng cân đối khỏe',b:['Tiền mặt ròng lớn, ROE cao','Dự án Đức Giang Nghi Sơn (xút-clo) mở rộng']},
   DCM:{h:'Đạm Cà Mau — net cash, cổ tức tốt',b:['Hưởng lợi giá ure & khí; tiền mặt ròng','Đa dạng hóa sang NPK/đạm chức năng']},
   DPM:{h:'Đạm Phú Mỹ — phòng thủ, cổ tức cao',b:['Net cash; nhạy giá ure & khí đầu vào']},
-  MWG:{h:'Bán lẻ phục hồi mạnh — Bách Hóa Xanh có lãi',b:['Q1/26 LNST +78% YoY; ROE 25.4%','BHX qua điểm hòa vốn → đóng góp lợi nhuận','TGDĐ/ĐMX tối ưu chi phí, mở rộng EraBlue']},
-  FPT:{h:'Công nghệ tăng trưởng kép — AI & bán dẫn',b:['ROE 26.8%; xuất khẩu phần mềm tăng 2 chữ số','Mảng AI/Data Center & nhà máy AI là động lực mới','Cổ phiếu phòng thủ-tăng trưởng chất lượng cao']},
-  VNM:{h:'Bò sữa phòng thủ — ROE 31.7%, cổ tức cao',b:['Thị phần dẫn đầu; biên cải thiện nhờ giá nguyên liệu','Cổ tức tiền mặt ~5–6%; SSI/Mirae mục tiêu 72–77k']},
+  MWG:{h:'Bán lẻ phục hồi mạnh — Bách Hóa Xanh có lãi',b:['LNST Q2/26 3.355 tỷ (+102% YoY); ROE TTM 29.2%','BHX qua điểm hòa vốn → đóng góp lợi nhuận','TGDĐ/ĐMX tối ưu chi phí, mở rộng EraBlue']},
+  FPT:{h:'Công nghệ tăng trưởng kép — AI & bán dẫn',b:['ROE TTM 26.5%; LNST Q2/26 2.570 tỷ (-6% YoY) — biên dịch vụ bị ép','Mảng AI/Data Center & nhà máy AI là động lực mới','Cổ phiếu phòng thủ-tăng trưởng chất lượng cao']},
+  VNM:{h:'Bò sữa phòng thủ — ROE TTM 33.9%, cổ tức cao',b:['Thị phần dẫn đầu; biên cải thiện nhờ giá nguyên liệu','Cổ tức tiền mặt ~5–6%; SSI/Mirae mục tiêu 72–77k']},
   MSN:{h:'Tiêu dùng - bán lẻ tích hợp (WinCommerce hồi phục)',b:['WCM đạt điểm hòa vốn → lợi nhuận cải thiện','Giảm đòn bẩy; Masan Consumer là viên ngọc']},
   SAB:{h:'Bia đầu ngành — phòng thủ, cổ tức',b:['Sức mua hồi phục dần; chi phí đầu vào hạ','P/E ~13x quanh trung bình']},
   GAS:{h:'Khí đốt độc quyền — câu chuyện LNG',b:['SSI mục tiêu 86k; dòng tiền & cổ tức ổn','Dự án kho cảng LNG Thị Vải/Sơn Mỹ']},
   PLX:{h:'Bán lẻ xăng dầu đầu ngành — hưởng lợi cơ chế giá',b:['Sản lượng ổn định; thoái vốn PGBank','Định mức kinh doanh xăng dầu cải thiện']},
-  POW:{h:'Điện khí/khí LNG — đầu tư công suất mới',b:['SSI mục tiêu 16k; Nhơn Trạch 3&4 vận hành','Nhu cầu điện tăng, ưu tiên huy động khí']},
+  POW:{h:'Điện khí/khí LNG — đầu tư công suất mới',b:['LNST Q2/26 3.708 tỷ (+387% YoY) — Nhơn Trạch 3&4 chạy full; SSI mục tiêu 16k','Nhu cầu điện tăng, ưu tiên huy động khí']},
   REE:{h:'Hạ tầng điện-nước-cơ điện — dòng tiền đa ngành',b:['Danh mục điện (thủy điện/gió) tạo dòng tiền đều','Mảng M&E & BĐS văn phòng cho thuê ổn định']},
-  PNJ:{h:'Bán lẻ trang sức dẫn đầu — mở rộng thị phần',b:['Thị phần tăng khi tiệm nhỏ rút lui','Nhạy sức mua; biên cải thiện theo giá vàng']},
+  PNJ:{h:'Bán lẻ trang sức dẫn đầu — mở rộng thị phần',b:['⚠ Q2/26 LỖ 283 tỷ (cùng kỳ lãi 437) — giá vàng tăng sốc, thiếu nguồn nguyên liệu','Nhạy sức mua; biên cải thiện theo giá vàng']},
   FRT:{h:'Long Châu dẫn dắt tăng trưởng',b:['Chuỗi nhà thuốc mở rộng nhanh & có lãi','FPT Shop tái cơ cấu giảm lỗ; định giá theo Long Châu']},
   DGW:{h:'Phân phối ICT — hưởng lợi chu kỳ tiêu dùng hồi phục',b:['Mở rộng ngành hàng (gia dụng, F&B, thiết bị)','Nhạy sức mua & ra mắt sản phẩm mới']},
   VJC:{h:'Hàng không giá rẻ — phục hồi du lịch quốc tế',b:['Mở rộng đường bay quốc tế; đội bay tăng','Nhạy giá nhiên liệu & tỷ giá']},
-  HVN:{h:'Hàng không quốc gia — phục hồi sau lỗ lũy kế',b:['ROE/P-B méo do vốn chủ mỏng → định giá theo P/E','Hồi phục khách quốc tế; rủi ro tỷ giá/nhiên liệu cao']},
+  HVN:{h:'Hàng không quốc gia — phục hồi sau lỗ lũy kế',b:['⚠ Q2/26 lỗ 606 tỷ (cùng kỳ lãi 2.956); vốn chủ mỏng làm ROE/P-B méo → định giá theo P/E','Hồi phục khách quốc tế; rủi ro tỷ giá/nhiên liệu cao']},
   GMD:{h:'Cảng biển — hưởng lợi xuất nhập khẩu & Gemalink',b:['Gemalink giai đoạn 2 mở rộng công suất','Sản lượng container tăng theo thương mại']},
-  BSR:{h:'Lọc dầu Dung Quất — chuyển sàn HOSE',b:['ROE 21.5%; crack spread phục hồi','Nâng cấp mở rộng NMLD; cổ tức cải thiện']},
+  BSR:{h:'Lọc dầu Dung Quất — chuyển sàn HOSE',b:['ROE TTM 30.2%; LNST Q2/26 7.667 tỷ (+806% YoY) — crack spread bứt tốc','Nâng cấp mở rộng NMLD; cổ tức cải thiện']},
   ACV:{h:'Độc quyền sân bay — biên lợi nhuận rất cao',b:['Phục hồi khách quốc tế; siêu dự án Long Thành','Hoàn nhập dự phòng tỷ giá là ẩn số lợi nhuận']},
   VHC:{h:'Cá tra xuất khẩu đầu ngành',b:['Hưởng lợi giá & nhu cầu Mỹ/EU hồi phục','Mở rộng collagen/gelatin biên cao']},
   DBC:{h:'Chăn nuôi heo — đòn bẩy giá heo hơi',b:['Lợi nhuận theo chu kỳ giá heo','Mảng vaccine ASF là catalyst dài hạn']},
@@ -214,7 +226,7 @@ const NOTES={
   NAB:{h:'Nam A Bank — tăng trưởng nhanh, quy mô nhỏ',b:['Mở rộng tín dụng mạnh; theo dõi nợ xấu']},
   // --- Chứng khoán / Tài chính (bổ sung) ---
   SHS:{h:'CK + đầu tư — biến động theo tự doanh',b:['Lợi nhuận phụ thuộc danh mục tự doanh cổ phiếu']},
-  MBS:{h:'CK hệ MB — margin tăng nhanh',b:['ROE 15%; hậu thuẫn hệ sinh thái MB','Dư nợ margin/VCSH cao']},
+  MBS:{h:'CK hệ MB — margin tăng nhanh',b:['ROE TTM 14.0%; LNST Q2/26 301 tỷ (+36% YoY); hậu thuẫn hệ sinh thái MB','Dư nợ margin/VCSH cao']},
   FTS:{h:'CK quy mô vừa — nắm cổ phần MSH',b:['Giá trị tự doanh (MSH) ảnh hưởng lớn tới lợi nhuận']},
   BSI:{h:'CK BIDV — hưởng lợi nâng hạng',b:['Đối tác ngoại Hana Securities; mở rộng margin']},
   CTS:{h:'CK VietinBank — hậu thuẫn hệ CTG',b:['Quy mô vừa; nhạy thanh khoản thị trường']},
@@ -233,7 +245,7 @@ const NOTES={
   CII:{h:'Hạ tầng BOT + BĐS — dòng tiền thu phí',b:['Thu phí BOT ổn định; đòn bẩy cao']},
   VCG:{h:'Vinaconex — xây dựng & đầu tư công',b:['Hưởng lợi đầu tư công (cao tốc, sân bay)','Backlog lớn; mảng BĐS bổ trợ']},
   HHV:{h:'Đèo Cả — thu phí BOT hạ tầng dài hạn',b:['Dòng tiền thu phí dài hạn ổn định','Hưởng lợi mạng cao tốc mở rộng']},
-  CTD:{h:'Coteccons — nhà thầu xây dựng số 1 hồi phục',b:['Backlog lớn (FDI/KCN); biên mỏng cải thiện dần']},
+  CTD:{h:'Coteccons — nhà thầu xây dựng số 1 hồi phục',b:['Backlog lớn (FDI/KCN); DT TTM 34.340 tỷ nhưng LNST TTM chỉ 788 tỷ — biên siêu mỏng']},
   VPI:{h:'Văn Phú Invest — phát triển BĐS đô thị',b:['Bàn giao dự án Hà Nội; dòng tiền đều']},
   KOS:{h:'Kosy — BĐS + điện gió',b:['Mảng năng lượng tái tạo bổ trợ dòng tiền']},
   NTL:{h:'Lideco — quỹ đất Bắc Bộ giá vốn thấp',b:['Biên gộp cao; cổ tức tiền mặt đều']},
@@ -297,6 +309,65 @@ async function livePx(tk){
   return null;
 }
 const kk=v=>isFinite(v)?(v/1000).toFixed(1):'—';
+// ===== BCTC quý mới nhất (24hMoney) — số THẬT, tự cập nhật khi có BCTC quý mới =====
+const F24='https://api-finance-t19.24hmoney.vn/v1/web/company/';
+async function j24(url){
+  for(const p of PXPROX){try{const c=new AbortController(),t=setTimeout(()=>c.abort(),9000);
+    const r=await fetch(p(url),{cache:'no-store',signal:c.signal});clearTimeout(t);
+    if(r.ok){const j=await r.json();if(j&&j.status===200&&j.data)return j.data;}}catch(e){}}
+  return null;
+}
+const vnum=n=>(n==null||!isFinite(n))?'—':Math.round(n).toLocaleString('vi-VN');
+const pick=(rows,keys)=>{for(const k of keys){const r=rows.find(x=>x.key===k);
+  if(r&&r.values&&r.values.some(v=>v!=null))return r.values.map(v=>v==null?null:+v);}return null;};
+const sum4=a=>a?a.slice(0,4).reduce((s,v)=>s+(v||0),0):null;
+// YoY chỉ có nghĩa khi quý cùng kỳ dương; nếu gốc âm thì mô tả bằng lời
+function delta(cur,base){
+  if(cur==null||base==null)return {c:'neu',t:'—'};
+  if(base<=0)return cur>0?{c:'pos',t:'cùng kỳ lỗ'}:{c:'neg',t:'cùng kỳ cũng lỗ'};
+  if(cur<0)return {c:'neg',t:'quý này lỗ'};
+  const p=(cur/base-1)*100;
+  return {c:p>=0?'pos':'neg',t:(p>=0?'+':'')+p.toFixed(0)+'% YoY'};
+}
+function cell(k,v,u,d,hi){
+  const dd=d?`<div class="d ${d.c}">${d.t}</div>`:'';
+  return `<div class="fcell${hi?' hi':''}"><div class="k">${k}</div><div class="v">${v}${u?`<small>${u}</small>`:''}</div>${dd}</div>`;
+}
+async function loadFin(tk){
+  const st=$('finSt'); if(st)st.textContent='⏳ đang tải BCTC…';
+  const [i,is]=await Promise.all([
+    j24(F24+'index-with-price?symbol='+tk),
+    j24(F24+`financial-report?symbol=${tk}&type=1&period=2&view=2&expanded=false`)
+  ]);
+  if(curTk!==tk)return;                       // người dùng đã đổi mã → bỏ kết quả cũ
+  const grid=$('finGrid'), qlbl=$('finQ'), st2=$('finSt');
+  if(!grid)return;
+  if(!i&&!is){if(st2)st2.textContent='⚠ không lấy được BCTC (chặn CORS — chạy qua localhost/bản deploy)';return;}
+  const rows=(is&&is.rows)||[], hd=(is&&is.headers)||[];
+  const rev=pick(rows,['isa3','total_revenue','isi64']);
+  const lnst=pick(rows,['isa20','isa22']);
+  const q=hd[0]?`Q${hd[0].quarter}/${String(hd[0].year).slice(2)}`:'quý mới nhất';
+  if(qlbl)qlbl.textContent=q;
+  const n=k=>{const v=i?+i[k]:NaN;return isFinite(v)&&v!==0?v:null;};
+  const marg=(rev&&lnst&&rev[0])?lnst[0]/rev[0]*100:null;
+  let h='';
+  if(rev)  h+=cell('Doanh thu '+q,vnum(rev[0]),'tỷ',delta(rev[0],rev[4]));
+  if(lnst) h+=cell('LNST '+q,vnum(lnst[0]),'tỷ',delta(lnst[0],lnst[4]),true);
+  // biên LN ròng vô nghĩa khi LN đến từ tài chính/thoái vốn còn doanh thu quý gần 0 (vd KDH)
+  if(marg!=null&&Math.abs(marg)<100) h+=cell('Biên LN ròng',marg.toFixed(1),'%');
+  if(rev)  h+=cell('Doanh thu TTM',vnum(sum4(rev)),'tỷ');
+  if(lnst) h+=cell('LNST TTM',vnum(sum4(lnst)),'tỷ',null,true);
+  h+=cell('EPS TTM',vnum(n('eps4Q')),'đ');
+  h+=cell('BVPS',vnum(n('book_value4Q')||n('book_value')),'đ');
+  h+=cell('ROE TTM',n('roe4Q')?n('roe4Q').toFixed(1):'—','%',null,true);
+  h+=cell('ROA TTM',n('roa4Q')?n('roa4Q').toFixed(1):'—','%');
+  h+=cell('P/E TTM',n('pe4Q')?n('pe4Q').toFixed(1):'—','x');
+  h+=cell('P/B',n('pb4Q')?n('pb4Q').toFixed(2):'—','x');
+  if(n('market_cap'))h+=cell('Vốn hóa',vnum(n('market_cap')/1e9),'tỷ');
+  grid.innerHTML=h;
+  if(st2)st2.textContent='● số thật 24hMoney';
+}
+
 function renderThesis(tk,sectKey){
   const n=NOTES[tk];
   const meth={bds:'RNAV / quỹ đất (chuẩn BĐS — giá trị tài sản ròng)',sx:'DCF + P/E + EV/EBITDA (doanh nghiệp sản xuất/dịch vụ)',ck:'P/B theo ROE (ngân hàng & chứng khoán — KHÔNG dùng DCF)'}[sectKey]||'';
@@ -305,6 +376,8 @@ function renderThesis(tk,sectKey){
   h+=`</div>`;
   if(n&&n.b&&n.b.length)h+='<ul>'+n.b.map(x=>`<li>${x}</li>`).join('')+'</ul>';
   h+=`<div class="meth">📐 Phương pháp định giá tự áp theo ngành: <b>${meth}</b></div>`;
+  // ----- Chỉ số BCTC quý mới nhất (số thật 24hMoney) -----
+  h+=`<div class="fin"><div class="lbl">📑 Chỉ số BCTC <b id="finQ">quý mới nhất</b> <span class="st24" id="finSt">⏳ đang tải…</span></div><div class="fingrid" id="finGrid"></div></div>`;
   // ----- Khối định giá CTCK + link báo cáo phân tích -----
   const c=CTCK[tk];
   h+=`<div class="ctck"><div class="lbl">📊 Định giá CTCK — giá mục tiêu &amp; báo cáo phân tích</div><div class="tgtrow">`;
@@ -316,6 +389,7 @@ function renderThesis(tk,sectKey){
   h+=`</div>`; // đóng tgtrow
   h+=`<div class="disc">Giá (nghìn đ). Giá mục tiêu là <b>đồng thuận tham khảo tổng hợp từ báo cáo phân tích CTCK + dữ liệu BCTC</b>, áp phương pháp phù hợp theo ngành (RNAV · DCF-comps · P/B-ROE). Không phải khuyến nghị đầu tư.</div></div>`;
   const el=document.getElementById('thesisBox'); if(el)el.innerHTML=h;
+  loadFin(tk).catch(()=>{});
   // tính upside vs giá hiện tại (bất đồng bộ, không chặn render)
   if(c){livePx(tk).then(px=>{const up=$('ctckUp'); if(!up||curTk!==tk)return;
     if(!px){up.className='upbox';up.textContent='—';return;}

@@ -132,7 +132,7 @@
     <h2 class="sec"><span class="bar"></span>Football field — P/B · P/E · Justified P/B</h2>
     <div class="chartbox"><canvas id="cField"></canvas></div>
 
-    <div class="note">Brokers (CTCK) định giá theo <b>P/B</b> (vốn chủ + ROE) là chính, P/E phụ — KHÔNG dùng DCF (dòng tiền tài chính phức tạp). <b>Justified P/B = (ROE−g)/(COE−g)</b>: nếu ROE &gt; COE → P/B hợp lý &gt; 1. ⚠ Lợi nhuận môi giới/tự doanh rất biến động theo thị trường — dùng ROE chuẩn hóa, cẩn trọng với P/E khi tự doanh lãi đột biến (vd VIX). Số liệu thị trường thật (simplize 14/06/2026); FV/CTCK là ước tính. Không phải khuyến nghị đầu tư.</div>
+    <div class="note">Brokers (CTCK) định giá theo <b>P/B</b> (vốn chủ + ROE) là chính, P/E phụ — KHÔNG dùng DCF (dòng tiền tài chính phức tạp). <b>Justified P/B = (ROE−g)/(COE−g)</b>: nếu ROE &gt; COE → P/B hợp lý &gt; 1. ⚠ Lợi nhuận môi giới/tự doanh rất biến động theo thị trường — dùng ROE chuẩn hóa, cẩn trọng với P/E khi tự doanh lãi đột biến (vd VIX). Số liệu thật từ BCTC Q2/2026 (24hMoney, cập nhật 29/08/2026); FV/CTCK là ước tính. Không phải khuyến nghị đầu tư.</div>
   </div>
 </div>
 
@@ -210,43 +210,43 @@ function drawField(methods,price){
 }
 document.querySelectorAll('input').forEach(el=>el.addEventListener('input',()=>{if(el.id!=='ticker')recalc();}));
 
-// DATA (simplize 14/06/2026). cons/fv = ước tính.
+// DATA — SỐ THẬT BCTC Q2/2026 (24hMoney): price/shares/bookEq(VCSH)/bvps/eps(TTM)/roe(TTM)/lev(TS÷VCSH). cons/fv = ước tính.
 const DATA={
-  SSI:{price:26150,shares:2491,bookEq:39480,bvps:15848,eps:2154,roe:13.86,lev:2.2,marg:1.1,beta:1.3,tpb:1.9,tpe:15,cons:34000,fv:34000},
-  VND:{price:17100,shares:1522,bookEq:21514,bvps:14132,eps:1436,roe:10.59, lev:2.0,marg:1.0,beta:1.4,tpb:1.3,tpe:12,cons:18500,fv:19000},
-  VCI:{price:23600,shares:1148,bookEq:17362,bvps:15128,eps:1315,roe:8.7, lev:1.9,marg:1.0,beta:1.3,tpb:1.6,tpe:16,cons:25000,fv:26000},
-  HCM:{price:27000,shares:1080,bookEq:14435,bvps:13366,eps:1383,roe:9.4, lev:2.3,marg:1.4,beta:1.3,tpb:1.8,tpe:16,cons:27000,fv:28000},
-  VIX:{price:17050,shares:2450,bookEq:21646,bvps:13312, eps:3063,roe:28.9,lev:1.7,marg:0.8,beta:1.5,tpb:1.7,tpe:9, cons:18000,fv:18000},
-  SHS:{price:18200,shares:900, bookEq:12698,bvps:14109,eps:1460,roe:11.3,lev:1.5,marg:0.7,beta:1.4,tpb:1.3,tpe:11,cons:19500,fv:20000},
-  MBS:{price:19200,shares:1001,bookEq:8356, bvps:11698, eps:1783,roe:15.2,lev:2.5,marg:1.8,beta:1.3,tpb:2.0,tpe:14,cons:21000,fv:21000},
-  FTS:{price:23000,shares:381, bookEq:4518, bvps:11856,eps:1059,roe:9.3, lev:1.6,marg:0.9,beta:1.3,tpb:1.7,tpe:18,cons:24000,fv:24000},
-  // ===== NGÂN HÀNG — SỐ THẬT Q1/2026 (24hmoney: EPS TTM, ROE thực; BVPS = EPS×P/E÷P/B). cons = giá mục tiêu CTCK T4–T6/2026 =====
-  VCB:{price:61800,shares:8340,bookEq:233200,bvps:27960,eps:4301,roe:16.1,lev:11,marg:0,beta:0.9,tpb:2.0,tpe:16,cons:70500,fv:70000}, // VCB/Yuanta/ACBS top pick
-  CTG:{price:33700,shares:5370,bookEq:129300,bvps:24070,eps:4906,roe:21.7,lev:13,marg:0,beta:1.0,tpb:1.6,tpe:9, cons:40200,fv:40000}, // NHSV 40.2k; ACBS ưu tiên
-  BID:{price:41900,shares:6900,bookEq:175300,bvps:25400,eps:4393,roe:17.8,lev:14,marg:0,beta:1.0,tpb:1.9,tpe:11,cons:48000,fv:47000},
-  TCB:{price:31800,shares:7065,bookEq:176600,bvps:25000,eps:3676,roe:14.7,lev:7, marg:0,beta:1.1,tpb:1.4,tpe:10,cons:46000,fv:44000}, // HSC nâng Mua, ĐT 46.0k
-  MBB:{price:25100,shares:6102,bookEq:108600,bvps:17800,eps:3442,roe:20.1,lev:9, marg:0,beta:1.1,tpb:1.4,tpe:8, cons:30400,fv:29000}, // HSC nâng Mua, ĐT 30.4k
-  ACB:{price:22300,shares:4467,bookEq:76100, bvps:17030,eps:2802,roe:17.5,lev:8, marg:0,beta:1.0,tpb:1.5,tpe:8, cons:32600,fv:31000}, // Yuanta ưu tiên
-  HDB:{price:28300,shares:3503,bookEq:63100, bvps:16050,eps:3545,roe:23.17,lev:11,marg:0,beta:1.1,tpb:1.6,tpe:8, cons:32200,fv:31000}, // NHSV 32.2k; ROE cao nhất nhóm
-  VPB:{price:26350,shares:7934,bookEq:174300,bvps:21960,eps:3314,roe:15.5,lev:8, marg:0,beta:1.2,tpb:1.3,tpe:9, cons:34000,fv:33000}, // NHSV 34.0k
-  SHB:{price:13900,shares:4070,bookEq:62150, bvps:15270,eps:2617,roe:18.1,lev:13,marg:0,beta:1.2,tpb:1.1,tpe:6, cons:16000,fv:15500}, // P/B 0.91x — rẻ nhất nhóm
-  // ===== Ngân hàng bổ sung — EPS TTM thật (LNST/cp Q1/26); BVPS/ROE ước tính =====
-  LPB:{price:48800,shares:2998,bookEq:39000, bvps:16561,eps:3738,roe:24.7,lev:9, marg:0,beta:1.1,tpb:3.0,tpe:13,cons:45000,fv:45000}, // LNST TTM 11.168 tỷ, ROE ~28%, P/B 3.8x (chạy nóng)
-  VIB:{price:16050,shares:2980,bookEq:38000, bvps:14437,eps:2231,roe:16.42,lev:9, marg:0,beta:1.1,tpb:1.4,tpe:7, cons:22000,fv:22000}, // bán lẻ thuần; EPS TTM 2.547, P/E 6.3x
-  TPB:{price:16250,shares:2642,bookEq:32000, bvps:15989,eps:2652,roe:17.13,lev:10,marg:0,beta:1.1,tpb:1.4,tpe:7, cons:19000,fv:19000}, // NH số; EPS TTM 2.794, ROE 23%
-  SSB:{price:14850,shares:2904,bookEq:30000, bvps:12098,eps:912,roe:7.74,lev:9, marg:0,beta:1.1,tpb:1.5,tpe:13,cons:19000,fv:19000}, // SeABank; EPS TTM 1.077
-  EIB:{price:20850,shares:1836,bookEq:25000, bvps:13617,eps:407, roe:3.0, lev:8, marg:0,beta:1.0,tpb:1.3,tpe:18,cons:18000,fv:18000}, // Eximbank; LN yếu (Q4/25 lỗ), ROE 3% → đắt
-  OCB:{price:12350,shares:2467,bookEq:31000, bvps:13106,eps:1611,roe:12.7,lev:9, marg:0,beta:1.1,tpb:1.0,tpe:7, cons:13000,fv:13000}, // OCB; EPS TTM 1.732, P/B ~1.0x
-  NAB:{price:12750,shares:1530,bookEq:18000, bvps:11895,eps:2192,roe:19.72,lev:9, marg:0,beta:1.1,tpb:1.2,tpe:6, cons:18000,fv:18000}, // Nam A Bank; EPS TTM 2.952, ROE 25%, P/E 4.3x — rẻ
-  MSB:{price:15600,shares:3000,bookEq:33000, bvps:14095,eps:1884,roe:14.14,lev:9, marg:0,beta:1.1,tpb:1.3,tpe:8, cons:16000,fv:16000}, // MSB; EPS TTM 1.959, P/E 8x
+  SSI:{price:21350,shares:2503,bookEq:40724,bvps:13525,eps:1753,roe:13.4,lev:2.4,marg:1.1,beta:1.3,tpb:1.9,tpe:15,cons:34000,fv:34000}, // Q2/26: DT TTM 14,275 tỷ · LNST TTM 4,802 tỷ · LNST Q2 +43% YoY · ROE 13.4% · P/E 12.2 · P/B 1.58
+  VND:{price:16650,shares:1522,bookEq:21432,bvps:14079,eps:1773,roe:12.8,lev:2.3,marg:1,beta:1.4,tpb:1.3,tpe:12,cons:18500,fv:19000}, // Q2/26: DT TTM 7,318 tỷ · LNST TTM 2,699 tỷ · LNST Q2 +139% YoY · ROE 12.8% · P/E 9.4 · P/B 1.18
+  VCI:{price:22850,shares:1152,bookEq:17138,bvps:14918,eps:1335,roe:8.9,lev:2.3,marg:1,beta:1.3,tpb:1.6,tpe:16,cons:25000,fv:26000}, // Q2/26: DT TTM 5,552 tỷ · LNST TTM 1,455 tỷ · LNST Q2 +36% YoY · ROE 8.9% · P/E 17.1 · P/B 1.53
+  HCM:{price:26050,shares:1081,bookEq:14640,bvps:12845,eps:1297,roe:9.8,lev:2.8,marg:1.4,beta:1.3,tpb:1.8,tpe:16,cons:27000,fv:28000}, // Q2/26: DT TTM 5,765 tỷ · LNST TTM 1,323 tỷ · LNST Q2 +42% YoY · ROE 9.8% · P/E 20.1 · P/B 2.03
+  VIX:{price:14100,shares:2450,bookEq:32695,bvps:12708,eps:2156,roe:16.5,lev:1.2,marg:0.8,beta:1.5,tpb:1.7,tpe:9,cons:18000,fv:18000}, // Q2/26: DT TTM 8,326 tỷ · LNST TTM 3,950 tỷ · LNST Q2 -94% YoY · ROE 16.5% · P/E 6.5 · P/B 1.11
+  SHS:{price:15800,shares:899,bookEq:12544,bvps:13946,eps:1119,roe:8.1,lev:2.2,marg:0.7,beta:1.4,tpb:1.3,tpe:11,cons:19500,fv:20000}, // Q2/26: DT TTM 3,427 tỷ · LNST TTM 1,007 tỷ · LNST Q2 -80% YoY · ROE 8.1% · P/E 14.1 · P/B 1.13
+  MBS:{price:17900,shares:1001,bookEq:11942,bvps:11931,eps:1831,roe:14,lev:2.9,marg:1.8,beta:1.3,tpb:2,tpe:14,cons:21000,fv:21000}, // Q2/26: DT TTM 4,394 tỷ · LNST TTM 1,233 tỷ · LNST Q2 +36% YoY · ROE 14% · P/E 9.8 · P/B 1.5
+  FTS:{price:22750,shares:381,bookEq:4434,bvps:11634,eps:1105,roe:9.5,lev:3.3,marg:0.9,beta:1.3,tpb:1.7,tpe:18,cons:24000,fv:24000}, // Q2/26: DT TTM 1,342 tỷ · LNST TTM 421 tỷ · LNST Q2 +29% YoY · ROE 9.5% · P/E 20.6 · P/B 1.96
+  // ===== NGÂN HÀNG — SỐ THẬT BCTC Q2/2026 (24hMoney). cons = giá mục tiêu CTCK T4–T6/2026 =====
+  VCB:{price:60100,shares:8356,bookEq:248491,bvps:29729,eps:4984,roe:17.9,lev:10.7,marg:0,beta:0.9,tpb:2,tpe:16,cons:70500,fv:70000}, // Q2/26: DT TTM 151,734 tỷ · LNST TTM 41,648 tỷ · LNST Q2 +65% YoY · ROE 17.9% · P/E 12.1 · P/B 2.02 — VCB/Yuanta/ACBS top pick
+  CTG:{price:31950,shares:7767,bookEq:200214,bvps:25616,eps:5172,roe:21.8,lev:14.8,marg:0,beta:1,tpb:1.6,tpe:9,cons:40200,fv:40000}, // Q2/26: DT TTM 194,886 tỷ · LNST TTM 40,173 tỷ · LNST Q2 +21% YoY · ROE 21.8% · P/E 6.2 · P/B 1.25 — NHSV 40.2k · ACBS ưu tiên
+  BID:{price:36850,shares:7280,bookEq:198783,bvps:24819,eps:4250,roe:17.7,lev:17.3,marg:0,beta:1,tpb:1.9,tpe:11,cons:48000,fv:47000}, // Q2/26: DT TTM 212,359 tỷ · LNST TTM 32,256 tỷ · LNST Q2 +21% YoY · ROE 17.7% · P/E 8.7 · P/B 1.48
+  TCB:{price:33400,shares:7086,bookEq:188997,bvps:25283,eps:3829,roe:14.8,lev:6.7,marg:0,beta:1.1,tpb:1.4,tpe:10,cons:46000,fv:44000}, // Q2/26: DT TTM 104,894 tỷ · LNST TTM 27,116 tỷ · LNST Q2 +18% YoY · ROE 14.8% · P/E 8.7 · P/B 1.32 — HSC nâng Mua, ĐT 46.0k
+  MBB:{price:21050,shares:8055,bookEq:156763,bvps:15632,eps:3234,roe:20.7,lev:11.1,marg:0,beta:1.1,tpb:1.4,tpe:8,cons:30400,fv:29000}, // Q2/26: DT TTM 137,752 tỷ · LNST TTM 30,078 tỷ · LNST Q2 +40% YoY · ROE 20.7% · P/E 6.5 · P/B 1.35 — HSC nâng Mua, ĐT 30.4k
+  ACB:{price:22650,shares:5804,bookEq:99315,bvps:17110,eps:2701,roe:16.3,lev:10.8,marg:0,beta:1,tpb:1.5,tpe:8,cons:32600,fv:31000}, // Q2/26: DT TTM 77,404 tỷ · LNST TTM 15,678 tỷ · LNST Q2 -12% YoY · ROE 16.3% · P/E 8.4 · P/B 1.32 — Yuanta ưu tiên
+  HDB:{price:27800,shares:5005,bookEq:90224,bvps:17151,eps:3895,roe:23.9,lev:11.6,marg:0,beta:1.1,tpb:1.6,tpe:8,cons:32200,fv:31000}, // Q2/26: DT TTM 88,590 tỷ · LNST TTM 19,097 tỷ · LNST Q2 +58% YoY · ROE 23.9% · P/E 7.1 · P/B 1.62 — NHSV 32.2k · ROE cao nhất nhóm
+  VPB:{price:27800,shares:7934,bookEq:191215,bvps:22476,eps:3758,roe:16.6,lev:7.9,marg:0,beta:1.2,tpb:1.3,tpe:9,cons:34000,fv:33000}, // Q2/26: DT TTM 154,342 tỷ · LNST TTM 29,816 tỷ · LNST Q2 +72% YoY · ROE 16.6% · P/E 7.4 · P/B 1.24 — NHSV 34.0k
+  SHB:{price:12200,shares:4594,bookEq:75154,bvps:15939,eps:2567,roe:17.2,lev:12.8,marg:0,beta:1.2,tpb:1.1,tpe:6,cons:16000,fv:15500}, // Q2/26: DT TTM 74,743 tỷ · LNST TTM 12,105 tỷ · LNST Q2 -2% YoY · ROE 17.2% · P/E 4.8 · P/B 0.77
+  // ===== Ngân hàng bổ sung — SỐ THẬT BCTC Q2/2026 =====
+  LPB:{price:49950,shares:2987,bookEq:43030,bvps:14405,eps:3780,roe:24.7,lev:14.3,marg:0,beta:1.1,tpb:3,tpe:13,cons:45000,fv:45000}, // Q2/26: DT TTM 51,399 tỷ · LNST TTM 11,292 tỷ · LNST Q2 +5% YoY · ROE 24.7% · P/E 13.2 · P/B 3.47
+  VIB:{price:14950,shares:3404,bookEq:47838,bvps:14053,eps:2180,roe:15.7,lev:12.1,marg:0,beta:1.1,tpb:1.4,tpe:7,cons:22000,fv:22000}, // Q2/26: DT TTM 48,802 tỷ · LNST TTM 7,419 tỷ · LNST Q2 -8% YoY · ROE 15.7% · P/E 6.9 · P/B 1.06 — bán lẻ thuần
+  TPB:{price:14650,shares:2774,bookEq:49566,bvps:16515,eps:2723,roe:16.5,lev:11,marg:0,beta:1.1,tpb:1.4,tpe:7,cons:19000,fv:19000}, // Q2/26: DT TTM 44,971 tỷ · LNST TTM 7,579 tỷ · LNST Q2 +12% YoY · ROE 16.5% · P/E 5.4 · P/B 0.89 — NH số
+  SSB:{price:17100,shares:3429,bookEq:42195,bvps:12280,eps:871,roe:7.3,lev:10.1,marg:0,beta:1.1,tpb:1.5,tpe:13,cons:19000,fv:19000}, // Q2/26: DT TTM 29,513 tỷ · LNST TTM 2,985 tỷ · LNST Q2 -13% YoY · ROE 7.3% · P/E 19.6 · P/B 1.39 — SeABank
+  EIB:{price:17300,shares:1869,bookEq:26488,bvps:14220,eps:264,roe:1.9,lev:10,marg:0,beta:1,tpb:1.3,tpe:18,cons:18000,fv:18000}, // Q2/26: DT TTM 19,015 tỷ · LNST TTM 492 tỷ · LNST Q2 -51% YoY · ROE 1.9% · P/E 65.5 · P/B 1.22 — Eximbank
+  OCB:{price:11000,shares:3063,bookEq:35822,bvps:11697,eps:1459,roe:13,lev:9.8,marg:0,beta:1.1,tpb:1,tpe:7,cons:13000,fv:13000}, // Q2/26: DT TTM 27,610 tỷ · LNST TTM 4,453 tỷ · LNST Q2 +23% YoY · ROE 13% · P/E 7.5 · P/B 0.94 — OCB
+  NAB:{price:11550,shares:2059,bookEq:25892,bvps:12457,eps:2261,roe:19.5,lev:17.4,marg:0,beta:1.1,tpb:1.2,tpe:6,cons:18000,fv:18000}, // Q2/26: DT TTM 30,429 tỷ · LNST TTM 4,692 tỷ · LNST Q2 +17% YoY · ROE 19.5% · P/E 5.1 · P/B 0.93 — Nam A Bank
+  MSB:{price:13350,shares:3120,bookEq:45247,bvps:12085,eps:1573,roe:13.7,lev:9.7,marg:0,beta:1.1,tpb:1.3,tpe:8,cons:16000,fv:16000}, // Q2/26: DT TTM 28,671 tỷ · LNST TTM 5,890 tỷ · LNST Q2 +1% YoY · ROE 13.7% · P/E 8.5 · P/B 1.1 — MSB
   // ===== Bảo hiểm & CK bổ sung =====
-  BSI:{price:34650,shares:234, bookEq:4000,  bvps:20810,eps:1858,roe:9.2,lev:2.0,marg:1.0,beta:1.3,tpb:2.0,tpe:16,cons:38000,fv:38000}, // CK BIDV (đối tác Hana); EPS TTM 2.035
-  CTS:{price:25850,shares:232, bookEq:4000,  bvps:10677,eps:2000,roe:19.39,lev:2.5,marg:1.2,beta:1.4,tpb:1.5,tpe:14,cons:30000,fv:30000}, // CK VietinBank; EPS lõi ~2.000 (Q3 đột biến tự doanh)
-  BVH:{price:66200,shares:742, bookEq:25000, bvps:33693,eps:3860,roe:11.5,lev:5.0,marg:0,beta:1.0,tpb:1.8,tpe:16,cons:60000,fv:60000}, // Bảo Việt; EPS TTM 3.860, hưởng lợi lãi suất & TTCK
-  PVI:{price:76900,shares:234, bookEq:9000,  bvps:38462,eps:5634,roe:14.6,lev:4.0,marg:0,beta:0.9,tpb:1.9,tpe:14,cons:80000,fv:80000}, // PVI bảo hiểm phi nhân thọ; EPS TTM ~5.634, cổ tức cao
-  VDS:{price:14700,shares:272, bookEq:3500,  bvps:10917,eps:872, roe:6.7, lev:2.0,marg:0.8,beta:1.5,tpb:1.2,tpe:12,cons:16000,fv:16000}, // CK Rồng Việt nhỏ, biến động mạnh (Q1 lỗ)
-  BMI:{price:14400,shares:180, bookEq:3500,  bvps:19444,eps:1400,roe:8.0, lev:4.0,marg:0,beta:1.0,tpb:1.0,tpe:12,cons:18000,fv:18000}, // Bảo Minh; EPS ~1.400, catalyst SCIC thoái vốn
-  EVF:{price:13600,shares:790, bookEq:8000,  bvps:13336,eps:1269,roe:9.4,lev:6.0,marg:0,beta:1.2,tpb:1.3,tpe:11,cons:16000,fv:16000}  // Tài chính EVN; EPS TTM 1.269, hưởng đầu tư ngành điện
+  BSI:{price:29200,shares:270,bookEq:5696,bvps:21103,eps:1937,roe:9.4,lev:3.4,marg:1,beta:1.3,tpb:2,tpe:16,cons:38000,fv:38000}, // Q2/26: DT TTM 2,568 tỷ · LNST TTM 523 tỷ · LNST Q2 +21% YoY · ROE 9.4% · P/E 15.1 · P/B 1.38 — CK BIDV (đối tác Hana)
+  CTS:{price:23300,shares:272,bookEq:2866,bvps:10527,eps:1385,roe:13.2,lev:4.3,marg:1.2,beta:1.4,tpb:1.5,tpe:14,cons:30000,fv:30000}, // Q2/26: DT TTM 1,762 tỷ · LNST TTM 377 tỷ · LNST Q2 -91% YoY · ROE 13.2% · P/E 16.8 · P/B 2.21 — CK VietinBank
+  BVH:{price:64000,shares:742,bookEq:27324,bvps:35388,eps:4472,roe:13.2,lev:11.6,marg:0,beta:1,tpb:1.8,tpe:16,cons:60000,fv:60000}, // Q2/26: DT TTM 40,837 tỷ · LNST TTM 3,320 tỷ · LNST Q2 +55% YoY · ROE 13.2% · P/E 14.3 · P/B 1.81 — Bảo Việt
+  PVI:{price:66000,shares:234,bookEq:9476,bvps:35302,eps:5142,roe:15.2,lev:4.9,marg:0,beta:0.9,tpb:1.9,tpe:14,cons:80000,fv:80000}, // Q2/26: DT TTM 10,592 tỷ · LNST TTM 1,322 tỷ · LNST Q2 +1% YoY · ROE 15.2% · P/E 12.8 · P/B 1.87 — PVI bảo hiểm phi nhân thọ
+  VDS:{price:12100,shares:272,bookEq:3014,bvps:10875,eps:1044,roe:9.4,lev:2.6,marg:0.8,beta:1.5,tpb:1.2,tpe:12,cons:16000,fv:16000}, // Q2/26: DT TTM 1,151 tỷ · LNST TTM 283 tỷ · Q2 lãi 37 tỷ (cùng kỳ lỗ 11) · ROE 9.4% · P/E 11.6 · P/B 1.11 — CK Rồng Việt nhỏ, biến động mạnh (Q1 lỗ)
+  BMI:{price:14000,shares:151,bookEq:3087,bvps:20505,eps:1983,roe:10,lev:2.8,marg:0,beta:1,tpb:1,tpe:12,cons:18000,fv:18000}, // Q2/26: DT TTM 5,513 tỷ · LNST TTM 298 tỷ · LNST Q2 +57% YoY · ROE 10% · P/E 7.1 · P/B 0.68 — Bảo Minh
+  EVF:{price:12400,shares:761,bookEq:10415,bvps:13693,eps:1273,roe:9.6,lev:8.8,marg:0,beta:1.2,tpb:1.3,tpe:11,cons:16000,fv:16000} // Q2/26: DT TTM 6,791 tỷ · LNST TTM 968 tỷ · LNST Q2 +20% YoY · ROE 9.6% · P/E 9.7 · P/B 0.91 — Tài chính EVN
 };
 const FV={SSI:34000,VND:19000,VCI:26000,HCM:28000,VIX:18000,SHS:20000,MBS:21000,FTS:24000,
   VCB:70000,CTG:40000,BID:47000,TCB:44000,MBB:29000,ACB:31000,HDB:31000,VPB:33000,SHB:15500,
@@ -263,7 +263,7 @@ async function fetchFund(tk){
 }
 async function applyFund(tk){
   const d=await fetchFund(tk); if(!d)return;
-  const eps=d.eps4Q,bvps=d.book_value,roe=d.roe4Q;
+  const eps=d.eps4Q,bvps=(d.book_value4Q||d.book_value),roe=d.roe4Q;
   if(eps>0)setV('eps',Math.round(eps));
   if(bvps>0)setV('bvps',Math.round(bvps));
   if(roe>0&&$('roe'))setV('roe',+roe.toFixed(1));
@@ -287,7 +287,7 @@ function loadTicker(tk){
   const ce=$('oCons');if(ce){const u=(d.cons-d.price)/d.price*100;ce.textContent=d.cons>0?('🎯 CTCK: '+fmt(d.cons)+'đ ('+(u>=0?'+':'')+u.toFixed(0)+'%)'):'';}
   const fe=$('oFV'),fvv=FV[tk]||0;if(fe){const u=(fvv-d.price)/d.price*100;fe.textContent=fvv>0?('💡 FV của tôi: '+fmt(fvv)+'đ ('+(u>=0?'+':'')+u.toFixed(0)+'%)'):'';}
   if(typeof loadPriceChart==='function')loadPriceChart(tk);
-  st.textContent='● Đã nạp '+tk+' (14/06/2026) — P/B + P/E';st.style.color='#6fe3ab';
+  st.textContent='● Đã nạp '+tk+' (BCTC Q2/2026) — P/B + P/E';st.style.color='#6fe3ab';
 }
 $('analyzeBtn').addEventListener('click',()=>loadTicker(($('ticker').value||'').trim().toUpperCase()));
 $('ticker').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();loadTicker(($('ticker').value||'').trim().toUpperCase());}});
