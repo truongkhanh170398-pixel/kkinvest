@@ -266,7 +266,7 @@
       <div class="htxt"><b>Dòng tiền theo nhóm nhà đầu tư</b><span id="ndTieu">—</span></div>
       <div class="hact">
         <div class="seg sm" id="segSan"><button class="on" data-c="10">HOSE</button><button data-c="02">HNX</button><button data-c="03">UPCOM</button></div>
-        <div class="seg sm" id="segKy"><button class="on" data-k="1">1 phiên</button><button data-k="5">5 phiên</button><button data-k="20">20 phiên</button></div>
+        <div class="seg sm" id="segKy"><button class="on" data-k="1">1 phiên</button><button data-k="5">5 phiên</button><button data-k="20">20 phiên</button><button data-k="60">60 phiên</button><button data-k="ytd">Từ đầu năm</button></div>
         <span class="stat" id="ndStat">⏳ đang tải…</span>
       </div></div>
     <div class="ndgrid" id="ndCards"></div>
@@ -916,9 +916,10 @@ async function ndLoad(code){
   ND.cache[code]=o; return o;
 }
 function ndSum(rows,n){
-  const s={fB:0,fS:0,pB:0,pS:0,tot:0,totKl:0,fBq:0,fSq:0,coTd:false,coTot:false};
+  const s={fB:0,fS:0,pB:0,pS:0,tot:0,totKl:0,fBq:0,fSq:0,pBq:0,pSq:0,coTdKl:false,coTd:false,coTot:false};
   rows.slice(0,n).forEach(r=>{
     s.fB+=r.fB||0; s.fS+=r.fS||0; s.fBq+=r.fBq||0; s.fSq+=r.fSq||0;
+    if(r.pBq!=null){s.pBq+=r.pBq;s.pSq+=r.pSq;s.coTdKl=true;}
     if(r.pB!=null){s.pB+=r.pB;s.pS+=r.pS;s.coTd=true;} else if(r.pNet!=null){s.pB+=Math.max(r.pNet,0);s.pS+=Math.max(-r.pNet,0);s.coTd=true;}
     if(r.tot!=null){s.tot+=r.tot;s.totKl+=r.totKl||0;s.coTot=true;}
   });
@@ -955,10 +956,84 @@ function ndBang(tieu,arr,mau){
       <h4 style="margin-top:12px">${tieu} — <span>bán ròng mạnh nhất</span></h4>
       ${dn.map(x=>row(x,0)).join('')||'<div class="ndrow" style="color:var(--muted)">Không có mã bán ròng.</div>'}</div>`;
 }
+
+/* ── Nguồn DÀI HẠN (VNDirect finfo) — 24hMoney chặn cứng ở 18–20 phiên nên không
+      cộng được từ đầu năm. VNDirect có khối ngoại & tự doanh cấp chỉ số từ 2021–2022,
+      và accumulatedVal của nó khớp tuyệt đối với tổng GTGD của 24hMoney (đã đối chiếu). ── */
+const VND_MA={'10':'VNINDEX','02':'HNX','03':'UPCOM'};
+async function jVnd(path){
+  const u='https://api-finfo.vndirect.com.vn/v4/'+path;
+  const via=[x=>x,x=>'/api/proxy?url='+encodeURIComponent(x)];
+  for(const p of via){
+    try{const c=new AbortController(),t=setTimeout(()=>c.abort(),20000);
+      const r=await fetch(p(u),{cache:'no-store',signal:c.signal});clearTimeout(t);
+      if(r.ok){const j=await r.json();if(j&&j.data)return j.data;}
+    }catch(e){}
+  }
+  return null;
+}
+async function ndLoadDai(code){
+  const k='dai'+code; if(ND.cache[k])return ND.cache[k];
+  const ma=VND_MA[code]; if(!ma)return null;
+  const tu=new Date().getFullYear()+'-01-01';
+  const [fo,pr,mk]=await Promise.all([
+    jVnd(`foreigns?q=code:${ma}~tradingDate:gte:${tu}&size=400&sort=tradingDate`),
+    jVnd(`proprietary_trading?q=code:${ma}~date:gte:${tu}&size=400&sort=date`),
+    jVnd(`vnmarket_prices?q=code:${ma}~date:gte:${tu}&size=400&sort=date`)
+  ]);
+  if(!fo&&!mk)return null;
+  const M={}, at=d=>(M[d]=M[d]||{d});
+  (mk||[]).forEach(r=>{const o=at(r.date);
+    o.tot=(r.accumulatedVal||0)/1e9; o.totKl=r.accumulatedVol||0; o.vni=r.close;});
+  (fo||[]).forEach(r=>{const o=at(r.tradingDate);
+    o.fB=(r.buyVal||0)/1e9; o.fS=(r.sellVal||0)/1e9; o.fBq=r.buyVol||0; o.fSq=r.sellVol||0;});
+  (pr||[]).forEach(r=>{const o=at(r.date);
+    o.pB=(r.buyingVal||0)/1e9; o.pS=(r.sellingVal||0)/1e9; o.pBq=r.buyingVol||0; o.pSq=r.sellingVol||0;});
+  const rows=Object.values(M).sort((a,b)=>a.d<b.d?1:-1).filter(o=>o.fB!=null&&o.tot!=null);
+  rows.forEach(o=>{
+    o.fNet=o.fB-o.fS;
+    o.pNet=(o.pB!=null)?o.pB-o.pS:null;
+    if(o.pB!=null){o.dB=o.tot-o.fB-o.pB; o.dS=o.tot-o.fS-o.pS; o.dNet=-(o.fNet+o.pNet);}
+    else {o.dB=o.tot-o.fB; o.dS=o.tot-o.fS; o.dNet=-o.fNet;}
+  });
+  const o={rows,topF:[],topP:[],nguon:'VNDirect'};
+  ND.cache[k]=o; return o;
+}
+/* biểu đồ LŨY KẾ từ đầu kỳ — hợp với khung dài, thấy rõ ai gom ai xả cả năm */
+function ndVeLuyKe(R){
+  let cf=0,cp=0,cd=0;
+  const F=[],P=[],D2=[];
+  R.forEach(r=>{cf+=r.fNet||0;cp+=r.pNet||0;cd+=r.dNet||0;F.push(cf);P.push(cp);D2.push(cd);});
+  const lab=R.map(r=>r.d.slice(8,10)+'/'+r.d.slice(5,7));
+  if(ND.chart)ND.chart.destroy();
+  ND.chart=new Chart($('chNdt'),{data:{labels:lab,datasets:[
+    {type:'line',label:'Nước ngoài (lũy kế)',data:F,borderColor:'#4f8cff',backgroundColor:'rgba(79,140,255,.13)',
+      fill:'origin',pointRadius:0,borderWidth:1.8,tension:.25,yAxisID:'y'},
+    {type:'line',label:'Tự doanh (lũy kế)',data:P,borderColor:'#e2b33b',backgroundColor:'rgba(226,179,59,.10)',
+      fill:'origin',pointRadius:0,borderWidth:1.8,tension:.25,yAxisID:'y'},
+    {type:'line',label:'Trong nước (lũy kế)',data:D2,borderColor:'#26c281',backgroundColor:'rgba(38,194,129,.10)',
+      fill:'origin',pointRadius:0,borderWidth:1.8,tension:.25,yAxisID:'y'},
+    {type:'line',label:SAN[ND.code],data:R.map(r=>r.vni??null),borderColor:'#e8edf7',borderWidth:1.4,
+      pointRadius:0,tension:.3,yAxisID:'y1',spanGaps:true,borderDash:[4,3]}]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:true,position:'top',align:'end',labels:{usePointStyle:true,boxWidth:7,color:'#8595b5',font:{size:10.5}}},
+        tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.dataset.yAxisID==='y1'
+          ?c.parsed.y.toLocaleString('vi-VN',{maximumFractionDigits:2})
+          :(c.parsed.y>=0?'+':'−')+Math.abs(c.parsed.y).toLocaleString('vi-VN',{maximumFractionDigits:0})+' tỷ')}}},
+      scales:{x:{ticks:{color:'#6c7c9e',maxTicksLimit:12,font:{size:9.5}},grid:{color:'#141d31'}},
+        y:{ticks:{color:'#6c7c9e',font:{size:9.5},callback:v=>Math.abs(v)>=1000?(v/1000).toFixed(0)+'k tỷ':v+'t'},
+           grid:{color:'#141d31'},title:{display:true,text:'Lũy kế ròng (tỷ)',color:'#6c7c9e',font:{size:9.5}}},
+        y1:{position:'right',ticks:{color:'#6c7c9e',font:{size:9.5}},grid:{display:false}}}}});
+}
+
 function ndVe(){
   const D=ND.data; if(!D||!D.rows.length)return;
-  const rows=D.rows, n=ND.ky, s=ndSum(rows,n), r0=rows[0];
-  const nhan=n===1?`phiên ${r0.d.split('-').reverse().join('/')}`:`${n} phiên gần nhất`;
+  const rows=D.rows, dai=(ND.ky==='ytd'||+ND.ky>20);
+  const n=(ND.ky==='ytd')?rows.length:Math.min(+ND.ky,rows.length);
+  const s=ndSum(rows,n), r0=rows[0], rN=rows[n-1]||r0;
+  const nhan=(ND.ky==='ytd')
+    ? `từ đầu năm · ${n} phiên (${rN.d.split('-').reverse().join('/')} → ${r0.d.split('-').reverse().join('/')})`
+    : (n===1?`phiên ${r0.d.split('-').reverse().join('/')}`:`${n} phiên gần nhất`);
   $('ndTieu').textContent=`${SAN[ND.code]} · ${nhan}`;
   $('ndCards').innerHTML=
     `<div class="ndtile t"><div class="k">Tổng GTGD sàn</div>
@@ -968,10 +1043,12 @@ function ndVe(){
     + ndTile('f','Nước ngoài',s.fNet,s.fB,s.fS,
         `Mua ${ndCp(s.fBq)} CP · Bán ${ndCp(s.fSq)} CP`,s.tot,'')
     + ndTile('p','Tự doanh',s.pNet,s.coTd?s.pB:null,s.coTd?s.pS:null,
-        '24hMoney không công bố khối lượng tự doanh',s.tot,'')
+        s.coTdKl?`Mua ${ndCp(s.pBq)} CP · Bán ${ndCp(s.pSq)} CP`
+                :'24hMoney không công bố khối lượng tự doanh',s.tot,'')
     + ndTile('d','Trong nước',s.dNet,s.dB,s.dS,
         'Nhỏ lẻ + tổ chức trong nước',s.tot,'phần bù');
-  // biểu đồ ròng theo phiên
+  // biểu đồ: khung ngắn xem ròng từng phiên, khung dài xem lũy kế
+  if(dai){ ndVeLuyKe(rows.slice(0,n).reverse()); ndVeSau(D,rows,n,s,dai); return; }
   const R=rows.slice(0,18).reverse();
   const lab=R.map(r=>r.d.slice(8,10)+'/'+r.d.slice(5,7));
   if(ND.chart)ND.chart.destroy();
@@ -990,22 +1067,32 @@ function ndVe(){
         y:{ticks:{color:'#6c7c9e',font:{size:9.5},callback:v=>v+'t'},grid:{color:'#141d31'},
            title:{display:true,text:'Ròng (tỷ)',color:'#6c7c9e',font:{size:9.5}}},
         y1:{position:'right',ticks:{color:'#6c7c9e',font:{size:9.5}},grid:{display:false}}}}});
-  $('ndTop').innerHTML=ndBang('Nước ngoài',D.topF)+ndBang('Tự doanh',D.topP);
+  ndVeSau(D,rows,n,s,dai);
+}
+function ndVeSau(D,rows,n,s,dai){
+  $('ndTop').innerHTML=dai
+    ? '<div class="ndcol" style="grid-column:1/-1"><h4>Bảng mã theo nhóm — <span>chỉ có ở khung ≤ 20 phiên</span></h4>'+
+      '<div class="ndrow" style="color:var(--muted)">24hMoney chỉ công bố chi tiết từng mã cho phiên gần nhất, không có bản lũy kế từ đầu năm. Chọn lại 1/5/20 phiên để xem bảng mã.</div></div>'
+    : ndBang('Nước ngoài',D.topF)+ndBang('Tự doanh',D.topP);
   const coCn=rows.slice(0,n).some(r=>r.cnNet!=null);
+  const nguon=dai
+    ? '<b>Nguồn khung dài:</b> VNDirect (khối ngoại & tự doanh cấp chỉ số, có lịch sử nhiều năm). 24hMoney chặn cứng ở 18–20 phiên nên không cộng được từ đầu năm. Tổng GTGD của hai nguồn đã đối chiếu khớp tuyệt đối; riêng số khối ngoại/tự doanh lệch nhẹ do phạm vi thống kê khác nhau, nên đừng cộng chéo hai khung.'
+    : '<b>Nguồn:</b> 24hMoney · cập nhật sau khi sàn kết phiên.';
   const ngayCn=(rows.find(r=>r.cnNet!=null)||{}).d;
   $('ndNote').innerHTML=`<b>Cách tính.</b> Nước ngoài và Tự doanh là số 24hMoney công bố (đã gồm cả khớp lệnh và thỏa thuận).
     <b>Trong nước</b> là <b>phần bù</b>: Tổng GTGD sàn − Nước ngoài − Tự doanh, nên gộp cả nhỏ lẻ lẫn tổ chức nội và luôn ngược dấu tổng hai nhóm kia.
     ${coCn?'':`<b>Vì sao không tách riêng nhỏ lẻ:</b> 24hMoney đã ngừng trả số cá nhân/tổ chức trong nước${ngayCn?` (phiên cuối còn số là ${ngayCn.split('-').reverse().join('/')})`:''} — các phiên sau đều trả 0, và ô “tổ chức trong nước” bị điền trùng số tự doanh nên không dùng được.`}
     Bảng mã bên dưới là <b>phiên gần nhất</b>; tự doanh chỉ có giá trị ròng, không có chiều mua/bán riêng.
-    Nguồn: 24hMoney · cập nhật sau khi sàn kết phiên.`;
+    ${nguon}`;
 }
 async function ndChay(){
   $('ndStat').textContent='⏳ đang tải…';
-  const d=await ndLoad(ND.code);
+  const dai=(ND.ky==='ytd'||+ND.ky>20);
+  const d=dai?await ndLoadDai(ND.code):await ndLoad(ND.code);
   if(!d||!d.rows.length){$('ndStat').textContent='⚠ không lấy được dữ liệu '+SAN[ND.code];
     $('ndCards').innerHTML='<div style="padding:8px;color:var(--muted);font-size:13px">Không có dữ liệu cho sàn này.</div>';return;}
   ND.data=d; ndVe();
-  $('ndStat').textContent='● số thật 24hMoney';
+  $('ndStat').textContent=dai?'● số thật VNDirect':'● số thật 24hMoney';
 }
 (function ndInit(){
   $('segSan').querySelectorAll('button').forEach(b=>b.onclick=()=>{
@@ -1013,7 +1100,7 @@ async function ndChay(){
     b.classList.add('on'); ND.code=b.dataset.c; ndChay();});
   $('segKy').querySelectorAll('button').forEach(b=>b.onclick=()=>{
     $('segKy').querySelectorAll('button').forEach(x=>x.classList.remove('on'));
-    b.classList.add('on'); ND.ky=+b.dataset.k; if(ND.data)ndVe();});
+    b.classList.add('on'); ND.ky=(b.dataset.k==='ytd')?'ytd':+b.dataset.k; ndChay();});
   ndChay();
 })();
 
