@@ -136,6 +136,55 @@
   .mapsec i{font-style:normal;font-weight:800;font-size:11.5px}
   .hide{display:none}
   .stat{color:var(--muted);font-size:12px}
+
+  /* ── Dòng tiền theo nhóm nhà đầu tư (24hMoney) ── */
+  .ndwrap{margin-top:14px}
+  .ndgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));gap:9px;padding:12px 14px}
+  .ndtile{position:relative;background:#0b1220;border:1px solid var(--line);border-radius:11px;padding:10px 13px 11px}
+  .ndtile::before{content:"";position:absolute;left:0;top:11px;bottom:11px;width:3px;border-radius:0 3px 3px 0;background:var(--muted)}
+  .ndtile.f::before{background:#4f8cff}.ndtile.p::before{background:#e2b33b}
+  .ndtile.d::before{background:#26c281}.ndtile.t::before{background:#8b93a7}
+  .ndtile .k{font-size:10.4px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+  .ndtile .n{font-family:ui-monospace,Consolas,monospace;font-size:21px;font-weight:800;line-height:1.18;margin:3px 0 1px}
+  .ndtile .bs{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .ndtile .bs b{font-weight:700}
+  .ndtile .bs .mb{color:#7fe3b0}.ndtile .bs .sb{color:#f1a3a3}
+  .ndtile .kl{font-size:11px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums}
+  .ndtile .sh{height:4px;border-radius:3px;background:#16203a;overflow:hidden;margin-top:7px;display:flex}
+  .ndtile .sh i{display:block;height:100%}
+  .ndbadge{font-size:9.4px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:1px 6px;
+    border-radius:4px;background:rgba(226,179,59,.18);color:#f0c26b;margin-left:5px;vertical-align:middle}
+  .ndtop{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--line)}
+  @media(max-width:900px){.ndtop{grid-template-columns:1fr}}
+  .ndcol{padding:11px 14px 13px}
+  .ndcol+.ndcol{border-left:1px solid var(--line)}
+  @media(max-width:900px){.ndcol+.ndcol{border-left:none;border-top:1px solid var(--line)}}
+  .ndcol h4{font-size:10.6px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  .ndcol h4 span{color:#c3cee4;font-weight:700;letter-spacing:0;text-transform:none;font-size:11px}
+  .ndrow{display:flex;align-items:center;gap:8px;font-size:12.4px;padding:3px 0}
+  .ndrow .tk{font-weight:800;width:52px;cursor:pointer}
+  .ndrow .tk:hover{color:#9cc0ff}
+  .ndrow .tr{flex:1;height:8px;background:#121b2e;border-radius:4px;position:relative;overflow:hidden}
+  .ndrow .tr i{position:absolute;top:0;height:8px;border-radius:4px}
+  .ndrow .vl{width:74px;text-align:right;font-family:ui-monospace,Consolas,monospace;font-weight:700;font-variant-numeric:tabular-nums}
+  .ndnote{font-size:11.3px;color:var(--muted);line-height:1.55;padding:10px 14px;border-top:1px solid var(--line);background:#0b1220}
+  .ndnote b{color:#c3cee4}
+
+  /* ── cảnh báo nổi từng lệnh lớn ── */
+  .toastwrap{position:fixed;right:18px;bottom:18px;z-index:9999;display:flex;flex-direction:column-reverse;gap:9px;max-height:88vh;overflow:hidden;pointer-events:none}
+  .toast{pointer-events:auto;min-width:288px;max-width:340px;background:#101a2e;border:1px solid var(--line);border-left:4px solid var(--up);border-radius:12px;padding:11px 14px;
+    box-shadow:0 12px 34px rgba(0,0,0,.62);cursor:pointer;animation:tin .32s cubic-bezier(.2,.9,.3,1.3);transition:opacity .3s,transform .3s}
+  .toast.s{border-left-color:var(--dn)}
+  .toast.out{opacity:0;transform:translateX(24px)}
+  .toast .r1{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800}
+  .toast .r1 .v{margin-left:auto;font-size:15px;font-variant-numeric:tabular-nums}
+  .toast .r2{font-size:11.5px;color:var(--muted);margin-top:4px;display:flex;gap:8px}
+  .toast .r2 b{color:#c3cee4;font-weight:700}
+  .toast.huge{border-width:1px 1px 1px 4px;box-shadow:0 0 0 1px rgba(226,179,59,.45),0 12px 34px rgba(0,0,0,.62)}
+  @keyframes tin{from{opacity:0;transform:translateX(40px) scale(.94)}to{opacity:1;transform:none}}
+  .bell{position:relative}
+  .bell.on{background:var(--up);color:#04140c;border-color:var(--up)}
+  .bcount{position:absolute;top:-6px;right:-6px;background:var(--dn);color:#fff;font-size:9.5px;font-weight:900;padding:1px 5px;border-radius:9px}
 </style>
 </head>
 <body>
@@ -151,6 +200,7 @@
     <a class="ns" href="loc-duckman.html">🦆 Lọc DuckMan</a>
     <a class="ns" href="heheman.html">🕵️ Heheman</a>
     <a class="ns" href="weinstein.html">📈 Weinstein</a>
+    <a class="ns" href="ban-tin.html">🔔 Bản tin</a>
     <a class="ns" href="danh-muc.html">💼 Danh mục KH</a>
   </div>
 
@@ -209,6 +259,20 @@
     <div class="card"><div class="l">⬇ Top Xả Bán Ròng</div><div class="v dn" id="cTopS">—</div><div class="s" id="cTopSS">—</div></div>
     <div class="card"><div class="l">◷ Ngành Gom Mua Ròng</div><div class="v up" style="font-size:17px" id="cSecB">—</div><div class="s" id="cSecBS">—</div></div>
     <div class="card"><div class="l">◷ Ngành Xả Bán Ròng</div><div class="v dn" style="font-size:17px" id="cSecS">—</div><div class="s" id="cSecSS">—</div></div>
+  </div>
+
+  <div class="panel ndwrap">
+    <div class="hd"><div class="ico b">👥</div>
+      <div class="htxt"><b>Dòng tiền theo nhóm nhà đầu tư</b><span id="ndTieu">—</span></div>
+      <div class="hact">
+        <div class="seg sm" id="segSan"><button class="on" data-c="10">HOSE</button><button data-c="02">HNX</button><button data-c="03">UPCOM</button></div>
+        <div class="seg sm" id="segKy"><button class="on" data-k="1">1 phiên</button><button data-k="5">5 phiên</button><button data-k="20">20 phiên</button></div>
+        <span class="stat" id="ndStat">⏳ đang tải…</span>
+      </div></div>
+    <div class="ndgrid" id="ndCards"></div>
+    <div class="chartbox" style="height:262px"><canvas id="chNdt"></canvas></div>
+    <div class="ndtop" id="ndTop"></div>
+    <div class="ndnote" id="ndNote"></div>
   </div>
 
   <div id="viewDash">
@@ -784,6 +848,175 @@ $('chkAuto').onchange=setAuto;
 $('selSec').innerHTML='<option value="">Tất cả ngành</option>'+Object.keys(SECTORS).map(s=>'<option>'+s+'</option>').join('');
 
 radarInit(); setAuto(); load(true);
+
+/* ═══════════════ DÒNG TIỀN THEO NHÓM NHÀ ĐẦU TƯ (nguồn 24hMoney) ═══════════════
+   Nước ngoài & Tự doanh: số công bố. Trong nước = Tổng GTGD sàn − NN − TD (phần bù).
+   24hMoney đã NGỪNG tách riêng cá nhân/tổ chức trong nước từ 02/09/2026 (trả về 0),
+   nên phần bù là cách duy nhất còn đo được dòng tiền nội địa theo phiên.
+   ════════════════════════════════════════════════════════════════════════════ */
+const H24='https://api-finance-t19.24hmoney.vn/v1/web/';
+const SAN={'10':'HOSE','02':'HNX','03':'UPCOM'};
+const ND={code:'10',ky:1,data:null,cache:{},chart:null};
+
+async function j24(path){
+  const u=H24+path;
+  const via=[x=>x,x=>'/api/proxy?url='+encodeURIComponent(x)];
+  for(const p of via){
+    try{const c=new AbortController(),t=setTimeout(()=>c.abort(),15000);
+      const r=await fetch(p(u),{cache:'no-store',signal:c.signal});clearTimeout(t);
+      if(r.ok){const j=await r.json();if(j&&j.status===200)return j.data||[];}
+    }catch(e){}
+  }
+  return null;
+}
+const ndDate=t=>new Date((t+7*3600)*1000).toISOString().slice(0,10);   // mốc 24hMoney là 00:00 giờ VN
+const ndDmy=d=>d.split('/').reverse().join('-');
+const ndTy=v=>(v==null||!isFinite(v))?'—':(Math.abs(v)>=1000?(v/1000).toLocaleString('vi-VN',{maximumFractionDigits:2})+' nghìn tỷ'
+  :v.toLocaleString('vi-VN',{maximumFractionDigits:0})+' tỷ');
+const ndNet=v=>(v==null||!isFinite(v))?'—':(v>=0?'+':'−')+ndTy(Math.abs(v));
+const ndCp=v=>(v==null||!isFinite(v))?'—':Math.round(v).toLocaleString('vi-VN');
+
+async function ndLoad(code){
+  if(ND.cache[code])return ND.cache[code];
+  const [th,ft,pr,inv,fs,ps]=await Promise.all([
+    j24(`indices/trading-history?code=${code}&floor_code=${code}`),
+    j24(`indices/foreign-trading?code=${code}`),
+    j24(`indices/proprietary-trading-history?code=${code}`),
+    j24(`indices/statistic-investor-history?code=${code}`),
+    j24(`indices/foreign-trading-stock?code=${code}`),
+    j24(`indices/proprietary-trading-stock?code=${code}`)
+  ]);
+  if(!th&&!ft&&!inv)return null;
+  const M={};
+  const at=d=>(M[d]=M[d]||{d});
+  (th||[]).forEach(r=>{const o=at(ndDate(r.trading_date));
+    o.tot=r.total_value_traded; o.totKl=r.total_share_traded; o.vni=r.market_index;});
+  (ft||[]).forEach(r=>{const o=at(ndDmy(r.date));
+    o.fB=r.buy_val; o.fS=r.sell_val; o.fBq=r.buy_qtty; o.fSq=r.sell_qtty;});
+  (pr||[]).forEach(r=>{const o=at(ndDmy(r.date)); o.pNet=r.net_value; o.pDeal=r.deal_value; o.pPt=r.pt_value;});
+  (inv||[]).forEach(r=>{const o=at(ndDate(r.trading_date));
+    if(o.fB==null){o.fB=r.foreign_buy/1e9;o.fS=r.foreign_sell/1e9;}
+    o.pB=r.proprietary_buy/1e9; o.pS=r.proprietary_sell/1e9;
+    o.cnB=r.local_individual_buy/1e9; o.cnS=r.local_individual_sell/1e9;});
+  // phần bù trong nước + ròng từng nhóm
+  const rows=Object.values(M).sort((a,b)=>a.d<b.d?1:-1)
+    .filter(o=>o.fB!=null&&(o.pB!=null||o.pNet!=null));
+  rows.forEach(o=>{
+    o.fNet=o.fB-o.fS;
+    if(o.pB!=null&&o.pS!=null)o.pNet=o.pB-o.pS; else if(o.pNet!=null){o.pB=null;o.pS=null;}
+    if(o.tot!=null&&o.pB!=null){o.dB=o.tot-o.fB-o.pB; o.dS=o.tot-o.fS-o.pS;}
+    o.dNet=(o.fNet!=null&&o.pNet!=null)?-(o.fNet+o.pNet):null;
+    o.cnNet=(o.cnB!=null&&o.cnS!=null&&(o.cnB||o.cnS))?(o.cnB-o.cnS):null;
+  });
+  const topF=(fs||[]).map(r=>({tk:r.symbol,net:(r.buy_val||0)-(r.sell_val||0)}))
+    .filter(x=>/^[A-Z]{3}$/.test(x.tk)&&isFinite(x.net));
+  const topP=(ps||[]).map(r=>({tk:r.symbol,net:(r.value||0)/1e9}))
+    .filter(x=>/^[A-Z]{3}$/.test(x.tk)&&isFinite(x.net));
+  const o={rows,topF,topP};
+  ND.cache[code]=o; return o;
+}
+function ndSum(rows,n){
+  const s={fB:0,fS:0,pB:0,pS:0,tot:0,totKl:0,fBq:0,fSq:0,coTd:false,coTot:false};
+  rows.slice(0,n).forEach(r=>{
+    s.fB+=r.fB||0; s.fS+=r.fS||0; s.fBq+=r.fBq||0; s.fSq+=r.fSq||0;
+    if(r.pB!=null){s.pB+=r.pB;s.pS+=r.pS;s.coTd=true;} else if(r.pNet!=null){s.pB+=Math.max(r.pNet,0);s.pS+=Math.max(-r.pNet,0);s.coTd=true;}
+    if(r.tot!=null){s.tot+=r.tot;s.totKl+=r.totKl||0;s.coTot=true;}
+  });
+  s.fNet=s.fB-s.fS; s.pNet=s.pB-s.pS;
+  s.dB=s.coTot?s.tot-s.fB-s.pB:null; s.dS=s.coTot?s.tot-s.fS-s.pS:null;
+  s.dNet=-(s.fNet+s.pNet);
+  return s;
+}
+function ndTile(cls,ten,net,mua,ban,klTxt,tong,badge){
+  const pc=(tong&&mua!=null)?((mua+ban)/2/tong*100):null;
+  const c=net>0?'up':(net<0?'dn':'');
+  let bs='—';
+  if(mua!=null&&ban!=null)bs=`<span class="mb">Mua <b>${ndTy(mua)}</b></span> · <span class="sb">Bán <b>${ndTy(ban)}</b></span>`;
+  const w=(mua!=null&&ban!=null&&(mua+ban)>0)?(mua/(mua+ban)*100):50;
+  return `<div class="ndtile ${cls}">
+    <div class="k">${ten}${badge?`<span class="ndbadge">${badge}</span>`:''}</div>
+    <div class="n ${c}">${ndNet(net)}</div>
+    <div class="bs">${bs}</div>
+    ${klTxt?`<div class="kl">${klTxt}</div>`:''}
+    ${(mua!=null&&ban!=null)?`<div class="sh"><i style="width:${w.toFixed(1)}%;background:var(--up)"></i><i style="width:${(100-w).toFixed(1)}%;background:var(--dn)"></i></div>`:''}
+    ${pc!=null?`<div class="kl">≈ ${pc.toFixed(1)}% tổng GTGD sàn</div>`:''}
+  </div>`;
+}
+function ndBang(tieu,arr,mau){
+  const up=[...arr].sort((a,b)=>b.net-a.net).slice(0,7).filter(x=>x.net>0);
+  const dn=[...arr].sort((a,b)=>a.net-b.net).slice(0,7).filter(x=>x.net<0);
+  const mx=Math.max(1,...up.map(x=>x.net),...dn.map(x=>-x.net));
+  const row=(x,pos)=>{const w=Math.abs(x.net)/mx*100;
+    return `<div class="ndrow"><span class="tk" onclick="go('${x.tk}')">${x.tk}</span>
+      <span class="tr"><i style="${pos?'left':'right'}:0;width:${w.toFixed(1)}%;background:${pos?'var(--up)':'var(--dn)'}"></i></span>
+      <span class="vl ${pos?'up':'dn'}">${ndNet(x.net)}</span></div>`;};
+  return `<div class="ndcol"><h4>${tieu} — <span>mua ròng mạnh nhất</span></h4>
+      ${up.map(x=>row(x,1)).join('')||'<div class="ndrow" style="color:var(--muted)">Không có mã mua ròng.</div>'}
+      <h4 style="margin-top:12px">${tieu} — <span>bán ròng mạnh nhất</span></h4>
+      ${dn.map(x=>row(x,0)).join('')||'<div class="ndrow" style="color:var(--muted)">Không có mã bán ròng.</div>'}</div>`;
+}
+function ndVe(){
+  const D=ND.data; if(!D||!D.rows.length)return;
+  const rows=D.rows, n=ND.ky, s=ndSum(rows,n), r0=rows[0];
+  const nhan=n===1?`phiên ${r0.d.split('-').reverse().join('/')}`:`${n} phiên gần nhất`;
+  $('ndTieu').textContent=`${SAN[ND.code]} · ${nhan}`;
+  $('ndCards').innerHTML=
+    `<div class="ndtile t"><div class="k">Tổng GTGD sàn</div>
+       <div class="n gold">${s.coTot?ndTy(s.tot):'—'}</div>
+       <div class="bs">${s.coTot?ndCp(s.totKl)+' CP khớp':'chưa có số tổng sàn'}</div>
+       <div class="kl">${nhan}</div></div>`
+    + ndTile('f','Nước ngoài',s.fNet,s.fB,s.fS,
+        `Mua ${ndCp(s.fBq)} CP · Bán ${ndCp(s.fSq)} CP`,s.tot,'')
+    + ndTile('p','Tự doanh',s.pNet,s.coTd?s.pB:null,s.coTd?s.pS:null,
+        '24hMoney không công bố khối lượng tự doanh',s.tot,'')
+    + ndTile('d','Trong nước',s.dNet,s.dB,s.dS,
+        'Nhỏ lẻ + tổ chức trong nước',s.tot,'phần bù');
+  // biểu đồ ròng theo phiên
+  const R=rows.slice(0,18).reverse();
+  const lab=R.map(r=>r.d.slice(8,10)+'/'+r.d.slice(5,7));
+  if(ND.chart)ND.chart.destroy();
+  ND.chart=new Chart($('chNdt'),{data:{labels:lab,datasets:[
+    {type:'bar',label:'Nước ngoài',data:R.map(r=>r.fNet),backgroundColor:'rgba(79,140,255,.72)',borderWidth:0,yAxisID:'y'},
+    {type:'bar',label:'Tự doanh',data:R.map(r=>r.pNet),backgroundColor:'rgba(226,179,59,.72)',borderWidth:0,yAxisID:'y'},
+    {type:'bar',label:'Trong nước',data:R.map(r=>r.dNet),backgroundColor:'rgba(38,194,129,.62)',borderWidth:0,yAxisID:'y'},
+    {type:'line',label:SAN[ND.code],data:R.map(r=>r.vni??null),borderColor:'#e8edf7',borderWidth:1.6,pointRadius:0,
+      tension:.3,yAxisID:'y1',spanGaps:true}]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:true,position:'top',align:'end',labels:{usePointStyle:true,boxWidth:7,color:'#8595b5',font:{size:10.5}}},
+        tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.dataset.yAxisID==='y1'
+          ?c.parsed.y.toLocaleString('vi-VN',{maximumFractionDigits:2})
+          :(c.parsed.y>=0?'+':'−')+Math.abs(c.parsed.y).toLocaleString('vi-VN',{maximumFractionDigits:0})+' tỷ')}}},
+      scales:{x:{stacked:false,ticks:{color:'#6c7c9e',maxTicksLimit:10,font:{size:9.5}},grid:{color:'#141d31'}},
+        y:{ticks:{color:'#6c7c9e',font:{size:9.5},callback:v=>v+'t'},grid:{color:'#141d31'},
+           title:{display:true,text:'Ròng (tỷ)',color:'#6c7c9e',font:{size:9.5}}},
+        y1:{position:'right',ticks:{color:'#6c7c9e',font:{size:9.5}},grid:{display:false}}}}});
+  $('ndTop').innerHTML=ndBang('Nước ngoài',D.topF)+ndBang('Tự doanh',D.topP);
+  const coCn=rows.slice(0,n).some(r=>r.cnNet!=null);
+  const ngayCn=(rows.find(r=>r.cnNet!=null)||{}).d;
+  $('ndNote').innerHTML=`<b>Cách tính.</b> Nước ngoài và Tự doanh là số 24hMoney công bố (đã gồm cả khớp lệnh và thỏa thuận).
+    <b>Trong nước</b> là <b>phần bù</b>: Tổng GTGD sàn − Nước ngoài − Tự doanh, nên gộp cả nhỏ lẻ lẫn tổ chức nội và luôn ngược dấu tổng hai nhóm kia.
+    ${coCn?'':`<b>Vì sao không tách riêng nhỏ lẻ:</b> 24hMoney đã ngừng trả số cá nhân/tổ chức trong nước${ngayCn?` (phiên cuối còn số là ${ngayCn.split('-').reverse().join('/')})`:''} — các phiên sau đều trả 0, và ô “tổ chức trong nước” bị điền trùng số tự doanh nên không dùng được.`}
+    Bảng mã bên dưới là <b>phiên gần nhất</b>; tự doanh chỉ có giá trị ròng, không có chiều mua/bán riêng.
+    Nguồn: 24hMoney · cập nhật sau khi sàn kết phiên.`;
+}
+async function ndChay(){
+  $('ndStat').textContent='⏳ đang tải…';
+  const d=await ndLoad(ND.code);
+  if(!d||!d.rows.length){$('ndStat').textContent='⚠ không lấy được dữ liệu '+SAN[ND.code];
+    $('ndCards').innerHTML='<div style="padding:8px;color:var(--muted);font-size:13px">Không có dữ liệu cho sàn này.</div>';return;}
+  ND.data=d; ndVe();
+  $('ndStat').textContent='● số thật 24hMoney';
+}
+(function ndInit(){
+  $('segSan').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    $('segSan').querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); ND.code=b.dataset.c; ndChay();});
+  $('segKy').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    $('segKy').querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); ND.ky=+b.dataset.k; if(ND.data)ndVe();});
+  ndChay();
+})();
+
 </script>
 </body>
 </html>
