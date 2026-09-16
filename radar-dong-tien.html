@@ -943,7 +943,7 @@ function ndTile(cls,ten,net,mua,ban,klTxt,tong,badge){
     ${pc!=null?`<div class="kl">≈ ${pc.toFixed(1)}% tổng GTGD sàn</div>`:''}
   </div>`;
 }
-function ndBang(tieu,arr,mau){
+function ndBang(tieu,arr,mo){
   const up=[...arr].sort((a,b)=>b.net-a.net).slice(0,7).filter(x=>x.net>0);
   const dn=[...arr].sort((a,b)=>a.net-b.net).slice(0,7).filter(x=>x.net<0);
   const mx=Math.max(1,...up.map(x=>x.net),...dn.map(x=>-x.net));
@@ -951,9 +951,9 @@ function ndBang(tieu,arr,mau){
     return `<div class="ndrow"><span class="tk" onclick="go('${x.tk}')">${x.tk}</span>
       <span class="tr"><i style="${pos?'left':'right'}:0;width:${w.toFixed(1)}%;background:${pos?'var(--up)':'var(--dn)'}"></i></span>
       <span class="vl ${pos?'up':'dn'}">${ndNet(x.net)}</span></div>`;};
-  return `<div class="ndcol"><h4>${tieu} — <span>mua ròng mạnh nhất</span></h4>
+  return `<div class="ndcol"><h4>${tieu} — <span>mua ròng mạnh nhất${mo?' · '+mo:''}</span></h4>
       ${up.map(x=>row(x,1)).join('')||'<div class="ndrow" style="color:var(--muted)">Không có mã mua ròng.</div>'}
-      <h4 style="margin-top:12px">${tieu} — <span>bán ròng mạnh nhất</span></h4>
+      <h4 style="margin-top:12px">${tieu} — <span>bán ròng mạnh nhất${mo?' · '+mo:''}</span></h4>
       ${dn.map(x=>row(x,0)).join('')||'<div class="ndrow" style="color:var(--muted)">Không có mã bán ròng.</div>'}</div>`;
 }
 
@@ -1026,6 +1026,60 @@ function ndVeLuyKe(R){
         y1:{position:'right',ticks:{color:'#6c7c9e',font:{size:9.5}},grid:{display:false}}}}});
 }
 
+
+/* ── LŨY KẾ TOP MÃ theo kỳ ─────────────────────────────────────────────────
+   ≤ tháng: 24hMoney có sẵn bản cộng dồn (type=today|week|month) — dùng thẳng.
+   Dài hơn: 24hMoney không có, nên gom từ VNDirect theo mã. VNDirect cho phép
+   lọc nhiều mã một lần (code:A,B,C) nên 218 mã của trang chỉ tốn ~6 request.
+   ────────────────────────────────────────────────────────────────────────── */
+const ND_TOP_CACHE={};
+async function ndTop24h(code,type){
+  const k='t24_'+code+'_'+type; if(ND_TOP_CACHE[k])return ND_TOP_CACHE[k];
+  const [fo,pr]=await Promise.all([
+    j24(`indices/foreign-trading-all-stock-by-time?code=${code}&type=${type}`),
+    j24(`indices/proprietary-trading-all-stock-by-time?code=${code}&type=${type}`)
+  ]);
+  const lay=d=>Array.isArray(d)?d:((d&&Array.isArray(d.data))?d.data:[]);
+  const o={
+    topF:lay(fo).map(r=>({tk:r.symbol,net:r.net_val})).filter(x=>/^[A-Z]{3}$/.test(x.tk)&&isFinite(x.net)),
+    topP:lay(pr).map(r=>({tk:r.symbol,net:r.prop_net})).filter(x=>/^[A-Z]{3}$/.test(x.tk)&&isFinite(x.net)),
+    nguon:'24hMoney'};
+  ND_TOP_CACHE[k]=o; return o;
+}
+async function ndTopVnd(code,tuNgay){
+  const k='tv_'+code+'_'+tuNgay; if(ND_TOP_CACHE[k])return ND_TOP_CACHE[k];
+  const san={'10':'HOSE','02':'HNX','03':'UPCOM'}[code];
+  const lo=[]; for(let i=0;i<UNI.length;i+=40)lo.push(UNI.slice(i,i+40));
+  const gom=(arr,fNet)=>{const A={};arr.forEach(r=>{if(r.floor&&r.floor!==san)return;
+    A[r.code]=(A[r.code]||0)+(fNet(r)||0);});
+    return Object.entries(A).map(([tk,v])=>({tk,net:v/1e9})).filter(x=>isFinite(x.net)&&x.net!==0);};
+  const [fo,pr]=await Promise.all([
+    Promise.all(lo.map(b=>jVnd(`foreigns?q=code:${b.join(',')}~tradingDate:gte:${tuNgay}&size=9999`))),
+    Promise.all(lo.map(b=>jVnd(`proprietary_trading?q=code:${b.join(',')}~date:gte:${tuNgay}&size=9999`)))
+  ]);
+  const o={topF:gom(fo.flat().filter(Boolean),r=>r.netVal),
+           topP:gom(pr.flat().filter(Boolean),r=>r.netVal),
+           nguon:'VNDirect',hep:true};
+  ND_TOP_CACHE[k]=o; return o;
+}
+/* nạp bảng mã đúng kỳ đang chọn, chạy nền để không chặn phần trên */
+async function ndNapTop(rows,n){
+  const ky=ND.ky, code=ND.code;
+  const el=$('ndTop'); if(!el)return;
+  const loai={1:'today'}[ky];   // 24hMoney chỉ có week/month theo LỊCH, lệch với 'N phiên' nên không dùng
+  el.innerHTML='<div class="ndcol" style="grid-column:1/-1"><div class="ndrow" style="color:var(--muted)">⏳ đang gom lũy kế theo mã…</div></div>';
+  let T=null;
+  try{ T=loai?await ndTop24h(code,loai):await ndTopVnd(code,(rows[n-1]||rows[rows.length-1]).d); }catch(e){}
+  if(ND.ky!==ky||ND.code!==code)return;                 // người dùng đã đổi kỳ → bỏ kết quả cũ
+  if(!T||(!T.topF.length&&!T.topP.length)){
+    el.innerHTML='<div class="ndcol" style="grid-column:1/-1"><div class="ndrow" style="color:var(--muted)">Không lấy được bảng mã cho kỳ này.</div></div>';return;}
+  const mo={1:'phiên gần nhất'}[ky]
+    ||`lũy kế ${n} phiên${ky==='ytd'?' từ đầu năm':''}`;
+  el.innerHTML=ndBang('Nước ngoài',T.topF,mo)+ndBang('Tự doanh',T.topP,mo);
+  const g=$('ndTopNguon');
+  if(g)g.textContent=T.nguon+(T.hep?` · ${UNI.length} mã trong danh mục theo dõi của trang`:'');
+}
+
 function ndVe(){
   const D=ND.data; if(!D||!D.rows.length)return;
   const rows=D.rows, dai=(ND.ky==='ytd'||+ND.ky>20);
@@ -1070,19 +1124,18 @@ function ndVe(){
   ndVeSau(D,rows,n,s,dai);
 }
 function ndVeSau(D,rows,n,s,dai){
-  $('ndTop').innerHTML=dai
-    ? '<div class="ndcol" style="grid-column:1/-1"><h4>Bảng mã theo nhóm — <span>chỉ có ở khung ≤ 20 phiên</span></h4>'+
-      '<div class="ndrow" style="color:var(--muted)">24hMoney chỉ công bố chi tiết từng mã cho phiên gần nhất, không có bản lũy kế từ đầu năm. Chọn lại 1/5/20 phiên để xem bảng mã.</div></div>'
-    : ndBang('Nước ngoài',D.topF)+ndBang('Tự doanh',D.topP);
+  ndNapTop(rows,n);
   const coCn=rows.slice(0,n).some(r=>r.cnNet!=null);
   const nguon=dai
     ? '<b>Nguồn khung dài:</b> VNDirect (khối ngoại & tự doanh cấp chỉ số, có lịch sử nhiều năm). 24hMoney chặn cứng ở 18–20 phiên nên không cộng được từ đầu năm. Tổng GTGD của hai nguồn đã đối chiếu khớp tuyệt đối; riêng số khối ngoại/tự doanh lệch nhẹ do phạm vi thống kê khác nhau, nên đừng cộng chéo hai khung.'
-    : '<b>Nguồn:</b> 24hMoney · cập nhật sau khi sàn kết phiên.';
+    : (n>1
+      ? '<b>Nguồn:</b> ô tổng lấy 24hMoney; bảng mã lấy VNDirect vì 24hMoney chỉ cộng dồn theo <i>tuần/tháng lịch</i>, không cộng được đúng N phiên. Hai nguồn lệch nhẹ ở số khối ngoại/tự doanh do phạm vi thống kê khác nhau.'
+      : '<b>Nguồn:</b> 24hMoney · cập nhật sau khi sàn kết phiên.');
   const ngayCn=(rows.find(r=>r.cnNet!=null)||{}).d;
   $('ndNote').innerHTML=`<b>Cách tính.</b> Nước ngoài và Tự doanh là số 24hMoney công bố (đã gồm cả khớp lệnh và thỏa thuận).
     <b>Trong nước</b> là <b>phần bù</b>: Tổng GTGD sàn − Nước ngoài − Tự doanh, nên gộp cả nhỏ lẻ lẫn tổ chức nội và luôn ngược dấu tổng hai nhóm kia.
     ${coCn?'':`<b>Vì sao không tách riêng nhỏ lẻ:</b> 24hMoney đã ngừng trả số cá nhân/tổ chức trong nước${ngayCn?` (phiên cuối còn số là ${ngayCn.split('-').reverse().join('/')})`:''} — các phiên sau đều trả 0, và ô “tổ chức trong nước” bị điền trùng số tự doanh nên không dùng được.`}
-    Bảng mã bên dưới là <b>phiên gần nhất</b>; tự doanh chỉ có giá trị ròng, không có chiều mua/bán riêng.
+    Bảng mã bên dưới <b>cộng dồn đúng kỳ đang chọn</b> (nguồn: <span id="ndTopNguon">—</span>); tự doanh chỉ có giá trị ròng, không có chiều mua/bán riêng.
     ${nguon}`;
 }
 async function ndChay(){
