@@ -72,6 +72,9 @@
   .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
   .dot.up{background:var(--up)}.dot.dn{background:var(--dn)}.dot.ref{background:var(--ref)}
   .gmpill .nm{color:#cdd6ea;font-weight:600}.gmpill .vl{font-weight:700}
+  .gmpill .cl{font-size:10px;font-weight:600;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 5px;white-space:nowrap}
+  .gmpill.closed{opacity:.74}
+  .gmpill.stale{opacity:.5}.gmpill.stale .cl{color:var(--dn);border-color:rgba(240,85,107,.45)}
   /* FV */
   .tablebox{background:var(--card);border:1px solid var(--line);border-radius:11px;overflow:auto}
   table{width:100%;border-collapse:collapse;font-size:13px}
@@ -383,11 +386,40 @@ const GLOBAL=[
   {grp:'Crypto',items:[['BTC-USD','Bitcoin'],['ETH-USD','Ethereum'],['BNB-USD','BNB'],['SOL-USD','Solana']]},
   {grp:'Lãi suất',items:[['^TNX','US 10-Yr Bond'],['^FVX','US 5-Yr Bond']]}
 ];
+/* ── Yahoo: CHỈ đi qua proxy Vercel.
+   Đo 21/09/2026: Yahoo KHÔNG trả Access-Control-Allow-Origin → gọi thẳng từ trình duyệt luôn hỏng
+   (phí 1 lượt ~100–300ms mỗi mã); allorigins 2/12, codetabs 0/12 (timeout 9s), corsproxy.io 0/6 (401).
+   Chỉ /api/proxy chạy: 12/12, trung vị ~60–300ms. Chạy local (python http.server) thì không có /api/proxy. ── */
+const Y_LOCAL=/^(localhost|127\.|0\.0\.0\.0)/.test(location.hostname)||location.protocol==='file:';
+async function yGet(u){
+  const via=Y_LOCAL?[x=>'https://api.allorigins.win/raw?url='+encodeURIComponent(x)]   // cửa duy nhất còn lại khi local, hay hỏng
+                   :[x=>'/api/proxy?url='+encodeURIComponent(x)];
+  let last;for(const p of via){try{return await tryFetch(p(u),Y_LOCAL?4000:9000);}catch(e){last=e;}}
+  throw last||new Error('fail');
+}
+/* spark: nhiều mã trong 1 request (Yahoo giới hạn 20 mã/request) → 32 mã chỉ cần 2 request thay vì 32 */
+async function yahooSpark(syms){
+  const out={}, lo=[];
+  for(let i=0;i<syms.length;i+=20)lo.push(syms.slice(i,i+20));
+  await Promise.all(lo.map(async b=>{
+    try{
+      const j=await yGet('https://query1.finance.yahoo.com/v8/finance/spark?symbols='+b.map(encodeURIComponent).join(',')+'&range=1d&interval=15m');
+      for(const s of b){
+        const o=j&&j[s]; if(!o||!o.close)continue;
+        let k=o.close.length-1; while(k>=0&&o.close[k]==null)k--;
+        if(k<0)continue;
+        const price=o.close[k], prev=o.previousClose??o.chartPreviousClose;
+        out[s]={price,pct:prev?(price-prev)/prev*100:0,t:(o.timestamp&&o.timestamp[k])||null};
+      }
+    }catch(e){}
+  }));
+  return out;
+}
 async function yahoo(sym){
   const u=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?range=1d&interval=15m`;
-  const j=await getJSONp(u);const r=j&&j.chart&&j.chart.result&&j.chart.result[0];
-  if(r&&r.meta){const p=r.meta.regularMarketPrice,pc=r.meta.chartPreviousClose||r.meta.previousClose;
-    return {price:p,pct:pc?(p-pc)/pc*100:0};}
+  const j=await yGet(u);const r=j&&j.chart&&j.chart.result&&j.chart.result[0];
+  if(r&&r.meta){const p=r.meta.regularMarketPrice,pc=r.meta.previousClose??r.meta.chartPreviousClose;
+    return {price:p,pct:pc?(p-pc)/pc*100:0,t:r.meta.regularMarketTime||null};}
   return null;
 }
 let gmData={};
@@ -395,26 +427,46 @@ function renderGM(){
   $i('gmBody').innerHTML=GLOBAL.map((g,gi)=>{
     const pills=g.items.map(([sym,nm])=>{
       const d=gmData[sym];
-      if(!d)return `<div class="gmpill"><span class="dot ref"></span><span class="nm">${nm}</span><span class="vl mini">—</span></div>`;
+      if(!d)return `<div class="gmpill stale"><span class="dot ref"></span><span class="nm">${nm}</span><span class="vl mini">—</span><span class="cl">không tải được</span></div>`;
+      // >3 giờ không có nhịp giá mới = sàn đang đóng (nghỉ trưa HK/Thượng Hải chỉ 1–1,5h nên không bị nhầm).
+      // Khi đó % là của PHIÊN TRƯỚC — phải ghi ngày, nếu không người xem tưởng là biến động hôm nay.
+      const dong=d.t&&(Date.now()-d.t*1000)>3*3600e3;
+      const ngay=d.t?new Date((d.t+7*3600)*1000).toISOString().slice(5,10).split('-').reverse().join('/'):'';
+      const nhan=d.stale?`<span class="cl">cũ · lỗi tải</span>`:(dong?`<span class="cl">đóng · ${ngay}</span>`:'');
       const cl=d.pct>0?'up':(d.pct<0?'dn':'ref');
       const arr=d.pct>0?'▲':(d.pct<0?'▼':'▬');
-      return `<div class="gmpill"><span class="dot ${cl}"></span><span class="nm">${nm}</span><span class="vl">${fnum(d.price)}</span><span class="${cl}">${arr} ${(d.pct>=0?'+':'')+d.pct.toFixed(2)}%</span></div>`;
+      return `<div class="gmpill${d.stale?' stale':(dong?' closed':'')}"><span class="dot ${cl}"></span><span class="nm">${nm}</span><span class="vl">${fnum(d.price)}</span><span class="${cl}">${arr} ${(d.pct>=0?'+':'')+d.pct.toFixed(2)}%</span>${nhan}</div>`;
     }).join('');
     const dir=gi%2?'rev':'', dur=40+gi*5;   // xen kẽ chiều + tốc độ khác nhau cho sinh động
     return `<div class="gmrow"><span class="gmcat">${g.grp}</span><div class="gmmarq"><div class="gmtrack ${dir}" style="animation-duration:${dur}s">${pills}${pills}</div></div></div>`;
   }).join('');
 }
+let _gm=false;
 async function refreshGM(){
-  $i('gUpd').textContent='Source · Yahoo Finance · ⏳';
-  const all=[];GLOBAL.forEach(g=>g.items.forEach(it=>all.push(it[0])));
-  const CONC=8;
-  for(let i=0;i<all.length;i+=CONC){
-    const part=all.slice(i,i+CONC);
-    const res=await Promise.all(part.map(s=>yahoo(s).then(d=>[s,d]).catch(()=>[s,null])));
-    res.forEach(([s,d])=>{if(d)gmData[s]=d;});
-  }
-  renderGM();   // render 1 lần khi đủ data → marquee không bị giật/reset giữa chừng
-  $i('gUpd').textContent='Source · Yahoo Finance · '+new Date().toLocaleTimeString('vi-VN');
+  if(_gm)return; _gm=true;              // lượt trước chưa xong thì bỏ lượt này, tránh chồng request mỗi 60s
+  const t0=Date.now();
+  try{
+    $i('gUpd').textContent='Source · Yahoo Finance · ⏳';
+    const all=[];GLOBAL.forEach(g=>g.items.forEach(it=>all.push(it[0])));
+    const got=await yahooSpark(all);
+    // mã spark bỏ sót → hỏi riêng từng mã (chỉ khi có proxy Vercel; local thì mỗi lượt tốn 4s nên bỏ)
+    const sot=all.filter(s=>!got[s]);
+    if(sot.length&&!Y_LOCAL){
+      const r=await Promise.all(sot.map(s=>yahoo(s).then(d=>[s,d]).catch(()=>[s,null])));
+      r.forEach(([s,d])=>{if(d)got[s]=d;});
+    }
+    let ok=0;
+    all.forEach(s=>{
+      if(got[s]){gmData[s]=got[s];ok++;}
+      else if(gmData[s])gmData[s].stale=true;   // giữ số cũ nhưng ĐÁNH DẤU, không âm thầm hiện số cũ như số mới
+    });
+    renderGM();   // render 1 lần khi đủ data → marquee không bị giật/reset giữa chừng
+    const giay=((Date.now()-t0)/1000).toFixed(1).replace('.',',');
+    $i('gUpd').textContent=(ok===0&&Y_LOCAL)
+      ? 'Source · Yahoo Finance · chạy local không có proxy Vercel nên Yahoo không tải được — mở kkinvest.vercel.app'
+      : 'Source · Yahoo Finance · '+new Date().toLocaleTimeString('vi-VN')+' · '+ok+'/'+all.length+' mã · '+giay+'s'
+        +(ok<all.length?' · thiếu '+(all.length-ok)+' mã':'');
+  }finally{_gm=false;}
 }
 
 // ===== CHỈ SỐ — chart tự vẽ (SVG), không phụ thuộc TradingView =====
@@ -431,10 +483,14 @@ function sparkSVG(arr,color,w,h){
     <polyline points="${line}" fill="none" stroke="${color}" stroke-width="1.6"/></svg>`;
 }
 async function yahooFull(sym){
-  const u=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?range=1d&interval=5m`;
-  const j=await getJSONp(u);const r=j&&j.chart&&j.chart.result&&j.chart.result[0];
-  if(r&&r.meta){const price=r.meta.regularMarketPrice,prev=r.meta.chartPreviousClose||r.meta.previousClose;
-    let series=[];try{series=r.indicators.quote[0].close.filter(x=>x!=null);}catch(e){}
+  // range=2d: hợp đồng tương lai (CL=F, YM=F) bị Yahoo reset "ngày" lúc 11:00 giờ VN → với range=1d
+  // sparkline chỉ còn 1–2 điểm đúng giữa phiên sáng VN. Lấy 2 ngày rồi cắt ~78 nến 5 phút (≈6,5 giờ) cho liền mạch.
+  const u=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?range=2d&interval=5m`;
+  const j=await yGet(u);const r=j&&j.chart&&j.chart.result&&j.chart.result[0];
+  // previousClose = đóng cửa NGÀY TRƯỚC, không đổi theo range. chartPreviousClose thì đổi: với range=2d
+  // nó lùi về 2 ngày trước (DJI: 51.461,9 thay vì 51.778) → % sai. Nên phải ưu tiên previousClose.
+  if(r&&r.meta){const price=r.meta.regularMarketPrice,prev=r.meta.previousClose??r.meta.chartPreviousClose;
+    let series=[];try{series=r.indicators.quote[0].close.filter(x=>x!=null).slice(-78);}catch(e){}
     if(series.length<2)series=[prev,price];
     return {price,prev,series};}
   return null;
