@@ -686,14 +686,19 @@ function render(){
   EVT=applyFilters(SOURCE.load(day,th)).sort((a,b)=>b.t-a.t||b.val-a.val);
   VIEWED=EVT.filter(e=>side==='all'||(side==='buy'?e.dir==='B':e.dir==='S'));
 
-  const unit=SOURCE.tick?'lệnh':'phút';
+  const donVi=SOURCE===SRC_DNSE?'lệnh khớp'
+    :SOURCE===SRC_24H?(+ND.gop?('đợt '+ND.gop+' giây'):'cụm 3 giây')
+    :'phút giao dịch';
+  const unit=donVi;
   const buyV=EVT.filter(e=>e.dir==='B').reduce((s,e)=>s+e.val,0);
   const sellV=EVT.filter(e=>e.dir==='S').reduce((s,e)=>s+e.val,0);
   const tot=buyV+sellV, nSym=new Set(EVT.map(e=>e.tk)).size;
 
   // ── header ──
   $('subTxt').innerHTML='Theo dõi biến động dòng tiền cá mập thời gian thực với <b>'+EVT.length+'</b> '+unit+' lớn từ <b>'+nSym+'</b> mã phát hiện trong phiên <b class="gold">'+dmy(day)+'</b>';
-  $('filtLine').innerHTML='Dữ liệu được tính toán dựa trên bộ lọc: <b>'+(SOURCE.tick?'Lệnh':'Phút giao dịch')+' trên '+$('selTh').value+' tỷ</b> <a id="lnkDetail">(Chi tiết)</a>';
+  $('filtLine').innerHTML='Bộ lọc: <b>'+donVi.charAt(0).toUpperCase()+donVi.slice(1)+' trên '+$('selTh').value+' tỷ</b>'
+    +(SOURCE===SRC_DNSE?' — <b>từng lệnh đơn lẻ</b>':' — <b>tổng nhiều lệnh</b> trong khoảng đó, không phải một lệnh đơn lẻ; muốn từng lệnh thật thì chọn nguồn <b>🔴 Tick DNSE</b>')
+    +' <a id="lnkDetail">(Chi tiết)</a>';
   $('lnkDetail').onclick=()=>$('method').classList.toggle('open');
   $('method').innerHTML=SOURCE.note||'';
 
