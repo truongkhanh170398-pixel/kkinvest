@@ -481,37 +481,47 @@ const SRC_REALTIME={
    (mua chủ động) hay giá chào mua (bán chủ động), thay vì đoán bằng quy tắc tick.
    ══════════════════════════════════════════════════════════════════════════ */
 const SRC_24H=(function(){
-  const CAP=9000;
+  const CAP=40000, SAN=2e8;   // SAN: bỏ dòng quá nhỏ cho nhẹ, thấp hơn mọi ngưỡng lọc (0,5 tỷ)
   let rows=[], prev={}, nLuot=0, nCum=0, nLoi=0, timer=null, dangQuet=false, nhip=3000, batDau=null;
-  const key=()=>'radar_24h_'+vnDate(Math.floor(Date.now()/1000));
+  const key=()=>'radar_24h_v2_'+vnDate(Math.floor(Date.now()/1000));   // v2: bỏ dữ liệu cũ còn lẫn lệnh thoả thuận
   function save(){try{localStorage.setItem(key(),JSON.stringify(rows.slice(-CAP)));}catch(e){}}
   function restore(){try{rows=JSON.parse(localStorage.getItem(key()))||[];}catch(e){rows=[];}}
-  // Khớp lệnh liên tục thì KHÔNG có API nào trả từng lệnh (đã đo: match_qtty poll 1s chỉ bắt 61%,
-  // riêng HPG 9% — không dùng được). Nhưng THOẢ THUẬN thì 24hMoney trả TỪNG LỆNH chính xác,
-  // cả sàn trong 1 request: symbol/price/match_qtty/match_value/time. Đây là lệnh đơn lẻ thật.
-  const ttDaCo=new Set();
-  async function quetTT(){
-    for(const san of ['10','02','03']){
-      const u='https://api-finance-t19.24hmoney.vn/v1/web/indices/agreements-trading-stock?code='+san;
-      let j=null;
-      try{ j=await tf(u,8000); }catch(e){ try{ j=await tf('/api/proxy?url='+encodeURIComponent(u),9000); }catch(e2){ continue; } }
-      for(const x of (j&&j.data)||[]){
-        const tk=x.symbol, val=+x.match_value||0, qt=+x.match_qtty||0, px=+x.price||0;
-        if(!tk||!val||!qt)continue;
-        const kh=tk+'|'+x.time+'|'+val;
-        if(ttDaCo.has(kh))continue; ttDaCo.add(kh);
-        const [h,m,s]=String(x.time||'').split(':').map(Number);
-        const d=new Date(Date.now()+7*3600e3); d.setUTCHours(h||0,m||0,s||0,0);
-        const giay=Math.floor(d.getTime()/1000)-7*3600;
-        const p=prev[tk];
-        // thoả thuận là giá thương lượng, không có bên chủ động → suy từ giá so với giá TB phiên
-        const dir=(p&&p.avg)?(px>=p.avg?'B':'S'):'B';
-        rows.push({t:giay,tk,px,vol:qt,val,dir,tt:1});
-      }
+  let daNap=false;
+  async function napPhien(onProgress){
+    if(daNap)return; daNap=true;
+    const n=new Date(Date.now()+7*3600e3);
+    const dauNgay=Math.floor(Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate())/1000)-7*3600;
+    const den=Math.floor(Date.now()/1000);
+    const hom=vnDate(den);
+    const co=new Set(rows.filter(r=>vnDate(r.t)===hom&&r.nen).map(r=>r.tk+'|'+r.t));
+    let xong=0;
+    for(let i=0;i<UNI.length;i+=14){
+      await Promise.all(UNI.slice(i,i+14).map(async tk=>{
+        const u='https://dchart-api.vndirect.com.vn/dchart/history?resolution=1&symbol='+tk+'&from='+dauNgay+'&to='+den;
+        let j=null;
+        for(const p of [x=>x,x=>'/api/proxy?url='+encodeURIComponent(x)]){
+          try{ j=await tf(p(u),8000); if(j&&j.s==='ok'&&j.t&&j.t.length)break; j=null; }catch(e){}
+        }
+        xong++; onProgress&&onProgress(xong,UNI.length);
+        if(!j)return;
+        for(let k=0;k<j.t.length;k++){
+          if(vnDate(j.t[k])!==hom)continue;
+          const c=toV(j.c[k]), v=(j.v&&j.v[k])||0;
+          if(!(c>0)||!(v>0))continue;
+          if(co.has(tk+'|'+j.t[k]))continue;
+          const truoc=k>0?toV(j.c[k-1]):toV(j.o[k]);
+          const h=toV(j.h[k]), l=toV(j.l[k]), o=toV(j.o[k]);
+          let dir;
+          if(c>truoc)dir='B'; else if(c<truoc)dir='S';
+          else{const r=h-l, clv=r>0?((c-l)-(h-c))/r:(c>=o?1:-1); dir=clv>0?'B':clv<0?'S':(c>=o?'B':'S');}
+          if(v*c>=SAN)rows.push({t:j.t[k],tk,px:c,vol:v,val:v*c,dir,nen:1});   // nen:1 = nến đã chốt, không gộp lại
+        }
+      }));
     }
-    if(ttDaCo.size>4000)ttDaCo.clear();
+    rows.sort((a,b)=>a.t-b.t);
+    if(rows.length>CAP)rows=rows.slice(-CAP);
+    save();
   }
-  let demTT=0;
   async function quet(){
     if(dangQuet)return; dangQuet=true;
     try{
@@ -536,12 +546,11 @@ const SRC_24H=(function(){
           if(p.ask&&mp>=p.ask)      dir='B';
           else if(p.bid&&mp<=p.bid) dir='S';
           else                      dir=mp>p.mp?'B':(mp<p.mp?'S':(p.dir||'B'));
-          rows.push({t:(+x.updated_at)||Math.floor(Date.now()/1000),tk,px:mp,vol:dv,val,dir});
+          if(val>=SAN)rows.push({t:(+x.updated_at)||Math.floor(Date.now()/1000),tk,px:mp,vol:dv,val,dir});
           nCum++;
           prev[tk]={vol,gt,mp,ask,bid,dir,avg:(+x.average_price||0)*1000};
         } else prev[tk]={vol,gt,mp,ask,bid,dir:p&&p.dir,avg:(+x.average_price||0)*1000};
       }
-      if((demTT++%5)===0){ try{ await quetTT(); }catch(e){} }
       if(rows.length>CAP)rows=rows.slice(-CAP);
       save();
     } finally{ dangQuet=false; }
@@ -549,11 +558,12 @@ const SRC_24H=(function(){
   return {
     label:'Realtime 24hMoney',
     tick:false,
-    note:'⚡ <b>Gần thời gian thực — nhịp '+(3)+' giây, không cần tài khoản.</b> Quét lại mỗi 3 giây, rồi <b>gộp các lần khớp liên tiếp cùng mã cùng chiều thành MỘT ĐỢT gom/xả</b> (ngắt khi nghỉ quá 45 giây, và mỗi đợt tối đa 60 giây — <b>bằng đúng một nến 1 phút</b> nên ngưỡng “lệnh trên 3 tỷ” vẫn giữ nguyên ý nghĩa như trước). Mỗi dòng là một đợt — thấy ngay khi nó vừa bắt đầu và <b>lớn dần theo thời gian thực</b>, thay vì phải đợi hết phút mới hiện. Riêng dòng gắn nhãn <b>TT</b> là <b>lệnh THỎA THUẬN đơn lẻ</b> — giá trị chính xác từng lệnh, không gộp (chiều mua/bán suy từ giá so với giá TB phiên nên chỉ là ước lượng). <b>Vì sao khớp lệnh liên tục không tách được từng lệnh:</b> không API công khai nào trả từng lệnh khớp — đo 30/09, bám theo <i>match_qtty</i> ở nhịp 1 giây chỉ bắt được 61% số lệnh (riêng HPG 9%). Muốn từng lệnh thật thì dùng <b>🔴 Tick DNSE</b>. Chiều <b>MUA/BÁN</b> xác định bằng <b>sổ lệnh</b>: khớp tại giá chào bán → <b>mua chủ động</b>, tại giá chào mua → <b>bán chủ động</b> — chính xác hơn hẳn quy tắc tick suy từ nến. <b>Hạn chế:</b> chỉ có dữ liệu <b>từ lúc mở trang</b> (đã lưu trong máy theo ngày nên F5 không mất), muốn xem lại phiên cũ thì chuyển sang <b>Nến 1 phút</b>. Tốn ~76KB mỗi lượt (≈88MB/giờ ở nhịp 3s) — đổi nhịp trong <b>Bộ lọc thông minh</b>.',
+    note:'⚡ <b>Gần thời gian thực — nhịp '+(3)+' giây, không cần tài khoản.</b> Quét lại mỗi 3 giây, rồi <b>gộp các lần khớp liên tiếp cùng mã cùng chiều thành MỘT ĐỢT gom/xả</b> (ngắt khi nghỉ quá 45 giây, và mỗi đợt tối đa 60 giây — <b>bằng đúng một nến 1 phút</b> nên ngưỡng “lệnh trên 3 tỷ” vẫn giữ nguyên ý nghĩa như trước). Mỗi dòng là một đợt — thấy ngay khi nó vừa bắt đầu và <b>lớn dần theo thời gian thực</b>, thay vì phải đợi hết phút mới hiện. <b>Mở trang là có ngay cả phiên:</b> nạp sẵn nến 1 phút của riêng hôm nay rồi chạy tiếp realtime, nên không mất phần đầu phiên. <b>Vì sao khớp lệnh liên tục không tách được từng lệnh:</b> không API công khai nào trả từng lệnh khớp — đo 30/09, bám theo <i>match_qtty</i> ở nhịp 1 giây chỉ bắt được 61% số lệnh (riêng HPG 9%). Muốn từng lệnh thật thì dùng <b>🔴 Tick DNSE</b>. Chiều <b>MUA/BÁN</b> xác định bằng <b>sổ lệnh</b>: khớp tại giá chào bán → <b>mua chủ động</b>, tại giá chào mua → <b>bán chủ động</b> — chính xác hơn hẳn quy tắc tick suy từ nến. <b>Hạn chế:</b> chỉ có <b>phiên hôm nay</b>; muốn xem lại phiên cũ thì chuyển sang <b>Nến 1 phút</b>. Tốn ~76KB mỗi lượt (≈88MB/giờ ở nhịp 3s) — đổi nhịp trong <b>Bộ lọc thông minh</b>.',
     days(){const d=vnDate(Math.floor(Date.now()/1000));return rows.length?[...new Set(rows.map(r=>vnDate(r.t)))].sort():[d];},
     stats(){return {nLuot,nCum,kept:rows.length,nLoi,nhip,batDau};},
-    async fetch(){
+    async fetch(onTien){
       if(!rows.length)restore();
+      if(!daNap){ await quet(); await napPhien(onTien); }   // quét seed mốc trước, rồi nạp lịch sử phiên
       if(!timer){ await quet(); timer=setInterval(quet,nhip); }
       return rows.length||1;
     },
@@ -561,8 +571,8 @@ const SRC_24H=(function(){
       const GAP=45, DAI=60;                           // GAP: nghỉ quá lâu = đợt mới · DAI: một đợt tối đa 60s
                                                       // (bằng một nến 1 phút → ngưỡng "trên 3 tỷ" giữ nguyên ý nghĩa cũ)
       const ca=rows.filter(r=>vnDate(r.t)===day).sort((a,b)=>a.t-b.t);
-      const raw=ca.filter(r=>!r.tt);
-      const tt=ca.filter(r=>r.tt).map(r=>({...r,tEnd:r.t,n:1}));   // giữ nguyên, không gộp
+      const raw=ca.filter(r=>!r.nen);
+      const nen=ca.filter(r=>r.nen).map(r=>({...r,tEnd:r.t,n:1}));   // nến đã chốt, giữ nguyên
       const cuoi={}, out=[];
       for(const r of raw){
         const k=r.tk+'|'+r.dir, c=cuoi[k];
@@ -573,7 +583,7 @@ const SRC_24H=(function(){
           cuoi[k]=o; out.push(o);
         }
       }
-      return out.concat(tt).filter(r=>r.val>=th).sort((a,b)=>a.t-b.t);
+      return out.concat(nen).filter(r=>r.val>=th).sort((a,b)=>a.t-b.t);
     },
     dung(){ if(timer){clearInterval(timer);timer=null;} },
     datNhip(ms){ nhip=ms; if(timer){clearInterval(timer);timer=setInterval(quet,nhip);} }
@@ -606,7 +616,7 @@ const SRC_DNSE=(function(){
     note:'✅ <b>Nguồn tick thật.</b> Mỗi dòng là <b>MỘT LỆNH KHỚP đơn lẻ</b> nhận trực tiếp từ luồng MQTT của DNSE. Chiều MUA/BÁN suy ra bằng <b>quy tắc tick ở cấp từng lệnh</b> (so giá lệnh này với lệnh liền trước cùng mã) — chính xác hơn hẳn so với suy từ nến phút. <b>Lưu ý bản chất:</b> MQTT chỉ đẩy dữ liệu từ lúc kết nối trở đi, <b>không có lịch sử</b> — mở trang càng sớm trong phiên thì càng đủ. Tick đã nhận được lưu trong máy anh theo ngày nên F5 không mất.',
     days(){const d=vnDate(Math.floor(Date.now()/1000));return rows.length?[...new Set(rows.map(r=>vnDate(r.t)))].sort():[d];},
     stats(){return {nTick,connected,kept:rows.length};},
-    async fetch(){ if(!rows.length)restore(); save(); return rows.length||1; },
+    async fetch(onTien){ if(!rows.length)restore(); save(); return rows.length||1; },
     load(day,th){return rows.filter(r=>vnDate(r.t)===day&&r.val>=th);},
     async connect(user,pass,onStat){
       if(typeof mqtt==='undefined'){onStat('⚠ chưa tải được thư viện MQTT');return false;}
@@ -761,11 +771,11 @@ function drawSectors(secArr){
 function rowHTML(e,isNew){
   return '<tr class="'+(isNew?'flash':'')+'" onclick="go(\''+e.tk+'\')">'+
     '<td style="color:var(--muted)">'+vnTime(e.t)+'</td>'+
-    '<td class="sym">'+e.tk+(e.tt?' <span class="tag tt">TT</span>':'')+'</td>'+
+    '<td class="sym">'+e.tk+'</td>'+
     '<td>'+fmt(e.px)+'</td>'+
     '<td>'+fmt(e.vol)+'</td>'+
     '<td class="'+(e.dir==='B'?'up':'dn')+'"><b>'+ty(e.val)+'</b></td>'+
-    '<td><span class="tag '+(e.dir==='B'?'b':'s')+'">'+(e.tt?'⇄ THỎA THUẬN':(e.dir==='B'?'↗ MUA':'↘ BÁN'))+'</span></td></tr>';
+    '<td><span class="tag '+(e.dir==='B'?'b':'s')+'">'+(e.dir==='B'?'↗ MUA':'↘ BÁN')+'</span></td></tr>';
 }
 function paintFlow(){
   const q=($('qFlow').value||'').trim().toUpperCase();
@@ -965,7 +975,7 @@ $('selSec').innerHTML='<option value="">Tất cả ngành</option>'+Object.keys(
 
 radarInit();
 // Ngoài giờ giao dịch, realtime chưa thu được cụm nào (nguồn này không có lịch sử) → mở bằng nến 1 phút.
-if(!inSession()&&!localStorage.getItem('radar_24h_'+vnDate(Math.floor(Date.now()/1000)))){
+if(!inSession()&&!localStorage.getItem('radar_24h_v2_'+vnDate(Math.floor(Date.now()/1000)))){
   SOURCE=SRC_MINUTE;
   $('segSrc').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.x==='min'));
 }
