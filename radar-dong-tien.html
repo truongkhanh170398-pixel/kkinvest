@@ -1044,6 +1044,10 @@ async function ndLoad(code){
     .filter(x=>/^[A-Z]{3}$/.test(x.tk)&&isFinite(x.net));
   const topP=(ps||[]).map(r=>({tk:r.symbol,net:(r.value||0)/1e9}))
     .filter(x=>/^[A-Z]{3}$/.test(x.tk)&&isFinite(x.net));
+  try{
+    const hn=await ndHomNay(code);
+    if(hn&&(!rows.length||rows[0].d<hn.d))rows.unshift(hn);
+  }catch(e){}
   const o={rows,topF,topP};
   ND.cache[code]=o; return o;
 }
@@ -1053,11 +1057,12 @@ function ndSum(rows,n){
     s.fB+=r.fB||0; s.fS+=r.fS||0; s.fBq+=r.fBq||0; s.fSq+=r.fSq||0;
     if(r.pBq!=null){s.pBq+=r.pBq;s.pSq+=r.pSq;s.coTdKl=true;}
     if(r.pB!=null){s.pB+=r.pB;s.pS+=r.pS;s.coTd=true;} else if(r.pNet!=null){s.pB+=Math.max(r.pNet,0);s.pS+=Math.max(-r.pNet,0);s.coTd=true;}
+    else s.thieuTd=true;                                   // phiên đang chạy: sàn chưa công bố tự doanh
     if(r.tot!=null){s.tot+=r.tot;s.totKl+=r.totKl||0;s.coTot=true;}
   });
   s.fNet=s.fB-s.fS; s.pNet=s.pB-s.pS;
   s.dB=s.coTot?s.tot-s.fB-s.pB:null; s.dS=s.coTot?s.tot-s.fS-s.pS:null;
-  s.dNet=-(s.fNet+s.pNet);
+  s.dNet=s.thieuTd?((s.dB!=null&&s.dS!=null)?s.dB-s.dS:null):-(s.fNet+s.pNet);
   return s;
 }
 function ndTile(cls,ten,net,mua,ban,klTxt,tong,badge){
@@ -1103,6 +1108,22 @@ async function jVnd(path){
     }catch(e){}
   }
   return null;
+}
+async function ndHomNay(code){
+  const ma=VND_MA[code]; if(!ma)return null;
+  const hom=new Date(Date.now()+7*3600e3).toISOString().slice(0,10);
+  const [fo,mk]=await Promise.all([
+    jVnd(`foreigns?q=code:${ma}~tradingDate:gte:${hom}&size=2`),
+    jVnd(`vnmarket_prices?q=code:${ma}~date:gte:${hom}&size=2`)
+  ]);
+  const F=(fo||[]).find(r=>r.tradingDate===hom), M=(mk||[]).find(r=>r.date===hom);
+  if(!F&&!M)return null;
+  const o={d:hom,dangChay:true};
+  if(M){o.tot=(M.accumulatedVal||0)/1e9; o.totKl=M.accumulatedVol||0; o.vni=M.close;}
+  if(F){o.fB=(F.buyVal||0)/1e9; o.fS=(F.sellVal||0)/1e9; o.fBq=F.buyVol||0; o.fSq=F.sellVol||0; o.fNet=o.fB-o.fS;}
+  o.pB=o.pS=o.pNet=null;                                  // tự doanh: chưa công bố trong phiên
+  if(o.tot!=null&&o.fB!=null){o.dB=o.tot-o.fB; o.dS=o.tot-o.fS; o.dNet=o.dB-o.dS;}
+  return (o.tot!=null||o.fB!=null)?o:null;
 }
 async function ndLoadDai(code){
   const k='dai'+code; if(ND.cache[k])return ND.cache[k];
@@ -1217,9 +1238,10 @@ function ndVe(){
   const rows=D.rows, dai=(ND.ky==='ytd'||+ND.ky>20);
   const n=(ND.ky==='ytd')?rows.length:Math.min(+ND.ky,rows.length);
   const s=ndSum(rows,n), r0=rows[0], rN=rows[n-1]||r0;
+  const dangChay=rows[0]&&rows[0].dangChay&&n>=1;
   const nhan=(ND.ky==='ytd')
     ? `từ đầu năm · ${n} phiên (${rN.d.split('-').reverse().join('/')} → ${r0.d.split('-').reverse().join('/')})`
-    : (n===1?`phiên ${r0.d.split('-').reverse().join('/')}`:`${n} phiên gần nhất`);
+    : (n===1?`phiên ${r0.d.split('-').reverse().join('/')}${dangChay?' · ĐANG GIAO DỊCH':''}`:`${n} phiên gần nhất`);
   $('ndTieu').textContent=`${SAN[ND.code]} · ${nhan}`;
   $('ndCards').innerHTML=
     `<div class="ndtile t"><div class="k">Tổng GTGD sàn</div>
@@ -1228,11 +1250,16 @@ function ndVe(){
        <div class="kl">${nhan}</div></div>`
     + ndTile('f','Nước ngoài',s.fNet,s.fB,s.fS,
         `Mua ${ndCp(s.fBq)} CP · Bán ${ndCp(s.fSq)} CP`,s.tot,'')
-    + ndTile('p','Tự doanh',s.pNet,s.coTd?s.pB:null,s.coTd?s.pS:null,
-        s.coTdKl?`Mua ${ndCp(s.pBq)} CP · Bán ${ndCp(s.pSq)} CP`
-                :'24hMoney không công bố khối lượng tự doanh',s.tot,'')
+    + (s.thieuTd&&!s.coTd
+        ? `<div class="ndtile p"><div class="k">Tự doanh<span class="ndbadge">chưa có</span></div>
+           <div class="n neu" style="font-size:16px">chưa công bố</div>
+           <div class="bs">Sàn chỉ công bố tự doanh <b>sau khi đóng cửa phiên</b></div>
+           <div class="kl">Chọn 5/20/60 phiên để xem số đã công bố</div></div>`
+        : ndTile('p','Tự doanh',s.pNet,s.coTd?s.pB:null,s.coTd?s.pS:null,
+            s.coTdKl?`Mua ${ndCp(s.pBq)} CP · Bán ${ndCp(s.pSq)} CP`
+                    :'24hMoney không công bố khối lượng tự doanh',s.tot,''))
     + ndTile('d','Trong nước',s.dNet,s.dB,s.dS,
-        'Nhỏ lẻ + tổ chức trong nước',s.tot,'phần bù');
+        s.thieuTd?'Nhỏ lẻ + tổ chức + tự doanh (chưa tách được)':'Nhỏ lẻ + tổ chức trong nước',s.tot,'phần bù');
   // biểu đồ: khung ngắn xem ròng từng phiên, khung dài xem lũy kế
   if(dai){ ndVeLuyKe(rows.slice(0,n).reverse()); ndVeSau(D,rows,n,s,dai); return; }
   const R=rows.slice(0,18).reverse();
@@ -1256,11 +1283,14 @@ function ndVe(){
   ndVeSau(D,rows,n,s,dai);
 }
 function ndVeSau(D,rows,n,s,dai){
+  const dangChay=!!(rows[0]&&rows[0].dangChay&&n>=1);
   ndNapTop(rows,n);
   const coCn=rows.slice(0,n).some(r=>r.cnNet!=null);
   const nguon=dai
     ? '<b>Nguồn khung dài:</b> VNDirect (khối ngoại & tự doanh cấp chỉ số, có lịch sử nhiều năm). 24hMoney chặn cứng ở 18–20 phiên nên không cộng được từ đầu năm. Tổng GTGD của hai nguồn đã đối chiếu khớp tuyệt đối; riêng số khối ngoại/tự doanh lệch nhẹ do phạm vi thống kê khác nhau, nên đừng cộng chéo hai khung.'
-    : (n>1
+    : (dangChay
+      ? '<b>Phiên đang chạy:</b> tổng GTGD và khối ngoại lấy từ <b>VNDirect</b> (cập nhật ~1 phút/lần). <b>Tự doanh chưa có</b> — cả 24hMoney lẫn VNDirect đều chỉ công bố tự doanh <b>sau khi đóng cửa</b>, nên ô “Trong nước” lúc này đang gộp cả tự doanh vào.'
+      : n>1
       ? '<b>Nguồn:</b> ô tổng lấy 24hMoney; bảng mã lấy VNDirect vì 24hMoney chỉ cộng dồn theo <i>tuần/tháng lịch</i>, không cộng được đúng N phiên. Hai nguồn lệch nhẹ ở số khối ngoại/tự doanh do phạm vi thống kê khác nhau.'
       : '<b>Nguồn:</b> 24hMoney · cập nhật sau khi sàn kết phiên.');
   const ngayCn=(rows.find(r=>r.cnNet!=null)||{}).d;
