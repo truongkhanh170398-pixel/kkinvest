@@ -1226,6 +1226,29 @@ function ndVeLuyKe(R){
    lọc nhiều mã một lần (code:A,B,C) nên 218 mã của trang chỉ tốn ~6 request.
    ────────────────────────────────────────────────────────────────────────── */
 const ND_TOP_CACHE={};
+const SSI_SAN={'10':'hose','02':'hnx','03':'upcom'};
+async function ndTopSsi(code){
+  const san=SSI_SAN[code]; if(!san)return null;
+  const k='ssi_'+code; if(ND_TOP_CACHE[k])return ND_TOP_CACHE[k];
+  let j=null;
+  const u='https://iboard-query.ssi.com.vn/stock/exchange/'+san;
+  for(const p of [x=>x,x=>'/api/proxy?url='+encodeURIComponent(x)]){
+    try{const c=new AbortController(),to=setTimeout(()=>c.abort(),12000);
+      const r=await fetch(p(u),{cache:'no-store',signal:c.signal});clearTimeout(to);
+      if(r.ok){const k=await r.json(); if(k&&k.data){j=k;break;}}
+    }catch(e){}
+  }
+  if(!j||!j.data)return null;
+  const topF=[];
+  for(const x of j.data){
+    const tk=x.stockSymbol; if(!/^[A-Z]{3}$/.test(tk||''))continue;
+    const net=((+x.buyForeignValue||0)-(+x.sellForeignValue||0))/1e9;
+    if(isFinite(net)&&net!==0)topF.push({tk,net});
+  }
+  if(!topF.length)return null;
+  const o={topF,topP:[],nguon:'SSI iBoard',toanSan:true};
+  ND_TOP_CACHE[k]=o; return o;
+}
 async function ndTopVnd(code,tuNgay){
   const k='tv_'+code+'_'+tuNgay; if(ND_TOP_CACHE[k])return ND_TOP_CACHE[k];
   const san={'10':'HOSE','02':'HNX','03':'UPCOM'}[code];
@@ -1248,7 +1271,14 @@ async function ndNapTop(rows,n){
   const el=$('ndTop'); if(!el)return;
   el.innerHTML='<div class="ndcol" style="grid-column:1/-1"><div class="ndrow" style="color:var(--muted)">⏳ đang gom lũy kế theo mã…</div></div>';
   let T=null;
-  try{ T=await ndTopVnd(code,(rows[n-1]||rows[rows.length-1]).d); }catch(e){}
+  try{
+    if(n===1){
+      T=await ndTopSsi(code);                                  // toàn sàn, 1 request
+      if(T){ const v=await ndTopVnd(code,rows[0].d).catch(()=>null);
+             if(v&&v.topP.length)T={...T,topP:v.topP,nguon:'SSI iBoard (khối ngoại) · VNDirect (tự doanh)'}; }
+    }
+    if(!T)T=await ndTopVnd(code,(rows[n-1]||rows[rows.length-1]).d);
+  }catch(e){}
   if(ND.ky!==ky||ND.code!==code)return;                 // người dùng đã đổi kỳ → bỏ kết quả cũ
   if(!T||(!T.topF.length&&!T.topP.length)){
     el.innerHTML='<div class="ndcol" style="grid-column:1/-1"><div class="ndrow" style="color:var(--muted)">Không lấy được bảng mã cho kỳ này.</div></div>';return;}
@@ -1258,7 +1288,7 @@ async function ndNapTop(rows,n){
     +(T.topP.length?ndBang('Tự doanh',T.topP,mo)
       :'<div class="ndcol"><h4>Tự doanh — <span>'+mo+'</span></h4><div class="ndrow" style="color:var(--muted)">Chưa công bố số tự doanh theo mã cho kỳ này (sàn công bố sau khi đóng cửa).</div></div>');
   const g=$('ndTopNguon');
-  if(g)g.textContent=T.nguon+(T.hep?` · ${UNI.length} mã trong danh mục theo dõi của trang`:'');
+  if(g)g.textContent=T.nguon+(T.toanSan?' · toàn sàn':(T.hep?` · ${UNI.length} mã trong danh mục theo dõi của trang`:''));
 }
 
 function ndVe(){
