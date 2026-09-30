@@ -496,12 +496,14 @@ const SRC_24H=(function(){
       nLuot++; if(!batDau)batDau=Math.floor(Date.now()/1000);
       for(const x of arr){
         const tk=x.symbol||x.code; if(!tk)continue;
-        const vol=+x.accumylated_vol||0;
-        const mp=(+x.match_price||0)*1000;                         // nghìn đồng → VND/cp
+        const vol=(+x.accumylated_vol||0)*10;                       // trường này đếm theo LÔ 10 CP
+        const gt=(+x.accumulated_val||0)*1e9;                       // accumulated_val đã là TỶ đồng
+        const mp=(+x.match_price||0)*1000;                          // nghìn đồng → VND/cp
         const ask=(+x.offer_price01||0)*1000, bid=(+x.bid_price01||0)*1000;
         const p=prev[tk];
         if(p&&mp>0&&vol>p.vol){
-          const dv=vol-p.vol, val=dv*mp;
+          const dv=vol-p.vol;
+          const val=(p.gt!=null&&gt>p.gt)?(gt-p.gt):dv*mp;          // ưu tiên giá trị sàn công bố
           // khớp tại giá CHÀO BÁN = bên mua chủ động nhấc lệnh; tại giá CHÀO MUA = bên bán chủ động đạp
           let dir;
           if(p.ask&&mp>=p.ask)      dir='B';
@@ -509,8 +511,8 @@ const SRC_24H=(function(){
           else                      dir=mp>p.mp?'B':(mp<p.mp?'S':(p.dir||'B'));
           rows.push({t:(+x.updated_at)||Math.floor(Date.now()/1000),tk,px:mp,vol:dv,val,dir});
           nCum++;
-          prev[tk]={vol,mp,ask,bid,dir};
-        } else prev[tk]={vol,mp,ask,bid,dir:p&&p.dir};
+          prev[tk]={vol,gt,mp,ask,bid,dir};
+        } else prev[tk]={vol,gt,mp,ask,bid,dir:p&&p.dir};
       }
       if(rows.length>CAP)rows=rows.slice(-CAP);
       save();
@@ -519,7 +521,7 @@ const SRC_24H=(function(){
   return {
     label:'Realtime 24hMoney',
     tick:false,
-    note:'⚡ <b>Gần thời gian thực — nhịp '+(3)+' giây, không cần tài khoản.</b> Quét lại mỗi 3 giây, rồi <b>gộp các lần khớp liên tiếp cùng mã cùng chiều (cách nhau ≤45 giây) thành MỘT ĐỢT gom/xả</b>. Mỗi dòng là một đợt — thấy ngay khi nó vừa bắt đầu và <b>lớn dần theo thời gian thực</b>, thay vì phải đợi hết phút như nến 1 phút. Chiều <b>MUA/BÁN</b> xác định bằng <b>sổ lệnh</b>: khớp tại giá chào bán → <b>mua chủ động</b>, tại giá chào mua → <b>bán chủ động</b> — chính xác hơn hẳn quy tắc tick suy từ nến. <b>Hạn chế:</b> chỉ có dữ liệu <b>từ lúc mở trang</b> (đã lưu trong máy theo ngày nên F5 không mất), muốn xem lại phiên cũ thì chuyển sang <b>Nến 1 phút</b>. Tốn ~76KB mỗi lượt (≈88MB/giờ ở nhịp 3s) — đổi nhịp trong <b>Bộ lọc thông minh</b>.',
+    note:'⚡ <b>Gần thời gian thực — nhịp '+(3)+' giây, không cần tài khoản.</b> Quét lại mỗi 3 giây, rồi <b>gộp các lần khớp liên tiếp cùng mã cùng chiều thành MỘT ĐỢT gom/xả</b> (ngắt khi nghỉ quá 45 giây, và mỗi đợt tối đa 60 giây — <b>bằng đúng một nến 1 phút</b> nên ngưỡng “lệnh trên 3 tỷ” vẫn giữ nguyên ý nghĩa như trước). Mỗi dòng là một đợt — thấy ngay khi nó vừa bắt đầu và <b>lớn dần theo thời gian thực</b>, thay vì phải đợi hết phút mới hiện. Chiều <b>MUA/BÁN</b> xác định bằng <b>sổ lệnh</b>: khớp tại giá chào bán → <b>mua chủ động</b>, tại giá chào mua → <b>bán chủ động</b> — chính xác hơn hẳn quy tắc tick suy từ nến. <b>Hạn chế:</b> chỉ có dữ liệu <b>từ lúc mở trang</b> (đã lưu trong máy theo ngày nên F5 không mất), muốn xem lại phiên cũ thì chuyển sang <b>Nến 1 phút</b>. Tốn ~76KB mỗi lượt (≈88MB/giờ ở nhịp 3s) — đổi nhịp trong <b>Bộ lọc thông minh</b>.',
     days(){const d=vnDate(Math.floor(Date.now()/1000));return rows.length?[...new Set(rows.map(r=>vnDate(r.t)))].sort():[d];},
     stats(){return {nLuot,nCum,kept:rows.length,nLoi,nhip,batDau};},
     async fetch(){
@@ -528,12 +530,13 @@ const SRC_24H=(function(){
       return rows.length||1;
     },
     load(day,th){
-      const GAP=45;                                   // giây — quá khoảng này coi là một đợt mới
+      const GAP=45, DAI=60;                           // GAP: nghỉ quá lâu = đợt mới · DAI: một đợt tối đa 60s
+                                                      // (bằng một nến 1 phút → ngưỡng "trên 3 tỷ" giữ nguyên ý nghĩa cũ)
       const raw=rows.filter(r=>vnDate(r.t)===day).sort((a,b)=>a.t-b.t);
       const cuoi={}, out=[];
       for(const r of raw){
         const k=r.tk+'|'+r.dir, c=cuoi[k];
-        if(c&&r.t-c.tEnd<=GAP){                       // nối vào đợt đang mở
+        if(c&&r.t-c.tEnd<=GAP&&r.t-c.t<DAI){          // nối vào đợt đang mở
           c.val+=r.val; c.vol+=r.vol; c.px=r.px; c.tEnd=r.t; c.n++;
         }else{
           const o={t:r.t,tEnd:r.t,tk:r.tk,px:r.px,vol:r.vol,val:r.val,dir:r.dir,n:1};
@@ -907,8 +910,6 @@ $('segSrc').querySelectorAll('button').forEach(b=>b.onclick=async()=>{
   $('dnseBox').className='hrow'+(dnse?'':' hide');
   if(SOURCE&&SOURCE.dung)SOURCE.dung();                 // tắt vòng quét của nguồn đang chạy
   SOURCE = dnse?SRC_DNSE:(x==='rt'?SRC_24H:SRC_MINUTE);
-  // cụm 3 giây nhỏ hơn nến 1 phút nhiều lần → ngưỡng 3 tỷ sẽ lọc sạch, hạ về 1 tỷ cho hợp
-  if(x==='rt'&&+$('selTh').value>1)$('selTh').value='1';
   prevKeys=new Set(); setAuto();
   await load(true);
 });
@@ -938,7 +939,6 @@ if(!inSession()&&!localStorage.getItem('radar_24h_'+vnDate(Math.floor(Date.now()
   SOURCE=SRC_MINUTE;
   $('segSrc').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.x==='min'));
 }
-if(SOURCE===SRC_24H)$('selTh').value='1';   // đợt gộp nhỏ hơn nến 1 phút nhiều lần
 setAuto(); load(true);
 
 /* ═══════════════ DÒNG TIỀN THEO NHÓM NHÀ ĐẦU TƯ (nguồn 24hMoney) ═══════════════
