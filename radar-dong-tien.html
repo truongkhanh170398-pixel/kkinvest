@@ -1055,13 +1055,11 @@ const ndCp=v=>(v==null||!isFinite(v))?'—':Math.round(v).toLocaleString('vi-VN'
 
 async function ndLoad(code){
   if(ND.cache[code])return ND.cache[code];
-  const [th,ft,pr,inv,fs,ps]=await Promise.all([
+  const [th,ft,pr,inv]=await Promise.all([
     j24(`indices/trading-history?code=${code}&floor_code=${code}`),
     j24(`indices/foreign-trading?code=${code}`),
     j24(`indices/proprietary-trading-history?code=${code}`),
-    j24(`indices/statistic-investor-history?code=${code}`),
-    j24(`indices/foreign-trading-stock?code=${code}`),
-    j24(`indices/proprietary-trading-stock?code=${code}`)
+    j24(`indices/statistic-investor-history?code=${code}`)
   ]);
   if(!th&&!ft&&!inv)return null;
   const M={};
@@ -1085,10 +1083,7 @@ async function ndLoad(code){
     o.dNet=(o.fNet!=null&&o.pNet!=null)?-(o.fNet+o.pNet):null;
     o.cnNet=(o.cnB!=null&&o.cnS!=null&&(o.cnB||o.cnS))?(o.cnB-o.cnS):null;
   });
-  const topF=(fs||[]).map(r=>({tk:r.symbol,net:(r.buy_val||0)-(r.sell_val||0)}))
-    .filter(x=>/^[A-Z]{3}$/.test(x.tk)&&isFinite(x.net));
-  const topP=(ps||[]).map(r=>({tk:r.symbol,net:(r.value||0)/1e9}))
-    .filter(x=>/^[A-Z]{3}$/.test(x.tk)&&isFinite(x.net));
+  const topF=[],topP=[];            // bảng mã lấy từ VNDirect trong ndNapTop, không dùng số của 24hMoney
   try{
     const hn=await ndHomNay(code);
     if(hn&&(!rows.length||rows[0].d<hn.d))rows.unshift(hn);
@@ -1231,19 +1226,6 @@ function ndVeLuyKe(R){
    lọc nhiều mã một lần (code:A,B,C) nên 218 mã của trang chỉ tốn ~6 request.
    ────────────────────────────────────────────────────────────────────────── */
 const ND_TOP_CACHE={};
-async function ndTop24h(code,type){
-  const k='t24_'+code+'_'+type; if(ND_TOP_CACHE[k])return ND_TOP_CACHE[k];
-  const [fo,pr]=await Promise.all([
-    j24(`indices/foreign-trading-all-stock-by-time?code=${code}&type=${type}`),
-    j24(`indices/proprietary-trading-all-stock-by-time?code=${code}&type=${type}`)
-  ]);
-  const lay=d=>Array.isArray(d)?d:((d&&Array.isArray(d.data))?d.data:[]);
-  const o={
-    topF:lay(fo).map(r=>({tk:r.symbol,net:r.net_val})).filter(x=>/^[A-Z]{3}$/.test(x.tk)&&isFinite(x.net)),
-    topP:lay(pr).map(r=>({tk:r.symbol,net:r.prop_net})).filter(x=>/^[A-Z]{3}$/.test(x.tk)&&isFinite(x.net)),
-    nguon:'24hMoney'};
-  ND_TOP_CACHE[k]=o; return o;
-}
 async function ndTopVnd(code,tuNgay){
   const k='tv_'+code+'_'+tuNgay; if(ND_TOP_CACHE[k])return ND_TOP_CACHE[k];
   const san={'10':'HOSE','02':'HNX','03':'UPCOM'}[code];
@@ -1264,16 +1246,17 @@ async function ndTopVnd(code,tuNgay){
 async function ndNapTop(rows,n){
   const ky=ND.ky, code=ND.code;
   const el=$('ndTop'); if(!el)return;
-  const loai={1:'today'}[ky];   // 24hMoney chỉ có week/month theo LỊCH, lệch với 'N phiên' nên không dùng
   el.innerHTML='<div class="ndcol" style="grid-column:1/-1"><div class="ndrow" style="color:var(--muted)">⏳ đang gom lũy kế theo mã…</div></div>';
   let T=null;
-  try{ T=loai?await ndTop24h(code,loai):await ndTopVnd(code,(rows[n-1]||rows[rows.length-1]).d); }catch(e){}
+  try{ T=await ndTopVnd(code,(rows[n-1]||rows[rows.length-1]).d); }catch(e){}
   if(ND.ky!==ky||ND.code!==code)return;                 // người dùng đã đổi kỳ → bỏ kết quả cũ
   if(!T||(!T.topF.length&&!T.topP.length)){
     el.innerHTML='<div class="ndcol" style="grid-column:1/-1"><div class="ndrow" style="color:var(--muted)">Không lấy được bảng mã cho kỳ này.</div></div>';return;}
-  const mo={1:'phiên gần nhất'}[ky]
-    ||`lũy kế ${n} phiên${ky==='ytd'?' từ đầu năm':''}`;
-  el.innerHTML=ndBang('Nước ngoài',T.topF,mo)+ndBang('Tự doanh',T.topP,mo);
+  const mo=(n===1)?`phiên ${(rows[0].d||'').split('-').reverse().join('/')}`
+    :`lũy kế ${n} phiên${ky==='ytd'?' từ đầu năm':''}`;
+  el.innerHTML=ndBang('Nước ngoài',T.topF,mo)
+    +(T.topP.length?ndBang('Tự doanh',T.topP,mo)
+      :'<div class="ndcol"><h4>Tự doanh — <span>'+mo+'</span></h4><div class="ndrow" style="color:var(--muted)">Chưa công bố số tự doanh theo mã cho kỳ này (sàn công bố sau khi đóng cửa).</div></div>');
   const g=$('ndTopNguon');
   if(g)g.textContent=T.nguon+(T.hep?` · ${UNI.length} mã trong danh mục theo dõi của trang`:'');
 }
