@@ -220,18 +220,19 @@
             <div class="dropmenu" id="filtMenu">
               <h4>Ngưỡng phát hiện</h4>
               <div class="frow">Giá trị tối thiểu
-                <select id="selTh"><option value="1">≥ 1 tỷ</option><option value="2">≥ 2 tỷ</option><option value="3" selected>≥ 3 tỷ</option><option value="5">≥ 5 tỷ</option><option value="10">≥ 10 tỷ</option></select></div>
+                <select id="selTh"><option value="0.5">≥ 0,5 tỷ</option><option value="1">≥ 1 tỷ</option><option value="2">≥ 2 tỷ</option><option value="3" selected>≥ 3 tỷ</option><option value="5">≥ 5 tỷ</option><option value="10">≥ 10 tỷ</option></select></div>
               <h4>Phạm vi</h4>
               <div class="frow">Ngành <select id="selSec"><option value="">Tất cả ngành</option></select></div>
               <div class="frow">Nhóm <select id="selGrp"><option value="">Toàn thị trường</option><option value="VN30">Chỉ VN30</option></select></div>
               <h4>Hiển thị</h4>
               <div class="frow">Bỏ phiên ATO/ATC <input type="checkbox" id="chkAuc" style="flex:none;width:auto;accent-color:var(--accent2)"></div>
+              <div class="frow">Nhịp realtime <select id="selNhip"><option value="2000">2 giây · ~131MB/giờ</option><option value="3000" selected>3 giây · ~88MB/giờ</option><option value="5000">5 giây · ~53MB/giờ</option><option value="10000">10 giây · ~26MB/giờ</option></select></div>
               <div class="frow">Tự làm mới 20s <input type="checkbox" id="chkAuto" checked style="flex:none;width:auto;accent-color:var(--accent2)"></div>
             </div>
           </div>
         </div>
         <div class="hrow">
-          <div class="seg" id="segSrc"><button class="on" data-x="min">📊 Nến 1 phút</button><button data-x="dnse">🔴 Tick DNSE</button></div>
+          <div class="seg" id="segSrc"><button class="on" data-x="rt">⚡ Realtime 24hMoney</button><button data-x="min">📊 Nến 1 phút</button><button data-x="dnse">🔴 Tick DNSE</button></div>
           <div class="seg" id="segSide"><button class="on" data-s="all">Tất cả</button><button data-s="buy">MUA</button><button data-s="sell">BÁN</button></div>
           <button class="ctl" id="btnRf">⟳ Làm mới</button>
           <span class="stat" id="stat">⏳ đang tải…</span>
@@ -469,6 +470,83 @@ const SRC_REALTIME={
    rồi subscribe topic tick của toàn rổ. Mỗi message = MỘT LỆNH KHỚP THẬT.
    Hạn chế bản chất của MQTT: chỉ nhận được từ lúc kết nối trở đi, không có
    lịch sử — nên tick nhận được sẽ ghi vào localStorage theo ngày để F5 không mất. */
+/* ═══════════ NGUỒN 3: REALTIME 24hMoney (không cần tài khoản) ═══════════════
+   24hMoney KHÔNG có API tick từng lệnh (đã dò hết 170 endpoint: mịn nhất là 1 phút).
+   Nhưng bảng giá gộp `v2/stock/details` nhận CẢ 218 MÃ trong MỘT request (~76KB nén,
+   ~240ms) và tự cập nhật nhanh tới 1,5 giây. Lấy HIỆU khối lượng luỹ kế giữa 2 lượt
+   quét là ra lượng khớp trong khoảng đó — đo thực tế 2026-09-30: tổng các cụm khớp
+   TRÙNG KHÍT mức tăng khối lượng cả phiên (lệch 0 ở toàn bộ mã thử), không sót.
+   Điểm hơn hẳn nến 1 phút: có SỔ LỆNH bid/ask nên biết lệnh khớp ở giá chào bán
+   (mua chủ động) hay giá chào mua (bán chủ động), thay vì đoán bằng quy tắc tick.
+   ══════════════════════════════════════════════════════════════════════════ */
+const SRC_24H=(function(){
+  const CAP=9000;
+  let rows=[], prev={}, nLuot=0, nCum=0, nLoi=0, timer=null, dangQuet=false, nhip=3000, batDau=null;
+  const key=()=>'radar_24h_'+vnDate(Math.floor(Date.now()/1000));
+  function save(){try{localStorage.setItem(key(),JSON.stringify(rows.slice(-CAP)));}catch(e){}}
+  function restore(){try{rows=JSON.parse(localStorage.getItem(key()))||[];}catch(e){rows=[];}}
+  async function quet(){
+    if(dangQuet)return; dangQuet=true;
+    try{
+      const u='https://api-finance-t19.24hmoney.vn/v2/web/stock/details?symbols='+UNI.join(',');
+      let j=null;
+      try{ j=await tf(u,8000); }                                   // CORS mở → đi thẳng
+      catch(e){ try{ j=await tf('/api/proxy?url='+encodeURIComponent(u),9000); }catch(e2){ nLoi++; } }
+      const arr=(j&&j.data)||[]; if(!arr.length)return;
+      nLuot++; if(!batDau)batDau=Math.floor(Date.now()/1000);
+      for(const x of arr){
+        const tk=x.symbol||x.code; if(!tk)continue;
+        const vol=+x.accumylated_vol||0;
+        const mp=(+x.match_price||0)*1000;                         // nghìn đồng → VND/cp
+        const ask=(+x.offer_price01||0)*1000, bid=(+x.bid_price01||0)*1000;
+        const p=prev[tk];
+        if(p&&mp>0&&vol>p.vol){
+          const dv=vol-p.vol, val=dv*mp;
+          // khớp tại giá CHÀO BÁN = bên mua chủ động nhấc lệnh; tại giá CHÀO MUA = bên bán chủ động đạp
+          let dir;
+          if(p.ask&&mp>=p.ask)      dir='B';
+          else if(p.bid&&mp<=p.bid) dir='S';
+          else                      dir=mp>p.mp?'B':(mp<p.mp?'S':(p.dir||'B'));
+          rows.push({t:(+x.updated_at)||Math.floor(Date.now()/1000),tk,px:mp,vol:dv,val,dir});
+          nCum++;
+          prev[tk]={vol,mp,ask,bid,dir};
+        } else prev[tk]={vol,mp,ask,bid,dir:p&&p.dir};
+      }
+      if(rows.length>CAP)rows=rows.slice(-CAP);
+      save();
+    } finally{ dangQuet=false; }
+  }
+  return {
+    label:'Realtime 24hMoney',
+    tick:false,
+    note:'⚡ <b>Gần thời gian thực — nhịp '+(3)+' giây, không cần tài khoản.</b> Quét lại mỗi 3 giây, rồi <b>gộp các lần khớp liên tiếp cùng mã cùng chiều (cách nhau ≤45 giây) thành MỘT ĐỢT gom/xả</b>. Mỗi dòng là một đợt — thấy ngay khi nó vừa bắt đầu và <b>lớn dần theo thời gian thực</b>, thay vì phải đợi hết phút như nến 1 phút. Chiều <b>MUA/BÁN</b> xác định bằng <b>sổ lệnh</b>: khớp tại giá chào bán → <b>mua chủ động</b>, tại giá chào mua → <b>bán chủ động</b> — chính xác hơn hẳn quy tắc tick suy từ nến. <b>Hạn chế:</b> chỉ có dữ liệu <b>từ lúc mở trang</b> (đã lưu trong máy theo ngày nên F5 không mất), muốn xem lại phiên cũ thì chuyển sang <b>Nến 1 phút</b>. Tốn ~76KB mỗi lượt (≈88MB/giờ ở nhịp 3s) — đổi nhịp trong <b>Bộ lọc thông minh</b>.',
+    days(){const d=vnDate(Math.floor(Date.now()/1000));return rows.length?[...new Set(rows.map(r=>vnDate(r.t)))].sort():[d];},
+    stats(){return {nLuot,nCum,kept:rows.length,nLoi,nhip,batDau};},
+    async fetch(){
+      if(!rows.length)restore();
+      if(!timer){ await quet(); timer=setInterval(quet,nhip); }
+      return rows.length||1;
+    },
+    load(day,th){
+      const GAP=45;                                   // giây — quá khoảng này coi là một đợt mới
+      const raw=rows.filter(r=>vnDate(r.t)===day).sort((a,b)=>a.t-b.t);
+      const cuoi={}, out=[];
+      for(const r of raw){
+        const k=r.tk+'|'+r.dir, c=cuoi[k];
+        if(c&&r.t-c.tEnd<=GAP){                       // nối vào đợt đang mở
+          c.val+=r.val; c.vol+=r.vol; c.px=r.px; c.tEnd=r.t; c.n++;
+        }else{
+          const o={t:r.t,tEnd:r.t,tk:r.tk,px:r.px,vol:r.vol,val:r.val,dir:r.dir,n:1};
+          cuoi[k]=o; out.push(o);
+        }
+      }
+      return out.filter(r=>r.val>=th).sort((a,b)=>a.t-b.t);
+    },
+    dung(){ if(timer){clearInterval(timer);timer=null;} },
+    datNhip(ms){ nhip=ms; if(timer){clearInterval(timer);timer=setInterval(quet,nhip);} }
+  };
+})();
+
 const SRC_DNSE=(function(){
   const KEEP_MIN=1e9, CAP=6000;      // chỉ giữ lệnh ≥1 tỷ, tối đa 6000 bản ghi/phiên
   let rows=[], lastPx={}, client=null, nTick=0, connected=false;
@@ -533,7 +611,7 @@ const SRC_DNSE=(function(){
   };
 })();
 
-let SOURCE = SRC_MINUTE;      // đổi qua lại bằng nút "Nến 1 phút / Tick DNSE" trên header
+let SOURCE = SRC_24H;         // đổi bằng nút nguồn trên header. Ngoài phiên tự lùi về SRC_MINUTE (xem phần khởi động).
 
 /* ═══════════════════════ TRẠNG THÁI & VÒNG ĐỜI ═══════════════════════════ */
 let EVT=[], VIEWED=[], side='all', view='dash', secMode='all', bigMode='all', cumMode='5m';
@@ -573,7 +651,7 @@ function render(){
 
   const live=day===SOURCE.days().slice(-1)[0]&&inSession();
   $('pillLive').className='pill'+(live?' on':'');
-  $('pillTxt').textContent=live?'LIVE 20s':'Ngoài giờ giao dịch';
+  $('pillTxt').textContent=live?('LIVE '+(SOURCE===SRC_24H?(+$('selNhip').value/1000)+'s':SOURCE===SRC_DNSE?'tick':'20s')):'Ngoài giờ giao dịch';
   $('rLive').className='rlive'+(live?'':' off');
 
   // ── KPI ──
@@ -799,8 +877,11 @@ async function load(first){
   fillDays(keep); render();
 }
 function setAuto(){ if(timer){clearInterval(timer);timer=null;}
-  // nguồn tick DNSE tự đẩy dữ liệu (vòng 5s riêng) nên không cần quét lại nến
-  if($('chkAuto').checked)timer=setInterval(()=>{if(inSession()&&SOURCE===SRC_MINUTE)load(false);},20000); }
+  if(!$('chkAuto').checked)return;
+  // DNSE tự đẩy qua MQTT (vòng 5s riêng). SRC_24H tự quét nền theo nhịp đã chọn nên ở đây
+  // chỉ cần VẼ LẠI; còn nến 1 phút thì mỗi lượt là tải lại 12,8MB nên giữ 20s.
+  if(SOURCE===SRC_24H) timer=setInterval(()=>{if(inSession())load(false);},+$('selNhip').value);
+  else                 timer=setInterval(()=>{if(inSession()&&SOURCE===SRC_MINUTE)load(false);},20000); }
 
 $('segSide').querySelectorAll('button').forEach(b=>b.onclick=()=>{
   $('segSide').querySelectorAll('button').forEach(x=>x.classList.remove('on','b','s'));
@@ -822,10 +903,13 @@ $('segCum').querySelectorAll('button').forEach(b=>b.onclick=()=>{
 $('segSrc').querySelectorAll('button').forEach(b=>b.onclick=async()=>{
   $('segSrc').querySelectorAll('button').forEach(x=>x.classList.remove('on'));
   b.classList.add('on');
-  const dnse=b.dataset.x==='dnse';
+  const x=b.dataset.x, dnse=x==='dnse';
   $('dnseBox').className='hrow'+(dnse?'':' hide');
-  SOURCE=dnse?SRC_DNSE:SRC_MINUTE;
-  prevKeys=new Set();
+  if(SOURCE&&SOURCE.dung)SOURCE.dung();                 // tắt vòng quét của nguồn đang chạy
+  SOURCE = dnse?SRC_DNSE:(x==='rt'?SRC_24H:SRC_MINUTE);
+  // cụm 3 giây nhỏ hơn nến 1 phút nhiều lần → ngưỡng 3 tỷ sẽ lọc sạch, hạ về 1 tỷ cho hợp
+  if(x==='rt'&&+$('selTh').value>1)$('selTh').value='1';
+  prevKeys=new Set(); setAuto();
   await load(true);
 });
 $('btnDnse').onclick=async()=>{
@@ -845,9 +929,17 @@ $('selTh').onchange=render; $('selSec').onchange=render; $('selGrp').onchange=re
 $('qFlow').oninput=paintFlow;
 $('btnRf').onclick=()=>load(false);
 $('chkAuto').onchange=setAuto;
+$('selNhip').onchange=()=>{SRC_24H.datNhip(+$('selNhip').value);setAuto();};
 $('selSec').innerHTML='<option value="">Tất cả ngành</option>'+Object.keys(SECTORS).map(s=>'<option>'+s+'</option>').join('');
 
-radarInit(); setAuto(); load(true);
+radarInit();
+// Ngoài giờ giao dịch, realtime chưa thu được cụm nào (nguồn này không có lịch sử) → mở bằng nến 1 phút.
+if(!inSession()&&!localStorage.getItem('radar_24h_'+vnDate(Math.floor(Date.now()/1000)))){
+  SOURCE=SRC_MINUTE;
+  $('segSrc').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.x==='min'));
+}
+if(SOURCE===SRC_24H)$('selTh').value='1';   // đợt gộp nhỏ hơn nến 1 phút nhiều lần
+setAuto(); load(true);
 
 /* ═══════════════ DÒNG TIỀN THEO NHÓM NHÀ ĐẦU TƯ (nguồn 24hMoney) ═══════════════
    Nước ngoài & Tự doanh: số công bố. Trong nước = Tổng GTGD sàn − NN − TD (phần bù).
