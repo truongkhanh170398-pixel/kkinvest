@@ -134,6 +134,7 @@
   .tile b{letter-spacing:.3px}.tile span{font-size:10.5px;opacity:.92}
   .mapsec{padding:11px 14px 3px;font-size:11.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:flex;gap:9px;align-items:baseline}
   .mapsec i{font-style:normal;font-weight:800;font-size:11.5px}
+  .tag.tt{background:rgba(226,179,59,.2);color:#f0c26b;font-size:9.5px;padding:1px 5px;border-radius:4px;font-weight:800}
   .hide{display:none}
   .stat{color:var(--muted);font-size:12px}
 
@@ -485,6 +486,32 @@ const SRC_24H=(function(){
   const key=()=>'radar_24h_'+vnDate(Math.floor(Date.now()/1000));
   function save(){try{localStorage.setItem(key(),JSON.stringify(rows.slice(-CAP)));}catch(e){}}
   function restore(){try{rows=JSON.parse(localStorage.getItem(key()))||[];}catch(e){rows=[];}}
+  // Khớp lệnh liên tục thì KHÔNG có API nào trả từng lệnh (đã đo: match_qtty poll 1s chỉ bắt 61%,
+  // riêng HPG 9% — không dùng được). Nhưng THOẢ THUẬN thì 24hMoney trả TỪNG LỆNH chính xác,
+  // cả sàn trong 1 request: symbol/price/match_qtty/match_value/time. Đây là lệnh đơn lẻ thật.
+  const ttDaCo=new Set();
+  async function quetTT(){
+    for(const san of ['10','02','03']){
+      const u='https://api-finance-t19.24hmoney.vn/v1/web/indices/agreements-trading-stock?code='+san;
+      let j=null;
+      try{ j=await tf(u,8000); }catch(e){ try{ j=await tf('/api/proxy?url='+encodeURIComponent(u),9000); }catch(e2){ continue; } }
+      for(const x of (j&&j.data)||[]){
+        const tk=x.symbol, val=+x.match_value||0, qt=+x.match_qtty||0, px=+x.price||0;
+        if(!tk||!val||!qt)continue;
+        const kh=tk+'|'+x.time+'|'+val;
+        if(ttDaCo.has(kh))continue; ttDaCo.add(kh);
+        const [h,m,s]=String(x.time||'').split(':').map(Number);
+        const d=new Date(Date.now()+7*3600e3); d.setUTCHours(h||0,m||0,s||0,0);
+        const giay=Math.floor(d.getTime()/1000)-7*3600;
+        const p=prev[tk];
+        // thoả thuận là giá thương lượng, không có bên chủ động → suy từ giá so với giá TB phiên
+        const dir=(p&&p.avg)?(px>=p.avg?'B':'S'):'B';
+        rows.push({t:giay,tk,px,vol:qt,val,dir,tt:1});
+      }
+    }
+    if(ttDaCo.size>4000)ttDaCo.clear();
+  }
+  let demTT=0;
   async function quet(){
     if(dangQuet)return; dangQuet=true;
     try{
@@ -511,9 +538,10 @@ const SRC_24H=(function(){
           else                      dir=mp>p.mp?'B':(mp<p.mp?'S':(p.dir||'B'));
           rows.push({t:(+x.updated_at)||Math.floor(Date.now()/1000),tk,px:mp,vol:dv,val,dir});
           nCum++;
-          prev[tk]={vol,gt,mp,ask,bid,dir};
-        } else prev[tk]={vol,gt,mp,ask,bid,dir:p&&p.dir};
+          prev[tk]={vol,gt,mp,ask,bid,dir,avg:(+x.average_price||0)*1000};
+        } else prev[tk]={vol,gt,mp,ask,bid,dir:p&&p.dir,avg:(+x.average_price||0)*1000};
       }
+      if((demTT++%5)===0){ try{ await quetTT(); }catch(e){} }
       if(rows.length>CAP)rows=rows.slice(-CAP);
       save();
     } finally{ dangQuet=false; }
@@ -521,7 +549,7 @@ const SRC_24H=(function(){
   return {
     label:'Realtime 24hMoney',
     tick:false,
-    note:'⚡ <b>Gần thời gian thực — nhịp '+(3)+' giây, không cần tài khoản.</b> Quét lại mỗi 3 giây, rồi <b>gộp các lần khớp liên tiếp cùng mã cùng chiều thành MỘT ĐỢT gom/xả</b> (ngắt khi nghỉ quá 45 giây, và mỗi đợt tối đa 60 giây — <b>bằng đúng một nến 1 phút</b> nên ngưỡng “lệnh trên 3 tỷ” vẫn giữ nguyên ý nghĩa như trước). Mỗi dòng là một đợt — thấy ngay khi nó vừa bắt đầu và <b>lớn dần theo thời gian thực</b>, thay vì phải đợi hết phút mới hiện. Chiều <b>MUA/BÁN</b> xác định bằng <b>sổ lệnh</b>: khớp tại giá chào bán → <b>mua chủ động</b>, tại giá chào mua → <b>bán chủ động</b> — chính xác hơn hẳn quy tắc tick suy từ nến. <b>Hạn chế:</b> chỉ có dữ liệu <b>từ lúc mở trang</b> (đã lưu trong máy theo ngày nên F5 không mất), muốn xem lại phiên cũ thì chuyển sang <b>Nến 1 phút</b>. Tốn ~76KB mỗi lượt (≈88MB/giờ ở nhịp 3s) — đổi nhịp trong <b>Bộ lọc thông minh</b>.',
+    note:'⚡ <b>Gần thời gian thực — nhịp '+(3)+' giây, không cần tài khoản.</b> Quét lại mỗi 3 giây, rồi <b>gộp các lần khớp liên tiếp cùng mã cùng chiều thành MỘT ĐỢT gom/xả</b> (ngắt khi nghỉ quá 45 giây, và mỗi đợt tối đa 60 giây — <b>bằng đúng một nến 1 phút</b> nên ngưỡng “lệnh trên 3 tỷ” vẫn giữ nguyên ý nghĩa như trước). Mỗi dòng là một đợt — thấy ngay khi nó vừa bắt đầu và <b>lớn dần theo thời gian thực</b>, thay vì phải đợi hết phút mới hiện. Riêng dòng gắn nhãn <b>TT</b> là <b>lệnh THỎA THUẬN đơn lẻ</b> — giá trị chính xác từng lệnh, không gộp (chiều mua/bán suy từ giá so với giá TB phiên nên chỉ là ước lượng). <b>Vì sao khớp lệnh liên tục không tách được từng lệnh:</b> không API công khai nào trả từng lệnh khớp — đo 30/09, bám theo <i>match_qtty</i> ở nhịp 1 giây chỉ bắt được 61% số lệnh (riêng HPG 9%). Muốn từng lệnh thật thì dùng <b>🔴 Tick DNSE</b>. Chiều <b>MUA/BÁN</b> xác định bằng <b>sổ lệnh</b>: khớp tại giá chào bán → <b>mua chủ động</b>, tại giá chào mua → <b>bán chủ động</b> — chính xác hơn hẳn quy tắc tick suy từ nến. <b>Hạn chế:</b> chỉ có dữ liệu <b>từ lúc mở trang</b> (đã lưu trong máy theo ngày nên F5 không mất), muốn xem lại phiên cũ thì chuyển sang <b>Nến 1 phút</b>. Tốn ~76KB mỗi lượt (≈88MB/giờ ở nhịp 3s) — đổi nhịp trong <b>Bộ lọc thông minh</b>.',
     days(){const d=vnDate(Math.floor(Date.now()/1000));return rows.length?[...new Set(rows.map(r=>vnDate(r.t)))].sort():[d];},
     stats(){return {nLuot,nCum,kept:rows.length,nLoi,nhip,batDau};},
     async fetch(){
@@ -532,7 +560,9 @@ const SRC_24H=(function(){
     load(day,th){
       const GAP=45, DAI=60;                           // GAP: nghỉ quá lâu = đợt mới · DAI: một đợt tối đa 60s
                                                       // (bằng một nến 1 phút → ngưỡng "trên 3 tỷ" giữ nguyên ý nghĩa cũ)
-      const raw=rows.filter(r=>vnDate(r.t)===day).sort((a,b)=>a.t-b.t);
+      const ca=rows.filter(r=>vnDate(r.t)===day).sort((a,b)=>a.t-b.t);
+      const raw=ca.filter(r=>!r.tt);
+      const tt=ca.filter(r=>r.tt).map(r=>({...r,tEnd:r.t,n:1}));   // giữ nguyên, không gộp
       const cuoi={}, out=[];
       for(const r of raw){
         const k=r.tk+'|'+r.dir, c=cuoi[k];
@@ -543,7 +573,7 @@ const SRC_24H=(function(){
           cuoi[k]=o; out.push(o);
         }
       }
-      return out.filter(r=>r.val>=th).sort((a,b)=>a.t-b.t);
+      return out.concat(tt).filter(r=>r.val>=th).sort((a,b)=>a.t-b.t);
     },
     dung(){ if(timer){clearInterval(timer);timer=null;} },
     datNhip(ms){ nhip=ms; if(timer){clearInterval(timer);timer=setInterval(quet,nhip);} }
@@ -731,11 +761,11 @@ function drawSectors(secArr){
 function rowHTML(e,isNew){
   return '<tr class="'+(isNew?'flash':'')+'" onclick="go(\''+e.tk+'\')">'+
     '<td style="color:var(--muted)">'+vnTime(e.t)+'</td>'+
-    '<td class="sym">'+e.tk+'</td>'+
+    '<td class="sym">'+e.tk+(e.tt?' <span class="tag tt">TT</span>':'')+'</td>'+
     '<td>'+fmt(e.px)+'</td>'+
     '<td>'+fmt(e.vol)+'</td>'+
     '<td class="'+(e.dir==='B'?'up':'dn')+'"><b>'+ty(e.val)+'</b></td>'+
-    '<td><span class="tag '+(e.dir==='B'?'b':'s')+'">'+(e.dir==='B'?'↗ MUA':'↘ BÁN')+'</span></td></tr>';
+    '<td><span class="tag '+(e.dir==='B'?'b':'s')+'">'+(e.tt?'⇄ THỎA THUẬN':(e.dir==='B'?'↗ MUA':'↘ BÁN'))+'</span></td></tr>';
 }
 function paintFlow(){
   const q=($('qFlow').value||'').trim().toUpperCase();
