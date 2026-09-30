@@ -226,7 +226,7 @@
               <div class="frow">Ngành <select id="selSec"><option value="">Tất cả ngành</option></select></div>
               <div class="frow">Nhóm <select id="selGrp"><option value="">Toàn thị trường</option><option value="VN30">Chỉ VN30</option></select></div>
               <h4>Hiển thị</h4>
-              <div class="frow">Bỏ phiên ATO/ATC <input type="checkbox" id="chkAuc" style="flex:none;width:auto;accent-color:var(--accent2)"></div>
+              <div class="frow">Bỏ phiên ATO/ATC <input type="checkbox" id="chkAuc" checked style="flex:none;width:auto;accent-color:var(--accent2)"></div>
               <div class="frow">Hiện lịch sử nến 1 phút <input type="checkbox" id="chkNen" checked style="flex:none;width:auto;accent-color:var(--accent2)"></div>
               <div class="frow">Gộp lệnh <select id="selGop"><option value="0">Không gộp · từng lần khớp</option><option value="15">Gộp 15 giây</option><option value="30">Gộp 30 giây</option><option value="60" selected>Gộp 60 giây · như nến 1 phút</option></select></div>
               <div class="frow">Nhịp realtime <select id="selNhip"><option value="2000">2 giây · ~131MB/giờ</option><option value="3000" selected>3 giây · ~88MB/giờ</option><option value="5000">5 giây · ~53MB/giờ</option><option value="10000">10 giây · ~26MB/giờ</option></select></div>
@@ -598,6 +598,7 @@ const SRC_24H=(function(){
 const SRC_DNSE=(function(){
   const KEEP_MIN=1e9, CAP=6000;      // chỉ giữ lệnh ≥1 tỷ, tối đa 6000 bản ghi/phiên
   let rows=[], lastPx={}, client=null, nTick=0, connected=false;
+  let heSo=1, klTick={}, moc=null, ketQuaChuan=null;   // hiệu chỉnh đơn vị KL tick
   const key=()=>'radar_dnse_'+vnDate(Math.floor(Date.now()/1000));
   function save(){try{localStorage.setItem(key(),JSON.stringify(rows.slice(-CAP)));}catch(e){}}
   function restore(){try{rows=JSON.parse(localStorage.getItem(key()))||[];}catch(e){rows=[];}}
@@ -609,7 +610,8 @@ const SRC_DNSE=(function(){
     const px=mp>3000?mp:mp*1000;        // chuẩn hoá về VND/cp
     nTick++;
     const prev=lastPx[tk]; lastPx[tk]=px;
-    const val=px*qt;
+    klTick[tk]=(klTick[tk]||0)+qt;                     // gom để đối chiếu đơn vị
+    const val=px*qt*heSo;
     if(val<KEEP_MIN)return;             // lọc ngay lúc nhận để không phình bộ nhớ
     const dir=prev==null?'B':(px>prev?'B':px<prev?'S':(rows.length&&rows[rows.length-1].tk===tk?rows[rows.length-1].dir:'B'));
     rows.push({t:Math.floor(Date.now()/1000),tk,px,vol:qt,val,dir});
@@ -620,7 +622,31 @@ const SRC_DNSE=(function(){
     tick:true,
     note:'✅ <b>Nguồn tick thật.</b> Mỗi dòng là <b>MỘT LỆNH KHỚP đơn lẻ</b> nhận trực tiếp từ luồng MQTT của DNSE. Chiều MUA/BÁN suy ra bằng <b>quy tắc tick ở cấp từng lệnh</b> (so giá lệnh này với lệnh liền trước cùng mã) — chính xác hơn hẳn so với suy từ nến phút. <b>Lưu ý bản chất:</b> MQTT chỉ đẩy dữ liệu từ lúc kết nối trở đi, <b>không có lịch sử</b> — mở trang càng sớm trong phiên thì càng đủ. Tick đã nhận được lưu trong máy anh theo ngày nên F5 không mất.',
     days(){const d=vnDate(Math.floor(Date.now()/1000));return rows.length?[...new Set(rows.map(r=>vnDate(r.t)))].sort():[d];},
-    stats(){return {nTick,connected,kept:rows.length};},
+    stats(){return {nTick,connected,kept:rows.length,heSo,chuan:ketQuaChuan};},
+    // đo tỉ lệ giữa KL tick nhận được và KL thật (24hMoney, đã quy đổi lô 10)
+    async doDonVi(){
+      const ma=Object.keys(klTick).filter(s=>klTick[s]>0).slice(0,40);
+      if(ma.length<3)return null;
+      let d=null;
+      try{ d=await tf('https://api-finance-t19.24hmoney.vn/v2/web/stock/details?symbols='+ma.join(','),8000); }catch(e){ return null; }
+      const now={}; for(const x of ((d&&d.data)||[]))now[x.symbol]=(+x.accumylated_vol||0)*10;
+      if(!moc){ moc={t:Date.now(),kl:{...klTick},that:now}; return null; }
+      let tick=0, that=0;
+      for(const s of ma){
+        if(moc.that[s]==null||now[s]==null)continue;
+        const dThat=now[s]-moc.that[s], dTick=(klTick[s]||0)-(moc.kl[s]||0);
+        if(dThat>0&&dTick>0){ tick+=dTick; that+=dThat; }
+      }
+      if(that<=0||tick<=0)return null;
+      const tiLe=that/tick;                               // >1 nghĩa là tick đang nhỏ hơn thật
+      let moiHeSo=heSo;
+      if(tiLe>8&&tiLe<12)moiHeSo=10; else if(tiLe>80&&tiLe<120)moiHeSo=100; else if(tiLe>0.8&&tiLe<1.25)moiHeSo=1;
+      const doi=moiHeSo!==heSo;
+      if(doi){ heSo=moiHeSo; rows.forEach(r=>{r.val=r.px*r.vol*heSo;}); }
+      ketQuaChuan={tiLe:+tiLe.toFixed(2),heSo,doi,mau:ma.length};
+      moc={t:Date.now(),kl:{...klTick},that:now};
+      return ketQuaChuan;
+    },
     async fetch(onTien){ if(!rows.length)restore(); save(); return rows.length||1; },
     load(day,th){return rows.filter(r=>vnDate(r.t)===day&&r.val>=th);},
     async connect(user,pass,onStat){
@@ -649,7 +675,14 @@ const SRC_DNSE=(function(){
           for(let i=0;i<UNI.length;i+=50)   // subscribe theo lô cho nhẹ
             client.subscribe(UNI.slice(i,i+50).map(s=>'plaintext/quotes/krx/mdds/tick/v1/roundlot/symbol/'+s));
           onStat('● đã nối · subscribe '+UNI.length+' mã · chờ tick…');
-          setInterval(()=>{save();onStat('● LIVE · '+nTick+' tick · giữ '+rows.length+' lệnh ≥1 tỷ');},5000);
+          let dem=0;
+          setInterval(async()=>{
+            save();
+            if((dem++%6)===5){ try{ await SRC_DNSE.doDonVi(); }catch(e){} }
+            const c=ketQuaChuan;
+            onStat('● LIVE · '+nTick+' tick · giữ '+rows.length+' lệnh ≥1 tỷ'
+              +(c?(' · đơn vị KL '+(c.heSo===1?'khớp 24hMoney':'đã hiệu chỉnh ×'+c.heSo)+' (tỉ lệ đo '+c.tiLe+')'):' · đang đo đơn vị KL…'));
+          },5000);
         });
         client.on('message',onMsg);
         client.on('error',e=>onStat('⚠ '+(e.message||e)));
