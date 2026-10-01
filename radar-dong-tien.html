@@ -602,13 +602,22 @@ const SRC_DNSE=(function(){
   const KEEP_MIN=1e9, CAP=6000;      // chỉ giữ lệnh ≥1 tỷ, tối đa 6000 bản ghi/phiên
   let rows=[], lastPx={}, client=null, nTick=0, connected=false;
   let heSo=1, klTick={}, nTickMa={}, moc=null, ketQuaChuan=null;   // hiệu chỉnh đơn vị KL tick
+  let nRaw=0, mauRaw=[], loiSub=[], topicThay={};                  // chẩn đoán khi không ra tick
   const key=()=>'radar_dnse_'+vnDate(Math.floor(Date.now()/1000));
   function save(){try{localStorage.setItem(key(),JSON.stringify(rows.slice(-CAP)));}catch(e){}}
   function restore(){try{rows=JSON.parse(localStorage.getItem(key()))||[];}catch(e){rows=[];}}
+  const soDau=(o,ten)=>{for(const k of ten){const v=o&&o[k];if(v!=null&&v!==''&&isFinite(+v))return +v;}return null;};
   function onMsg(topic,payload){
-    let d; try{d=JSON.parse(payload.toString());}catch(e){return;}
-    const tk=d.symbol||topic.split('/').pop(); if(!tk)return;
-    const mp=d.matchPrice, qt=d.matchQtty!=null?d.matchQtty:d.matchQty;
+    nRaw++;                                           // đếm TRƯỚC mọi điều kiện
+    const txt=payload?payload.toString():'';
+    if(mauRaw.length<3)mauRaw.push({topic,txt:txt.slice(0,260)});
+    const tp=topic.split('/').slice(0,-1).join('/');
+    topicThay[tp]=(topicThay[tp]||0)+1;
+    let d; try{d=JSON.parse(txt);}catch(e){return;}
+    const tk=d.symbol||d.Symbol||d.code||topic.split('/').pop(); if(!tk)return;
+    // tên trường của DNSE có thể khác tài liệu → thử nhiều biến thể thay vì bỏ qua
+    const mp=soDau(d,['matchPrice','matchedPrice','lastPrice','price','MatchPrice','matchPx']);
+    const qt=soDau(d,['matchQtty','matchQty','matchedQuantity','matchQuantity','matchVol','lastVol','qtty','quantity','volume','vol','MatchQtty']);
     if(mp==null||!qt)return;
     const px=mp>3000?mp:mp*1000;        // chuẩn hoá về VND/cp
     nTick++;
@@ -626,7 +635,8 @@ const SRC_DNSE=(function(){
     tick:true,
     note:'✅ <b>Nguồn tick thật.</b> Mỗi dòng là <b>MỘT LỆNH KHỚP đơn lẻ</b> nhận trực tiếp từ luồng MQTT của DNSE. Chiều MUA/BÁN suy ra bằng <b>quy tắc tick ở cấp từng lệnh</b> (so giá lệnh này với lệnh liền trước cùng mã) — chính xác hơn hẳn so với suy từ nến phút. <b>Lưu ý bản chất:</b> MQTT chỉ đẩy dữ liệu từ lúc kết nối trở đi, <b>không có lịch sử</b> — mở trang càng sớm trong phiên thì càng đủ. Tick đã nhận được lưu trong máy anh theo ngày nên F5 không mất.',
     days(){const d=vnDate(Math.floor(Date.now()/1000));return rows.length?[...new Set(rows.map(r=>vnDate(r.t)))].sort():[d];},
-    stats(){return {nTick,connected,kept:rows.length,heSo,chuan:ketQuaChuan};},
+    stats(){return {nTick,connected,kept:rows.length,heSo,chuan:ketQuaChuan,nRaw,mauRaw,loiSub,
+      topic:Object.entries(topicThay).sort((a,b)=>b[1]-a[1]).slice(0,6)};},
     // đối soát với số chính thức của sàn (SSI iBoard — toàn sàn, 1 request mỗi sàn)
     async doiSoat(){
       const CT={};
@@ -709,16 +719,30 @@ const SRC_DNSE=(function(){
           {clientId:cid,username:inv,password:token,protocolVersion:5,clean:true,keepalive:60,reconnectPeriod:5000,connectTimeout:15000});
         client.on('connect',()=>{
           connected=true; restore();
+          let nOk=0;
           for(let i=0;i<UNI.length;i+=50)   // subscribe theo lô cho nhẹ
-            client.subscribe(UNI.slice(i,i+50).map(s=>'plaintext/quotes/krx/mdds/tick/v1/roundlot/symbol/'+s));
+            client.subscribe(UNI.slice(i,i+50).map(s=>'plaintext/quotes/krx/mdds/tick/v1/roundlot/symbol/'+s),
+              (err,granted)=>{ if(err)loiSub.push(String(err.message||err).slice(0,80));
+                               else nOk+=((granted||[]).filter(g=>g.qos<128)).length; });
           onStat('● đã nối · subscribe '+UNI.length+' mã · chờ tick…');
+          // Không có message nào sau 20 giây → nhiều khả năng SAI TOPIC. Dò bằng wildcard
+          // để biết luồng thật nằm ở đâu, rồi tự bám theo topic đó.
+          setTimeout(()=>{
+            if(nRaw>0)return;
+            loiSub.push('20s không nhận được message nào — đang dò topic bằng wildcard');
+            client.subscribe('plaintext/quotes/krx/mdds/#',(e,g)=>{
+              if(e)loiSub.push('wildcard lỗi: '+String(e.message||e).slice(0,60));
+            });
+          },20000);
           let dem=0;
           setInterval(async()=>{
             save();
             if((dem++%6)===5){ try{ await SRC_DNSE.doDonVi(); }catch(e){} }
             const c=ketQuaChuan;
             onStat('● LIVE · '+nTick+' tick · giữ '+rows.length+' lệnh ≥1 tỷ'
-              +(c?(' · đơn vị KL '+(c.heSo===1?'khớp 24hMoney':'đã hiệu chỉnh ×'+c.heSo)+' (tỉ lệ đo '+c.tiLe+')'):' · đang đo đơn vị KL…'));
+              +' · nhận '+nRaw+' message thô'
+              +(c?(' · đơn vị KL '+(c.heSo===1?'khớp 24hMoney':'đã hiệu chỉnh ×'+c.heSo)):'')
+              +(nRaw>0&&nTick===0?' · ⚠ CÓ message nhưng không đọc được trường giá/KL — bấm Đối soát để xem mẫu':''));
           },5000);
         });
         client.on('message',onMsg);
@@ -1048,7 +1072,19 @@ $('btnSoat').onclick=async()=>{
   body.innerHTML='<div class="ndrow" style="color:var(--muted)">⏳ đang lấy số chính thức từ SSI iBoard để đối soát…</div>';
   let k=null; try{ k=await SRC_DNSE.doiSoat(); }catch(e){}
   if(!k||!k.rows.length){
-    body.innerHTML='<div class="ndrow" style="color:var(--muted)">Chưa có tick nào để đối soát. Hãy bấm <b>Kết nối tick</b> và chờ vài phút trong giờ giao dịch.</div>';
+    const st=SRC_DNSE.stats();
+    let h='<div class="ndtile f" style="margin-bottom:8px"><div class="k">Chẩn đoán luồng tick DNSE</div>'
+      +'<div class="n" style="font-size:16px">'+(st.nRaw?('nhận '+st.nRaw+' message nhưng đọc ra 0 tick'):'chưa nhận được message nào')+'</div>'
+      +'<div class="bs">'+(st.connected?'đã nối MQTT':'CHƯA nối được MQTT')+' · '+st.nRaw+' message thô · '+st.nTick+' tick đọc được</div></div>';
+    if(st.loiSub&&st.loiSub.length)
+      h+='<div class="ndrow" style="color:#f1a3a3">Lỗi/ghi chú subscribe: '+st.loiSub.slice(0,3).join(' · ')+'</div>';
+    if(st.topic&&st.topic.length)
+      h+='<div class="ndrow" style="color:var(--muted)">Topic thực nhận được: '+st.topic.map(x=>x[0]+' ('+x[1]+')').join('<br>')+'</div>';
+    if(st.mauRaw&&st.mauRaw.length)
+      h+='<div class="ndrow" style="color:var(--muted);display:block">Mẫu message đầu tiên:<br><code style="font-size:11px;word-break:break-all">'
+        +st.mauRaw.map(m=>m.topic+'<br>'+m.txt.replace(/</g,'&lt;')).join('<br><br>')+'</code></div>';
+    if(!st.nRaw)h+='<div class="ndrow" style="color:var(--muted)">Nếu ngoài giờ giao dịch thì không có tick là bình thường. Trong giờ mà vẫn 0: chờ 20 giây để trang tự dò topic rồi bấm lại nút này.</div>';
+    body.innerHTML=h;
     return;
   }
   const s=k.tong, f=n=>Math.round(n).toLocaleString('vi-VN');
