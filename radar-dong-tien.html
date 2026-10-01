@@ -244,7 +244,10 @@
           <input class="srch" id="dUser" placeholder="TK DNSE (SĐT / 064Cxxxxxx)" autocomplete="username" style="width:210px">
           <input class="srch" id="dPass" type="password" placeholder="Mật khẩu DNSE" autocomplete="current-password" style="width:160px">
           <button class="ctl" id="btnDnse">Kết nối tick</button>
+          <button class="ctl" id="btnSoat">🔎 Đối soát dữ liệu</button>
           <span class="stat" id="dStat">○ chưa nối</span>
+        </div>
+        <div class="hrow hide" id="soatBox"><div id="soatBody" style="width:100%"></div>
         </div>
       </div>
     </div>
@@ -598,7 +601,7 @@ const SRC_24H=(function(){
 const SRC_DNSE=(function(){
   const KEEP_MIN=1e9, CAP=6000;      // chỉ giữ lệnh ≥1 tỷ, tối đa 6000 bản ghi/phiên
   let rows=[], lastPx={}, client=null, nTick=0, connected=false;
-  let heSo=1, klTick={}, moc=null, ketQuaChuan=null;   // hiệu chỉnh đơn vị KL tick
+  let heSo=1, klTick={}, nTickMa={}, moc=null, ketQuaChuan=null;   // hiệu chỉnh đơn vị KL tick
   const key=()=>'radar_dnse_'+vnDate(Math.floor(Date.now()/1000));
   function save(){try{localStorage.setItem(key(),JSON.stringify(rows.slice(-CAP)));}catch(e){}}
   function restore(){try{rows=JSON.parse(localStorage.getItem(key()))||[];}catch(e){rows=[];}}
@@ -611,6 +614,7 @@ const SRC_DNSE=(function(){
     nTick++;
     const prev=lastPx[tk]; lastPx[tk]=px;
     klTick[tk]=(klTick[tk]||0)+qt;                     // gom để đối chiếu đơn vị
+    nTickMa[tk]=(nTickMa[tk]||0)+1;
     const val=px*qt*heSo;
     if(val<KEEP_MIN)return;             // lọc ngay lúc nhận để không phình bộ nhớ
     const dir=prev==null?'B':(px>prev?'B':px<prev?'S':(rows.length&&rows[rows.length-1].tk===tk?rows[rows.length-1].dir:'B'));
@@ -623,6 +627,39 @@ const SRC_DNSE=(function(){
     note:'✅ <b>Nguồn tick thật.</b> Mỗi dòng là <b>MỘT LỆNH KHỚP đơn lẻ</b> nhận trực tiếp từ luồng MQTT của DNSE. Chiều MUA/BÁN suy ra bằng <b>quy tắc tick ở cấp từng lệnh</b> (so giá lệnh này với lệnh liền trước cùng mã) — chính xác hơn hẳn so với suy từ nến phút. <b>Lưu ý bản chất:</b> MQTT chỉ đẩy dữ liệu từ lúc kết nối trở đi, <b>không có lịch sử</b> — mở trang càng sớm trong phiên thì càng đủ. Tick đã nhận được lưu trong máy anh theo ngày nên F5 không mất.',
     days(){const d=vnDate(Math.floor(Date.now()/1000));return rows.length?[...new Set(rows.map(r=>vnDate(r.t)))].sort():[d];},
     stats(){return {nTick,connected,kept:rows.length,heSo,chuan:ketQuaChuan};},
+    // đối soát với số chính thức của sàn (SSI iBoard — toàn sàn, 1 request mỗi sàn)
+    async doiSoat(){
+      const CT={};
+      for(const san of ['hose','hnx','upcom']){
+        let j=null;
+        for(const p of [x=>x,x=>'/api/proxy?url='+encodeURIComponent(x)]){
+          try{const c=new AbortController(),to=setTimeout(()=>c.abort(),12000);
+            const r=await fetch(p('https://iboard-query.ssi.com.vn/stock/exchange/'+san),{cache:'no-store',signal:c.signal});
+            clearTimeout(to);
+            if(r.ok){const k=await r.json(); if(k&&k.data){j=k;break;}}
+          }catch(e){}
+        }
+        for(const x of ((j&&j.data)||[])){
+          const s=x.stockSymbol; if(!s)continue;
+          CT[s]={kl:+x.nmTotalTradedQty||0,gt:+x.nmTotalTradedValue||0,gia:+x.matchedPrice||0};
+        }
+      }
+      if(!Object.keys(CT).length)return null;
+      const ma=Object.keys(klTick).filter(s=>klTick[s]>0);
+      const d=[];
+      let klT=0,klC=0;
+      for(const s of ma){
+        const c=CT[s]; if(!c||!c.kl)continue;
+        const tick=klTick[s]*heSo;
+        klT+=tick; klC+=c.kl;
+        d.push({tk:s,tick,ct:c.kl,tyLe:c.kl?tick/c.kl*100:0,n:nTickMa[s]||0,gt:c.gt});
+      }
+      d.sort((a,b)=>b.ct-a.ct);
+      return {rows:d,tong:{tick:klT,ct:klC,tyLe:klC?klT/klC*100:0,ma:d.length,
+        nTick,heSo,lenhLon:rows.length,
+        // chỉ tính mã CÓ ĐĂNG KÝ nhận tick, không tính cả sàn
+        thieu:UNI.filter(s=>CT[s]&&CT[s].kl>0&&!klTick[s]).length}};
+    },
     // đo tỉ lệ giữa KL tick nhận được và KL thật (24hMoney, đã quy đổi lô 10)
     async doDonVi(){
       const ma=Object.keys(klTick).filter(s=>klTick[s]>0).slice(0,40);
@@ -1004,6 +1041,32 @@ $('btnDnse').onclick=async()=>{
   $('btnDnse').disabled=false;
   $('dPass').value='';                       // xoá mật khẩu khỏi ô nhập ngay sau khi dùng
   if(ok){ if(liveT)clearInterval(liveT); liveT=setInterval(()=>{if(SOURCE===SRC_DNSE)load(false);},5000); }
+};
+$('btnSoat').onclick=async()=>{
+  const box=$('soatBox'), body=$('soatBody');
+  box.className='hrow';
+  body.innerHTML='<div class="ndrow" style="color:var(--muted)">⏳ đang lấy số chính thức từ SSI iBoard để đối soát…</div>';
+  let k=null; try{ k=await SRC_DNSE.doiSoat(); }catch(e){}
+  if(!k||!k.rows.length){
+    body.innerHTML='<div class="ndrow" style="color:var(--muted)">Chưa có tick nào để đối soát. Hãy bấm <b>Kết nối tick</b> và chờ vài phút trong giờ giao dịch.</div>';
+    return;
+  }
+  const s=k.tong, f=n=>Math.round(n).toLocaleString('vi-VN');
+  const danh=s.tyLe>=95?['ok','Khớp — tick nhận gần như đầy đủ']
+    :s.tyLe>=70?['mid','Thiếu một phần — nối trễ sau giờ mở cửa hoặc rớt kết nối']
+    :['no','Thiếu nhiều — kiểm lại kết nối hoặc nối lại từ đầu phiên'];
+  body.innerHTML=
+    '<div class="ndtile '+(danh[0]==='ok'?'d':danh[0]==='mid'?'p':'f')+'" style="margin-bottom:8px">'
+    +'<div class="k">Đối soát tick DNSE với số chính thức (SSI iBoard)</div>'
+    +'<div class="n">'+s.tyLe.toFixed(1)+'%</div>'
+    +'<div class="bs">'+danh[1]+'</div>'
+    +'<div class="kl">KL tick '+f(s.tick)+' CP · KL chính thức '+f(s.ct)+' CP · '+s.ma+' mã có tick'
+    +(s.thieu?' · '+s.thieu+' mã có giao dịch nhưng CHƯA nhận được tick nào':'')+'</div>'
+    +'<div class="kl">Tổng '+f(s.nTick)+' tick · hệ số đơn vị KL đang áp ×'+s.heSo+' · giữ '+s.lenhLon+' lệnh ≥1 tỷ</div></div>'
+    +'<div class="tbl" style="max-height:260px"><table><thead><tr><th>Mã</th><th>KL tick</th><th>KL chính thức</th><th>Khớp</th><th>Số tick</th></tr></thead><tbody>'
+    +k.rows.slice(0,25).map(r=>'<tr><td class="sym">'+r.tk+'</td><td>'+f(r.tick)+'</td><td>'+f(r.ct)+'</td>'
+      +'<td class="'+(r.tyLe>=95?'up':r.tyLe>=70?'':'dn')+'"><b>'+r.tyLe.toFixed(0)+'%</b></td><td>'+f(r.n)+'</td></tr>').join('')
+    +'</tbody></table></div>';
 };
 $('btnFilt').onclick=e=>{e.stopPropagation();$('filtMenu').classList.toggle('open');};
 document.addEventListener('click',e=>{if(!$('filtMenu').contains(e.target)&&e.target!==$('btnFilt'))$('filtMenu').classList.remove('open');});
