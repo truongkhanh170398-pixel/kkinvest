@@ -1005,6 +1005,7 @@ async function renderNote(tk,sectKey){
   if(_noteTk!==tk)return;
   const CS=canslim(tk,ta,F,gs,br);
   box.innerHTML=noteHTML(tk,sectKey,ta,F,gs,br,CS);
+  window._noteAI={tk,sectKey,ta,F,gs,br,CS,luc:new Date().toISOString()};
   step('● số thật · BCTC 24hMoney + giá VNDirect');
 }
 function moNote(tk,sectKey,cuon){
@@ -1408,5 +1409,7 @@ frame.addEventListener('load',()=>{autosize();
   load('bds','KDH');
 })();
 </script>
+<script src="ai-boicanh-coban.js"></script>
+<script defer src="tro-ly-ai.js"></script>
 </body>
 </html>

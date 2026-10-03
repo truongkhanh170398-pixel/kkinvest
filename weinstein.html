@@ -254,5 +254,6 @@ $('scanBtn').onclick=runScan;
 document.querySelectorAll('thead th[data-k]').forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=(k==='tk'||k==='floor')?1:-1;}render();});
 runScan();
 </script>
+<script defer src="tro-ly-ai.js"></script>
 </body>
 </html>
