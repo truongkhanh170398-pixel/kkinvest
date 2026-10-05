@@ -262,7 +262,7 @@
         hoiDap.pop();
         return;
       }
-      var rd = r.body.getReader(), dec = new TextDecoder(), dem = '';
+      var rd = r.body.getReader(), dec = new TextDecoder(), dem = '', ketThuc = null;
       for (;;) {
         var bb = await rd.read(); if (bb.done) break;
         dem += dec.decode(bb.value, { stream: true });
@@ -272,6 +272,7 @@
           for (var k = 0; k < dl.length; k++) {
             var o = null; try { o = JSON.parse(dl[k].slice(5).trim()); } catch (e) { continue; }
             var ca = o && o.candidates && o.candidates[0];
+            if (ca && ca.finishReason) ketThuc = ca.finishReason;
             var ps = ca && ca.content && ca.content.parts;
             // model "thinking" trả về cả phần suy nghĩ (thought) — không hiện ra chat
             if (ps) for (var z = 0; z < ps.length; z++)
@@ -281,8 +282,17 @@
         }
       }
       oA.classList.remove('aiNhay');
-      if (!ra.trim()) { oA.remove(); theM('e', 'Gemini không trả về nội dung nào.'); hoiDap.pop(); }
-      else { oA.innerHTML = md(ra); hoiDap.push({ role: 'assistant', content: ra }); luu(); }
+      if (!ra.trim()) {
+        oA.remove();
+        // model "thinking" có thể tiêu hết hạn mức vào phần suy nghĩ rồi không còn chỗ trả lời
+        theM('e', ketThuc === 'MAX_TOKENS'
+          ? 'Model dùng hết hạn mức vào phần suy nghĩ, chưa kịp trả lời. Hỏi lại, hoặc chọn mức Nhanh (model không suy nghĩ dài).'
+          : 'Gemini không trả về nội dung nào. Thử hỏi lại.');
+        hoiDap.pop();
+      } else {
+        if (ketThuc === 'MAX_TOKENS') ra += '\n\n*(câu trả lời bị cắt vì chạm hạn mức — hỏi lại hoặc chia nhỏ câu hỏi)*';
+        oA.innerHTML = md(ra); hoiDap.push({ role: 'assistant', content: ra }); luu();
+      }
     } catch (e) {
       oA.classList.remove('aiNhay');
       if (!ra) { oA.remove(); theM('e', 'Không gọi được trợ lý: ' + (e && e.message || e)); hoiDap.pop(); }
