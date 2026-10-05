@@ -154,23 +154,27 @@ function docOai(o) {
 async function chuyenTiep(res, body, doc, model, nha) {
   const rd = body.getReader(), dec = new TextDecoder();
   let dem = '', co = false, het = null;
+  const xuLy = k => {
+    for (const d of k.split('\n')) {
+      if (d.indexOf('data:') !== 0) continue;
+      const s = d.slice(5).trim();
+      if (!s || s === '[DONE]') continue;
+      let o; try { o = JSON.parse(s); } catch (e) { continue; }
+      const x = doc(o);
+      if (x.het) het = x.het;
+      if (x.t) { co = true; res.write('data: ' + JSON.stringify({ t: x.t }) + '\n\n'); }
+    }
+  };
   for (;;) {
     const { done, value } = await rd.read();
     if (done) break;
-    dem += dec.decode(value, { stream: true });
+    // Gemini ngắt khối bằng \r\n\r\n — tách theo '\n\n' thuần thì KHÔNG khối nào vỡ ra
+    // và cả câu trả lời biến mất. Bỏ \r trước khi tách.
+    dem += dec.decode(value, { stream: true }).replace(/\r/g, '');
     const khoi = dem.split('\n\n'); dem = khoi.pop();
-    for (const k of khoi) {
-      for (const d of k.split('\n')) {
-        if (d.indexOf('data:') !== 0) continue;
-        const s = d.slice(5).trim();
-        if (!s || s === '[DONE]') continue;
-        let o; try { o = JSON.parse(s); } catch (e) { continue; }
-        const x = doc(o);
-        if (x.het) het = x.het;
-        if (x.t) { co = true; res.write('data: ' + JSON.stringify({ t: x.t }) + '\n\n'); }
-      }
-    }
+    for (const k of khoi) xuLy(k);
   }
+  if (dem.trim()) xuLy(dem);   // mẩu cuối không có dòng trống kết thúc
   res.write('data: ' + JSON.stringify({ xong: { het: het, model: model, nha: NHA[nha].ten } }) + '\n\n');
   return co;
 }
