@@ -79,10 +79,10 @@
   wrap.id = 'aiWrap';
   wrap.innerHTML =
     '<div id="aiTop"><b>HỎI ĐÁP AI</b>' +
-      '<select id="aiMuc" title="Mức suy luận">' +
-        '<option value="can" selected>Cân bằng</option>' +
-        '<option value="nhanh">Nhanh</option>' +
-        '<option value="sau">Suy luận sâu</option></select>' +
+      '<select id="aiMuc" title="Cả 3 mức đều dùng model miễn phí của Google. Bản Pro phải trả tiền nên không có ở đây.">' +
+        '<option value="can" selected>Cân bằng · free</option>' +
+        '<option value="nhanh">Nhanh · free</option>' +
+        '<option value="sau">Kỹ hơn · free</option></select>' +
       '<button class="x" id="aiChep" title="Chép câu hỏi + số liệu để dán sang Claude/Gemini web">📋</button>' +
       '<button class="x" id="aiKhoaBtn" title="Khoá Gemini">🔑</button>' +
       '<button class="x" id="aiXoa" title="Xoá hội thoại">⟳</button>' +
