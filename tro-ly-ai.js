@@ -88,10 +88,14 @@
       '<button class="x" id="aiXoa" title="Xoá hội thoại">⟳</button>' +
       '<button class="x" id="aiDong" title="Đóng">✕</button></div>' +
     '<div id="aiCtx"></div><div id="aiBody"></div><div id="aiGoi"></div>' +
-    '<div id="aiKhoaBox"><div class="t">Dán <b>khoá Gemini</b> để chat ngay trong trang. ' +
-      'Lấy <b>miễn phí</b> ở <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> ' +
-      '(đăng nhập Google → Create API key). Không có khoá thì vẫn dùng nút 📋 để chép sang Claude.</div>' +
-      '<div class="r"><input id="aiKhoa" type="password" autocomplete="off" spellcheck="false" placeholder="AIza… hoặc AQ.…">' +
+    '<div id="aiKhoaBox"><div class="t">Dán khoá <b>miễn phí</b> của một hoặc nhiều nhà — ' +
+      'ngăn bằng <b>dấu phẩy</b>, bên nào lỗi thì tự chuyển sang bên kia:<br>' +
+      '· <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google Gemini</a> <code>AQ.</code>/<code>AIza</code> &nbsp;' +
+      '· <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Groq</a> <code>gsk_</code><br>' +
+      '· <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">OpenRouter</a> <code>sk-or-</code> &nbsp;' +
+      '· <a href="https://cloud.cerebras.ai" target="_blank" rel="noopener">Cerebras</a> <code>csk-</code><br>' +
+      'Không có khoá thì vẫn dùng nút 📋 để chép sang Claude.</div>' +
+      '<div class="r"><input id="aiKhoa" type="password" autocomplete="off" spellcheck="false" placeholder="AQ.… , gsk_… , sk-or-…">' +
       '<button id="aiKhoaLuu">Lưu</button><button id="aiKhoaXoa" title="Xoá khoá khỏi máy này">Xoá</button></div>' +
       '<div id="aiKhoaNote"></div></div>' +
     '<div id="aiBot"><textarea id="aiIn" rows="1" placeholder="Hỏi về số liệu đang hiện trên trang…"></textarea>' +
@@ -156,9 +160,11 @@
   function layKhoa() { try { return localStorage.getItem(K_KHOA) || ''; } catch (e) { return ''; } }
   function veKhoaNote() {
     var k = layKhoa();
+    var TEN = { 'AQ.': 'Gemini', 'AIz': 'Gemini', 'gsk': 'Groq', 'sk-': 'OpenRouter', 'csk': 'Cerebras' };
+    var ds = k ? k.split(',').map(function (x) { return (TEN[x.trim().slice(0, 3)] || '?') + ' …' + x.trim().slice(-5); }) : [];
     $('aiKhoaNote').innerHTML = k
-      ? '✓ Đang dùng khoá lưu trong trình duyệt này (…' + k.slice(-6) + '). ' +
-        'Gói miễn phí của Google có hạn mức theo phút và theo ngày; hết thì chờ ít phút.'
+      ? '✓ Đang dùng ' + ds.length + ' khoá: <b>' + ds.join('</b>, <b>') + '</b>. ' +
+        'Gói miễn phí giới hạn theo lượt/phút; bên nào lỗi thì trang tự chuyển sang bên còn lại.'
       : 'Khoá chỉ nằm trong localStorage của trình duyệt này, không đồng bộ sang máy khác.';
   }
   function moKhoa(batBuoc) {
@@ -262,7 +268,7 @@
         hoiDap.pop();
         return;
       }
-      var rd = r.body.getReader(), dec = new TextDecoder(), dem = '', ketThuc = null;
+      var rd = r.body.getReader(), dec = new TextDecoder(), dem = '', ketThuc = null, nguon = null;
       for (;;) {
         var bb = await rd.read(); if (bb.done) break;
         dem += dec.decode(bb.value, { stream: true });
@@ -271,13 +277,9 @@
           var dl = khoi[i].split('\n').filter(function (l) { return l.indexOf('data:') === 0; });
           for (var k = 0; k < dl.length; k++) {
             var o = null; try { o = JSON.parse(dl[k].slice(5).trim()); } catch (e) { continue; }
-            var ca = o && o.candidates && o.candidates[0];
-            if (ca && ca.finishReason) ketThuc = ca.finishReason;
-            var ps = ca && ca.content && ca.content.parts;
-            // model "thinking" trả về cả phần suy nghĩ (thought) — không hiện ra chat
-            if (ps) for (var z = 0; z < ps.length; z++)
-              if (ps[z].text && !ps[z].thought) ra += ps[z].text;
-            if (ra) { oA.innerHTML = md(ra); body.scrollTop = body.scrollHeight; }
+            // server đã quy mọi nhà cung cấp về một dạng: {t:"…"} rồi {xong:{…}}
+            if (o.xong) { ketThuc = o.xong.het; nguon = o.xong; continue; }
+            if (o.t) { ra += o.t; oA.innerHTML = md(ra); body.scrollTop = body.scrollHeight; }
           }
         }
       }
@@ -290,8 +292,16 @@
           : 'Gemini không trả về nội dung nào. Thử hỏi lại.');
         hoiDap.pop();
       } else {
-        if (ketThuc === 'MAX_TOKENS') ra += '\n\n*(câu trả lời bị cắt vì chạm hạn mức — hỏi lại hoặc chia nhỏ câu hỏi)*';
-        oA.innerHTML = md(ra); hoiDap.push({ role: 'assistant', content: ra }); luu();
+        if (ketThuc === 'MAX_TOKENS' || ketThuc === 'length')
+          ra += '\n\n*(câu trả lời bị cắt vì chạm hạn mức — hỏi lại hoặc chia nhỏ câu hỏi)*';
+        oA.innerHTML = md(ra);
+        if (nguon && nguon.nha) {
+          var n = document.createElement('div');
+          n.style.cssText = 'font-size:10px;color:#7e8db0;margin-top:6px';
+          n.textContent = 'nguồn: ' + nguon.nha + ' · ' + (nguon.model || '');
+          oA.appendChild(n);
+        }
+        hoiDap.push({ role: 'assistant', content: ra }); luu();
       }
     } catch (e) {
       oA.classList.remove('aiNhay');
@@ -318,12 +328,18 @@
   };
   $('aiKhoaLuu').onclick = function () {
     var v = $('aiKhoa').value.trim();
-    // Google có nhiều dạng khoá và còn đổi tiếp (cũ "AIza…", mới "AQ.Ab8…")
-    if (!/^[A-Za-z0-9._-]{20,200}$/.test(v)) {
-      $('aiKhoaNote').innerHTML = '⚠ Trông không giống khoá — dán thiếu hay lẫn khoảng trắng? ' +
-        'Dạng <b>AIza…</b> và <b>AQ.…</b> đều dùng được.';
+    // nhiều khoá ngăn bằng dấu phẩy; mỗi khoá phải nhận ra được nhà cung cấp
+    var ds = v.split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+    var la = function (k) { return /^[A-Za-z0-9._-]{20,400}$/.test(k); };
+    var biet = function (k) { return /^(AQ\.|AIza|gsk_|sk-or-|csk-)/.test(k); };
+    var xau = ds.filter(function (k) { return !la(k) || !biet(k); });
+    if (!ds.length || xau.length) {
+      $('aiKhoaNote').innerHTML = '⚠ Không nhận ra ' + (xau.length || 1) + ' khoá. ' +
+        'Khoá phải bắt đầu bằng <b>AQ.</b> / <b>AIza</b> (Gemini), <b>gsk_</b> (Groq), ' +
+        '<b>sk-or-</b> (OpenRouter) hoặc <b>csk-</b> (Cerebras). Nhiều khoá thì ngăn bằng dấu phẩy.';
       return;
     }
+    v = ds.join(',');
     try { localStorage.setItem(K_KHOA, v); } catch (e) {
       $('aiKhoaNote').textContent = '⚠ Trình duyệt không cho lưu (chế độ ẩn danh?). Khoá chỉ dùng được tới khi đóng tab.';
     }
