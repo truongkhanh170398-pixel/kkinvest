@@ -52,6 +52,17 @@
     '#aiGui{background:#e2b33b;color:#1a1405;border:none;border-radius:9px;font:700 13px "Segoe UI",sans-serif;',
       'padding:0 15px;cursor:pointer}',
     '#aiGui:disabled{background:#2a3350;color:#7e8db0;cursor:default}',
+    '#aiKhoaBox{display:none;flex:0 0 auto;padding:10px 12px;border-top:1px solid #1c2740;background:#0b1120}',
+    '#aiKhoaBox.mo{display:block}',
+    '#aiKhoaBox .t{font-size:11.5px;color:#9fb0d4;margin-bottom:7px;line-height:1.45}',
+    '#aiKhoaBox .t a{color:#4f8cff}',
+    '#aiKhoaBox .r{display:flex;gap:6px}',
+    '#aiKhoa{flex:1;background:#0e1525;color:#e8edf7;border:1px solid #1c2740;border-radius:8px;',
+      'padding:7px 9px;font:12px ui-monospace,Consolas,monospace}',
+    '#aiKhoa:focus{outline:none;border-color:#4f8cff}',
+    '#aiKhoaLuu{background:#26c281;color:#06281b;border:none;border-radius:8px;font:700 12px "Segoe UI",sans-serif;padding:0 13px;cursor:pointer}',
+    '#aiKhoaXoa{background:#141d31;color:#f0a8b6;border:1px solid #3a2030;border-radius:8px;font:600 12px "Segoe UI",sans-serif;padding:0 11px;cursor:pointer}',
+    '#aiKhoaNote{font-size:10.5px;color:#7e8db0;margin-top:6px}',
     '.aiNhay::after{content:"▌";animation:aiNhay 1s steps(2) infinite;color:#e2b33b}',
     '@keyframes aiNhay{50%{opacity:0}}',
     '@media(max-width:560px){#aiWrap{right:8px;bottom:8px;width:calc(100vw - 16px);height:calc(100vh - 20px)}}'
@@ -68,9 +79,15 @@
         '<option value="can" selected>Cân bằng</option>' +
         '<option value="nhanh">Nhanh</option>' +
         '<option value="sau">Suy luận sâu</option></select>' +
+      '<button id="aiKhoaBtn" title="Khoá Anthropic">🔑</button>' +
       '<button id="aiXoa" title="Xoá hội thoại">⟳</button>' +
       '<button id="aiDong" title="Đóng">✕</button></div>' +
     '<div id="aiCtx"></div><div id="aiBody"></div><div id="aiGoi"></div>' +
+    '<div id="aiKhoaBox"><div class="t">Dán <b>Anthropic API key</b> của anh để trợ lý chạy ngay, ' +
+      'không cần vào Vercel. Lấy khoá ở <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.</div>' +
+      '<div class="r"><input id="aiKhoa" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">' +
+      '<button id="aiKhoaLuu">Lưu</button><button id="aiKhoaXoa" title="Xoá khoá khỏi máy này">Xoá</button></div>' +
+      '<div id="aiKhoaNote"></div></div>' +
     '<div id="aiBot"><textarea id="aiIn" rows="1" placeholder="Hỏi về số liệu đang hiện trên trang…"></textarea>' +
       '<button id="aiGui">Gửi</button></div>';
   document.body.appendChild(fab); document.body.appendChild(wrap);
@@ -150,6 +167,24 @@
     });
   }
 
+  /* ── khoá Anthropic (chỉ dùng khi máy chủ chưa đặt sẵn) ───── */
+  var K_KHOA = 'ai_khoa_anthropic';
+  function layKhoa() { try { return localStorage.getItem(K_KHOA) || ''; } catch (e) { return ''; } }
+  function veKhoaNote() {
+    var k = layKhoa();
+    $('aiKhoaNote').innerHTML = k
+      ? '✓ Đang dùng khoá lưu trong trình duyệt này (…' + k.slice(-6) +
+        '). Không gửi đi đâu ngoài Anthropic, không đồng bộ sang máy khác.'
+      : 'Khoá chỉ nằm trong localStorage của trình duyệt này. Muốn khỏi dán lại trên từng máy ' +
+        'thì đặt ANTHROPIC_API_KEY ở Vercel → Settings → Environment Variables.';
+  }
+  function moKhoa(batBuoc) {
+    $('aiKhoaBox').classList.add('mo');
+    $('aiKhoa').value = layKhoa();
+    veKhoaNote();
+    if (batBuoc) $('aiKhoa').focus();
+  }
+
   /* ── lưu / nạp ────────────────────────────────────────────── */
   function luu() { try { localStorage.setItem(KHOA, JSON.stringify(hoiDap.slice(-16))); } catch (e) {} }
   function nap() {
@@ -170,8 +205,10 @@
     var oA = theM('a', ''); oA.classList.add('aiNhay');
     var ra = '';
     try {
+      var hd = { 'Content-Type': 'application/json' };
+      var kk = layKhoa(); if (kk) hd['X-Ai-Key'] = kk;
       var r = await fetch('/api/ai', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: hd,
         body: JSON.stringify({ hoiDap: hoiDap, boiCanh: layBoiCanh().text, trang: document.title, muc: $('aiMuc').value })
       });
       if (!r.ok || (r.headers.get('content-type') || '').indexOf('event-stream') < 0) {
@@ -179,6 +216,7 @@
         oA.remove();
         theM('e', (j && j.loi ? j.loi : 'Gọi /api/ai lỗi ' + r.status) +
           (j && j.huongDan ? '\n\n' + j.huongDan : '') + (j && j.chiTiet ? '\n' + j.chiTiet : ''));
+        if (j && j.canKhoa) moKhoa(true);
         return;
       }
       var rd = r.body.getReader(), dec = new TextDecoder(), dem = '';
@@ -214,6 +252,29 @@
   fab.onclick = function () { wrap.classList.add('mo'); fab.style.display = 'none'; veCtx(); veGoiY(); inp.focus(); };
   $('aiDong').onclick = function () { wrap.classList.remove('mo'); fab.style.display = 'flex'; };
   $('aiXoa').onclick = function () { hoiDap = []; body.innerHTML = ''; luu(); veCtx(); veGoiY(); };
+  $('aiKhoaBtn').onclick = function () {
+    var b = $('aiKhoaBox');
+    if (b.classList.contains('mo')) b.classList.remove('mo'); else moKhoa(true);
+  };
+  $('aiKhoaLuu').onclick = function () {
+    var v = $('aiKhoa').value.trim();
+    if (!/^sk-ant-[\w-]{20,}$/.test(v)) {
+      $('aiKhoaNote').innerHTML = '⚠ Khoá phải bắt đầu bằng <b>sk-ant-</b> và dài hơn thế. Kiểm lại xem có dán thiếu không.';
+      return;
+    }
+    try { localStorage.setItem(K_KHOA, v); } catch (e) {
+      $('aiKhoaNote').textContent = '⚠ Trình duyệt không cho lưu (chế độ ẩn danh?). Khoá chỉ dùng được tới khi đóng tab.';
+    }
+    $('aiKhoaBox').classList.remove('mo');
+    theM('a', '✓ Đã lưu khoá. Hỏi lại câu vừa rồi là chạy được.');
+  };
+  $('aiKhoaXoa').onclick = function () {
+    try { localStorage.removeItem(K_KHOA); } catch (e) {}
+    $('aiKhoa').value = ''; veKhoaNote();
+  };
+  $('aiKhoa').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); $('aiKhoaLuu').onclick(); }
+  });
   gui.onclick = batDau;
   inp.addEventListener('keydown', function (e) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); batDau(); }

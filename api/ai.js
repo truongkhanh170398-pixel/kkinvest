@@ -39,15 +39,26 @@ CÁCH TRẢ LỜI:
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,X-Ai-Key');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
   if (req.method !== 'POST') { res.status(405).json({ loi: 'Chỉ nhận POST' }); return; }
 
-  const key = process.env.ANTHROPIC_API_KEY;
+  // Ưu tiên khoá đặt sẵn ở máy chủ. Chưa có thì nhận khoá người dùng tự dán vào
+  // widget — khoá đó nằm trong localStorage của chính trình duyệt họ, đi qua đây
+  // một lần rồi chuyển thẳng cho Anthropic, KHÔNG ghi log, KHÔNG lưu lại.
+  const khoaTay = String(req.headers['x-ai-key'] || '').trim();
+  const key = process.env.ANTHROPIC_API_KEY || khoaTay;
   if (!key) {
-    res.status(503).json({ loi: 'Chưa cấu hình ANTHROPIC_API_KEY',
-      huongDan: 'Vercel → Project kkinvest → Settings → Environment Variables → thêm ANTHROPIC_API_KEY (lấy ở console.anthropic.com) → Redeploy.' });
+    res.status(503).json({
+      loi: 'Chưa có khoá Anthropic', canKhoa: true,
+      huongDan: 'Cách nhanh: bấm 🔑 trên khung trợ lý rồi dán khoá — chỉ lưu trong trình duyệt này.\n'
+        + 'Cách bền: Vercel → kkinvest → Settings → Environment Variables → ANTHROPIC_API_KEY → Redeploy.'
+    });
+    return;
+  }
+  if (!/^sk-ant-[\w-]{20,}$/.test(key)) {
+    res.status(400).json({ loi: 'Khoá không đúng dạng (phải bắt đầu bằng sk-ant-)', canKhoa: true });
     return;
   }
 
@@ -89,8 +100,11 @@ export default async function handler(req, res) {
 
     if (!r.ok || !r.body) {
       const t = await r.text().catch(() => '');
-      res.status(r.status === 401 ? 401 : 502)
-         .json({ loi: 'Claude API trả lỗi ' + r.status, chiTiet: t.slice(0, 400) });
+      res.status(r.status === 401 ? 401 : 502).json({
+        loi: r.status === 401 ? 'Anthropic từ chối khoá này (401)' : 'Claude API trả lỗi ' + r.status,
+        canKhoa: r.status === 401 && !process.env.ANTHROPIC_API_KEY,
+        chiTiet: t.slice(0, 400)
+      });
       return;
     }
 
