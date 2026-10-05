@@ -6,13 +6,16 @@ export const config = { maxDuration: 60 };
 
 const GOC = 'https://generativelanguage.googleapis.com/v1beta/models/';
 
-// Mức "Nhanh/Cân/Sâu" → chuỗi model thử lần lượt. Google đổi tên model khá thường,
-// nên gặp 404 thì tự rơi xuống model kế tiếp thay vì báo lỗi cho người dùng.
+// Mức "Nhanh/Cân/Sâu" → chuỗi model thử lần lượt.
+// Đặt alias "-latest" lên đầu: Google khai tử model theo thời gian (đo 05/10/2026:
+// gemini-2.5-flash đã trả 404 "no longer available to new users"), alias thì không chết.
 const CHUOI = {
-  nhanh: ['gemini-2.5-flash-lite', 'gemini-2.0-flash', 'gemini-2.5-flash'],
-  can:   ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash-lite'],
-  sau:   ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.0-flash']
+  nhanh: ['gemini-flash-lite-latest', 'gemini-3.5-flash-lite', 'gemini-2.5-flash-lite'],
+  can:   ['gemini-flash-latest', 'gemini-3.5-flash', 'gemini-flash-lite-latest'],
+  sau:   ['gemini-pro-latest', 'gemini-3.1-pro-preview', 'gemini-flash-latest']
 };
+// Mã lỗi nên thử model kế tiếp thay vì bỏ cuộc: model bị gỡ, quá tải, hết quota riêng.
+const THU_TIEP = { 404: 1, 429: 1, 500: 1, 503: 1 };
 const CHU_TOI_DA = 120000;
 const DAU_RA = 2200;
 
@@ -57,8 +60,10 @@ export default async function handler(req, res) {
     });
     return;
   }
-  if (!/^AIza[\w-]{30,}$/.test(key)) {
-    res.status(400).json({ loi: 'Khoá Gemini không đúng dạng (phải bắt đầu bằng AIza)', canKhoa: true });
+  // Google có nhiều định dạng khoá và còn đổi tiếp (cũ "AIza…", mới "AQ.Ab8…").
+  // Nên chỉ chặn thứ rõ ràng không phải khoá, đừng khoá cứng tiền tố.
+  if (!/^[A-Za-z0-9._-]{20,200}$/.test(key)) {
+    res.status(400).json({ loi: 'Khoá không hợp lệ — dán thiếu hoặc lẫn khoảng trắng?', canKhoa: true });
     return;
   }
 
@@ -123,19 +128,22 @@ export default async function handler(req, res) {
     }
 
     const t = await r.text().catch(() => '');
-    // 404 = model không có trên khoá này → thử model kế tiếp
-    if (r.status === 404) { cuoi = { ma: 404, loi: 'Không có model ' + model, chiTiet: t.slice(0, 200) }; continue; }
     cuoi = {
       ma: r.status,
       loi: r.status === 400 || r.status === 403 ? 'Google từ chối khoá này (' + r.status + ')'
          : r.status === 429 ? 'Hết hạn mức miễn phí của Gemini, chờ ít phút rồi hỏi lại'
+         : r.status === 503 ? 'Model Gemini đang quá tải, thử lại sau ít phút'
+         : r.status === 404 ? 'Model ' + model + ' không dùng được với khoá này'
          : 'Gemini trả lỗi ' + r.status,
       canKhoa: (r.status === 400 || r.status === 403) && !process.env.GEMINI_API_KEY,
       chiTiet: t.slice(0, 400)
     };
+    // model bị gỡ / quá tải / hết quota riêng → thử model kế tiếp rồi mới bỏ cuộc
+    if (THU_TIEP[r.status]) continue;
     break;
   }
 
-  if (!res.headersSent) res.status(cuoi ? (cuoi.ma === 404 ? 502 : cuoi.ma) : 502).json(cuoi || { loi: 'Không gọi được Gemini' });
+  if (!res.headersSent) res.status(cuoi ? (cuoi.ma === 404 ? 502 : cuoi.ma) : 502)
+    .json(cuoi || { loi: 'Không gọi được Gemini' });
   else { try { res.end(); } catch {} }
 }

@@ -91,7 +91,7 @@
     '<div id="aiKhoaBox"><div class="t">Dán <b>khoá Gemini</b> để chat ngay trong trang. ' +
       'Lấy <b>miễn phí</b> ở <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> ' +
       '(đăng nhập Google → Create API key). Không có khoá thì vẫn dùng nút 📋 để chép sang Claude.</div>' +
-      '<div class="r"><input id="aiKhoa" type="password" autocomplete="off" spellcheck="false" placeholder="AIza…">' +
+      '<div class="r"><input id="aiKhoa" type="password" autocomplete="off" spellcheck="false" placeholder="AIza… hoặc AQ.…">' +
       '<button id="aiKhoaLuu">Lưu</button><button id="aiKhoaXoa" title="Xoá khoá khỏi máy này">Xoá</button></div>' +
       '<div id="aiKhoaNote"></div></div>' +
     '<div id="aiBot"><textarea id="aiIn" rows="1" placeholder="Hỏi về số liệu đang hiện trên trang…"></textarea>' +
@@ -273,7 +273,9 @@
             var o = null; try { o = JSON.parse(dl[k].slice(5).trim()); } catch (e) { continue; }
             var ca = o && o.candidates && o.candidates[0];
             var ps = ca && ca.content && ca.content.parts;
-            if (ps) for (var z = 0; z < ps.length; z++) if (ps[z].text) ra += ps[z].text;
+            // model "thinking" trả về cả phần suy nghĩ (thought) — không hiện ra chat
+            if (ps) for (var z = 0; z < ps.length; z++)
+              if (ps[z].text && !ps[z].thought) ra += ps[z].text;
             if (ra) { oA.innerHTML = md(ra); body.scrollTop = body.scrollHeight; }
           }
         }
@@ -306,8 +308,10 @@
   };
   $('aiKhoaLuu').onclick = function () {
     var v = $('aiKhoa').value.trim();
-    if (!/^AIza[\w-]{30,}$/.test(v)) {
-      $('aiKhoaNote').innerHTML = '⚠ Khoá Gemini phải bắt đầu bằng <b>AIza</b>. Kiểm lại xem có dán thiếu không.';
+    // Google có nhiều dạng khoá và còn đổi tiếp (cũ "AIza…", mới "AQ.Ab8…")
+    if (!/^[A-Za-z0-9._-]{20,200}$/.test(v)) {
+      $('aiKhoaNote').innerHTML = '⚠ Trông không giống khoá — dán thiếu hay lẫn khoảng trắng? ' +
+        'Dạng <b>AIza…</b> và <b>AQ.…</b> đều dùng được.';
       return;
     }
     try { localStorage.setItem(K_KHOA, v); } catch (e) {
