@@ -28,6 +28,9 @@
   .btn-acc{background:var(--accent2);color:#04122b;border-color:var(--accent2)}
   .layout{display:grid;grid-template-columns:330px 1fr;gap:18px}
   @media(max-width:980px){.layout{grid-template-columns:1fr}}
+  /* Ẩn cột nhập liệu: vẫn nằm trong DOM để công thức đọc value, chỉ không hiện */
+  .layout.anPanel{grid-template-columns:1fr}
+  .layout.anPanel>.panel{display:none}
   .panel{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:14px 16px}
   .panel h3{font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:14px 0 8px;
     border-bottom:1px solid var(--line);padding-bottom:5px}
@@ -138,6 +141,7 @@
     <input class="tk" id="ticker" value="KDH">
     <button class="btn-acc" id="analyzeBtn">🔍 Phân tích mã</button>
     <button id="fetchPx">↻ Lấy giá</button>
+    <button id="togPanel">⚙ Thông số</button>
     <span class="mini" id="pxStatus">Mã có sẵn: KDH · DXG · NVL · NLG · VHM · VIC · PDR · HDC · IDC</span>
   </div>
 </div></header>
@@ -851,6 +855,23 @@ function renderSize(tk){
 if(typeof window.loadTicker==='function'){const _h=(location.hash||'').replace('#','').trim().toUpperCase();window.loadTicker(_h||'KDH');}
 // Giá hiện tại tự chạy theo thị trường: làm mới ngầm mỗi 45s cho mã đang xem
 setInterval(()=>{const el=document.getElementById('ticker');if(el&&el.value.trim()&&typeof fetchPrice==='function')fetchPrice(true);},45000);
+
+// ===== Ẩn cột nhập liệu =====
+// Nhập mã là trang tự nạp hết thông số rồi, nên mặc định ẩn cột này cho gọn —
+// phần tính toán vẫn chạy y nguyên vì các ô input chỉ bị display:none chứ không bị bỏ đi.
+(function(){
+  const L=document.querySelector('.layout'), b=document.getElementById('togPanel');
+  if(!L||!b)return;
+  const K='vt_an_panel';
+  let an=true; try{ an=localStorage.getItem(K)!=='0'; }catch(e){}
+  const ve=()=>{
+    L.classList.toggle('anPanel',an);
+    b.textContent=an?'⚙ Hiện thông số':'⚙ Ẩn thông số';
+    b.title=an?'Mở cột nhập liệu để chỉnh tay WACC, RNAV, trọng số…':'Thu gọn cột nhập liệu';
+  };
+  b.onclick=()=>{ an=!an; try{localStorage.setItem(K,an?'1':'0');}catch(e){} ve(); };
+  ve();
+})();
 </script>
 <script defer src="tro-ly-ai.js"></script>
 </body>
