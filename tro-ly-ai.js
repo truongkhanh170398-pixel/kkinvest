@@ -294,7 +294,8 @@
         hoiDap.pop();
         return;
       }
-      var rd = r.body.getReader(), dec = new TextDecoder(), dem = '', ketThuc = null, nguon = null;
+      var rd = r.body.getReader(), dec = new TextDecoder(), dem = '',
+          ketThuc = null, nguon = null, loiLuong = null;
       for (;;) {
         var bb = await rd.read(); if (bb.done) break;
         dem += dec.decode(bb.value, { stream: true });
@@ -304,6 +305,8 @@
           for (var k = 0; k < dl.length; k++) {
             var o = null; try { o = JSON.parse(dl[k].slice(5).trim()); } catch (e) { continue; }
             // server đã quy mọi nhà cung cấp về một dạng: {t:"…"} rồi {xong:{…}}
+            // Luồng mở ngay từ đầu (chống 504) nên lỗi cũng về bằng đường này.
+            if (o.loi) { loiLuong = o; continue; }
             if (o.xong) { ketThuc = o.xong.het; nguon = o.xong; continue; }
             if (o.t) { ra += o.t; oA.innerHTML = md(ra); body.scrollTop = body.scrollHeight; }
           }
@@ -313,9 +316,12 @@
       if (!ra.trim()) {
         oA.remove();
         // model "thinking" có thể tiêu hết hạn mức vào phần suy nghĩ rồi không còn chỗ trả lời
-        theM('e', ketThuc === 'MAX_TOKENS'
-          ? 'Model dùng hết hạn mức vào phần suy nghĩ, chưa kịp trả lời. Hỏi lại, hoặc chọn mức Nhanh (model không suy nghĩ dài).'
-          : 'Gemini không trả về nội dung nào. Thử hỏi lại.');
+        theM('e', loiLuong
+          ? loiLuong.loi + (loiLuong.huongDan ? '\n\n' + loiLuong.huongDan : '')
+          : (ketThuc === 'MAX_TOKENS'
+            ? 'Model dùng hết hạn mức vào phần suy nghĩ, chưa kịp trả lời. Hỏi lại, hoặc chọn mức Nhanh (model không suy nghĩ dài).'
+            : 'Không nhận được nội dung nào. Thử hỏi lại.'));
+        if (loiLuong && loiLuong.canKhoa) moKhoa(true);
         hoiDap.pop();
       } else {
         if (ketThuc === 'MAX_TOKENS' || ketThuc === 'length')

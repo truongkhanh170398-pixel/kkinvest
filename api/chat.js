@@ -233,7 +233,9 @@ function docOai(o) {
 }
 
 /* ─────────── đọc SSE của nhà cung cấp, đẩy ra dạng chuẩn ─────────── */
-async function chuyenTiep(res, body, doc, model, nha) {
+// Trả {co, het}: co=false nghĩa là model này không ra chữ nào (hỏng hoặc quá chậm)
+// → người gọi còn kịp nhảy sang model khác, vì chưa ghi mẩu chữ nào ra response.
+async function chuyenTiep(res, body, doc, model, nha, hanDau) {
   const rd = body.getReader(), dec = new TextDecoder();
   let dem = '', co = false, het = null;
   const xuLy = k => {
@@ -247,18 +249,26 @@ async function chuyenTiep(res, body, doc, model, nha) {
       if (x.t) { co = true; res.write('data: ' + JSON.stringify({ t: x.t }) + '\n\n'); }
     }
   };
-  for (;;) {
-    const { done, value } = await rd.read();
-    if (done) break;
-    // Gemini ngắt khối bằng \r\n\r\n — tách theo '\n\n' thuần thì KHÔNG khối nào vỡ ra
-    // và cả câu trả lời biến mất. Bỏ \r trước khi tách.
-    dem += dec.decode(value, { stream: true }).replace(/\r/g, '');
-    const khoi = dem.split('\n\n'); dem = khoi.pop();
-    for (const k of khoi) xuLy(k);
-  }
-  if (dem.trim()) xuLy(dem);   // mẩu cuối không có dòng trống kết thúc
-  res.write('data: ' + JSON.stringify({ xong: { het: het, model: model, nha: NHA[nha].ten } }) + '\n\n');
-  return co;
+  // Model "thinking" có thể nghĩ hàng chục giây rồi mới nhả chữ đầu. Chờ mãi thì
+  // hàm serverless bị cắt và người dùng nhận 504. Quá hạn mà chưa ra chữ nào thì
+  // bỏ model này, nhảy sang model kế — lúc đó response vẫn còn sạch.
+  let quaHan = false;
+  const hen = hanDau ? setTimeout(() => { quaHan = true; try { rd.cancel(); } catch (e) {} }, hanDau) : null;
+  try {
+    for (;;) {
+      const { done, value } = await rd.read();
+      if (done) break;
+      // Gemini ngắt khối bằng \r\n\r\n — tách theo '\n\n' thuần thì KHÔNG khối nào vỡ ra
+      // và cả câu trả lời biến mất. Bỏ \r trước khi tách.
+      dem += dec.decode(value, { stream: true }).replace(/\r/g, '');
+      const khoi = dem.split('\n\n'); dem = khoi.pop();
+      for (const k of khoi) xuLy(k);
+      if (co && hen) { clearTimeout(hen); }   // đã ra chữ → thôi canh giờ, cứ chảy tiếp
+    }
+    if (dem.trim()) xuLy(dem);   // mẩu cuối không có dòng trống kết thúc
+  } catch (e) { /* luồng bị cắt */ }
+  finally { if (hen) clearTimeout(hen); }
+  return { co, het, quaHan };
 }
 
 export default async function handler(req, res) {
@@ -328,6 +338,17 @@ export default async function handler(req, res) {
   const max = DAU_RA[muc];
   let cuoi = null, daThu = [];
 
+  // Mở luồng SSE NGAY, trước khi gọi nhà cung cấp. Trước đây server im lặng suốt
+  // lúc dò model (đo 07/10: 24,6 giây mới ra byte đầu vì 2 model liên tiếp trả 503),
+  // nên cổng trước mặt cắt kết nối và người dùng nhận 504. Mở sớm + nhịp giữ sống
+  // thì kết nối không bị cắt, và lỗi cũng gửi được qua chính luồng này.
+  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('X-Accel-Buffering', 'no');
+  res.write(': dang chon model\n\n');
+  const nhip = setInterval(() => { try { res.write(': .\n\n'); } catch (e) {} }, 8000);
+  const dong = (o) => { clearInterval(nhip); try { res.write('data: ' + JSON.stringify(o) + '\n\n'); res.end(); } catch (e) {} };
+
   for (const { nha, key } of khoa) {
     let ds;
     if (nha === 'google') ds = NHA.google.model[muc];
@@ -352,17 +373,15 @@ export default async function handler(req, res) {
       }
 
       if (r.ok && r.body) {
-        if (!res.headersSent) {
-          res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
-          res.setHeader('Cache-Control', 'no-cache, no-transform');
-          res.setHeader('X-Accel-Buffering', 'no');
-          res.setHeader('X-Nguon', NHA[nha].ten + ' / ' + model);
-        }
+        let k = { co: false };
         try {
-          await chuyenTiep(res, r.body, nha === 'google' ? docGoogle : docOai, model, nha);
+          k = await chuyenTiep(res, r.body, nha === 'google' ? docGoogle : docOai, model, nha, 22000);
         } catch (e) { /* client ngắt giữa chừng */ }
-        res.end();
-        return;
+        if (k.co) { dong({ xong: { het: k.het, model: model, nha: NHA[nha].ten } }); return; }
+        // không ra chữ nào → ghi nhận rồi thử model kế tiếp
+        cuoi = { ma: 504, loi: NHA[nha].ten + ': ' + model
+          + (k.quaHan ? ' nghĩ quá 22 giây chưa trả lời' : ' không trả về nội dung') };
+        continue;
       }
 
       const t = await r.text().catch(() => '');
@@ -382,16 +401,13 @@ export default async function handler(req, res) {
     }
   }
 
-  if (!res.headersSent) {
-    // giữ cả dòng tổng lẫn lỗi cụ thể của nhà cuối cùng — mất dòng nào cũng khó hiểu
-    res.status(cuoi && cuoi.ma >= 400 && cuoi.ma < 600 ? (cuoi.ma === 404 ? 502 : cuoi.ma) : 502)
-       .json(Object.assign({}, cuoi || {}, {
-         loi: 'Không nhà nào trả lời được' + (cuoi && cuoi.loi ? ' — ' + cuoi.loi : ''),
-         huongDan: khoa.length < 2
-           ? 'Dán thêm khoá miễn phí của nhà khác (Groq gsk_… / OpenRouter sk-or-… / Cerebras csk-…), '
-             + 'ngăn bằng dấu phẩy — bên nào lỗi thì trang tự chuyển.'
-           : 'Chờ ít phút rồi hỏi lại, hoặc bấm 📋 để chép câu hỏi sang claude.ai.',
-         daThu: daThu.slice(0, 12)
-       }));
-  } else { try { res.end(); } catch {} }
+  // Luồng SSE đã mở từ đầu nên lỗi cũng đi qua đây, không trả JSON nữa.
+  dong(Object.assign({}, cuoi || {}, {
+    loi: 'Không nhà nào trả lời được' + (cuoi && cuoi.loi ? ' — ' + cuoi.loi : ''),
+    huongDan: khoa.length < 2
+      ? 'Dán thêm khoá miễn phí của nhà khác (Groq gsk_… / OpenRouter sk-or-… / Cerebras csk-…), '
+        + 'ngăn bằng dấu phẩy — bên nào lỗi thì trang tự chuyển.'
+      : 'Chờ ít phút rồi hỏi lại, hoặc bấm 📋 để chép câu hỏi sang claude.ai.',
+    daThu: daThu.slice(0, 12)
+  }));
 }
