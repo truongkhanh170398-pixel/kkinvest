@@ -385,7 +385,9 @@ export default async function handler(req, res) {
       let r;
       try {
         const ctrl = new AbortController();
-        const to = setTimeout(() => ctrl.abort(), 50000);
+        // Chờ MỞ kết nối cũng phải nằm trong hạn tổng. Để cứng 50 giây thì một
+        // nhà im lặng là đủ ăn hết giờ (đo live: lượt 60,6 giây, 0 chữ).
+        const to = setTimeout(() => ctrl.abort(), Math.max(4000, Math.min(12000, conLai() - 4000)));
         const p = nha === 'google' ? goiGoogle(key, model, sys, tin, max)
                                    : goiOai(nha, key, model, sys, tin, max);
         r = await p; clearTimeout(to);
