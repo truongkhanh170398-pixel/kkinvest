@@ -80,8 +80,8 @@
   wrap.innerHTML =
     '<div id="aiTop"><b>HỎI ĐÁP AI</b>' +
       '<select id="aiMuc" title="Cả 3 mức đều dùng model miễn phí của Google. Bản Pro phải trả tiền nên không có ở đây.">' +
-        '<option value="can" selected>Cân bằng · free</option>' +
-        '<option value="nhanh">Nhanh · free</option>' +
+        '<option value="nhanh" selected>Nhanh · free</option>' +
+        '<option value="can">Cân bằng · free</option>' +
         '<option value="sau">Kỹ hơn · free</option></select>' +
       '<button class="x" id="aiChep" title="Chép câu hỏi + số liệu để dán sang Claude/Gemini web">📋</button>' +
       '<button class="x" id="aiKhoaBtn" title="Khoá Gemini">🔑</button>' +
@@ -385,6 +385,12 @@
   $('aiKhoa').addEventListener('keydown', function (e) {
     if (e.key === 'Enter') { e.preventDefault(); $('aiKhoaLuu').onclick(); }
   });
+  // nhớ mức đã chọn, khỏi phải đổi lại mỗi lần mở trang
+  try {
+    var mucCu = localStorage.getItem('ai_muc');
+    if (mucCu) $('aiMuc').value = mucCu;
+  } catch (e) {}
+  $('aiMuc').onchange = function () { try { localStorage.setItem('ai_muc', $('aiMuc').value); } catch (e) {} };
   gui.onclick = batDau;
   inp.addEventListener('keydown', function (e) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); batDau(); }

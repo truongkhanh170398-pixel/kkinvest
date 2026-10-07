@@ -68,7 +68,9 @@ const NHA = {
     // Alias "-latest" đặt đầu vì alias không bị khai tử khi Google gỡ model.
     model: {
       nhanh: ['gemini-flash-lite-latest', 'gemini-3.1-flash-lite', 'gemini-3.5-flash-lite'],
-      can:   ['gemini-flash-latest', 'gemini-3.5-flash', 'gemini-flash-lite-latest'],
+      // 3.5-flash nghĩ lâu (đo: 20-30 giây mới nhả chữ), nên xếp sau lite —
+      // flash-latest hỏng thì rơi ngay sang model nhanh thay vì model chậm.
+      can:   ['gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-3.5-flash'],
       sau:   ['gemini-3.5-flash', 'gemini-flash-latest', 'gemini-3-flash-preview']
     }
   },
