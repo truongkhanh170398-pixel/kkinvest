@@ -252,22 +252,29 @@ async function chuyenTiep(res, body, doc, model, nha, hanDau) {
   // Model "thinking" có thể nghĩ hàng chục giây rồi mới nhả chữ đầu. Chờ mãi thì
   // hàm serverless bị cắt và người dùng nhận 504. Quá hạn mà chưa ra chữ nào thì
   // bỏ model này, nhảy sang model kế — lúc đó response vẫn còn sạch.
-  let quaHan = false;
-  const hen = hanDau ? setTimeout(() => { quaHan = true; try { rd.cancel(); } catch (e) {} }, hanDau) : null;
+  // rd.cancel() KHÔNG gỡ được lệnh read() đang treo — đo 07/10: lượt hỏi vẫn
+  // chạy tới 60,4 giây rồi bị nền tảng cắt. Phải ĐUA read() với đồng hồ.
+  let quaHan = false, henId = null;
+  const hanP = hanDau ? new Promise(r => { henId = setTimeout(() => r('QUA_HAN'), hanDau); }) : null;
   try {
     for (;;) {
-      const { done, value } = await rd.read();
+      let kq;
+      if (!co && hanP) {
+        kq = await Promise.race([rd.read(), hanP]);
+        if (kq === 'QUA_HAN') { quaHan = true; try { rd.cancel().catch(() => {}); } catch (e) {} break; }
+      } else kq = await rd.read();
+      const { done, value } = kq;
       if (done) break;
       // Gemini ngắt khối bằng \r\n\r\n — tách theo '\n\n' thuần thì KHÔNG khối nào vỡ ra
       // và cả câu trả lời biến mất. Bỏ \r trước khi tách.
       dem += dec.decode(value, { stream: true }).replace(/\r/g, '');
       const khoi = dem.split('\n\n'); dem = khoi.pop();
       for (const k of khoi) xuLy(k);
-      if (co && hen) { clearTimeout(hen); }   // đã ra chữ → thôi canh giờ, cứ chảy tiếp
+      if (co && henId) { clearTimeout(henId); henId = null; }   // đã ra chữ → thôi canh giờ
     }
     if (dem.trim()) xuLy(dem);   // mẩu cuối không có dòng trống kết thúc
   } catch (e) { /* luồng bị cắt */ }
-  finally { if (hen) clearTimeout(hen); }
+  finally { if (henId) clearTimeout(henId); }
   return { co, het, quaHan };
 }
 
@@ -363,10 +370,15 @@ export default async function handler(req, res) {
       ds = chonModel(nha, co, muc);
     }
 
-    for (const model of ds) {
+    for (let idx = 0; idx < ds.length; idx++) {
+      const model = ds[idx];
       // Còn quá ít thời gian thì đừng bắt đầu model mới — thà báo lỗi tử tế
       // còn hơn bị cắt ngang giữa câu trả lời dở dang.
-      if (conLai() < 9000) { cuoi = cuoi || { ma: 504, loi: 'các model đều nghĩ quá lâu' }; break; }
+      if (conLai() < 8000) { cuoi = cuoi || { ma: 504, loi: 'các model đều nghĩ quá lâu' }; break; }
+      // Chia đều thời gian còn lại cho số model chưa thử. Nếu cho model đầu một
+      // hạn cứng 20 giây thì hai model treo đã ăn hết giờ, model sống phía sau
+      // không còn lượt nào (đo bằng test: thử được 2/3 model).
+      const hanModel = Math.max(7000, Math.min(20000, (conLai() - 4000) / (ds.length - idx)));
       daThu.push(NHA[nha].ten + '/' + model);
       let r;
       try {
@@ -383,8 +395,7 @@ export default async function handler(req, res) {
       if (r.ok && r.body) {
         let k = { co: false };
         try {
-          k = await chuyenTiep(res, r.body, nha === 'google' ? docGoogle : docOai, model, nha,
-                               Math.max(6000, Math.min(20000, conLai() - 6000)));
+          k = await chuyenTiep(res, r.body, nha === 'google' ? docGoogle : docOai, model, nha, hanModel);
         } catch (e) { /* client ngắt giữa chừng */ }
         if (k.co) { dong({ xong: { het: k.het, model: model, nha: NHA[nha].ten } }); return; }
         // không ra chữ nào → ghi nhận rồi thử model kế tiếp
