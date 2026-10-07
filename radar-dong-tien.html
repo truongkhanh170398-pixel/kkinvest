@@ -488,6 +488,9 @@ const SRC_REALTIME={
 const SRC_24H=(function(){
   const CAP=40000, SAN=2e8;   // SAN: bỏ dòng quá nhỏ cho nhẹ, thấp hơn mọi ngưỡng lọc (0,5 tỷ)
   let rows=[], prev={}, nLuot=0, nCum=0, nLoi=0, timer=null, dangQuet=false, nhip=3000, batDau=null;
+  // bu: dòng tiền đang cộng dồn theo mã+chiều, chưa đủ ngưỡng để ghi thành một dòng
+  // doFlow: tổng giá trị thật đã chảy qua kể từ lúc mở trang, để báo khi bảng rỗng
+  let bu={}, doFlow=0, doTu=null;
   const key=()=>'radar_24h_v2_'+vnDate(Math.floor(Date.now()/1000));   // v2: bỏ dữ liệu cũ còn lẫn lệnh thoả thuận
   function save(){try{localStorage.setItem(key(),JSON.stringify(rows.slice(-CAP)));}catch(e){}}
   function restore(){try{rows=JSON.parse(localStorage.getItem(key()))||[];}catch(e){rows=[];}}
@@ -552,7 +555,17 @@ const SRC_24H=(function(){
           if(p.ask&&mp>=p.ask)      dir='B';
           else if(p.bid&&mp<=p.bid) dir='S';
           else                      dir=mp>p.mp?'B':(mp<p.mp?'S':(p.dir||'B'));
-          if(val>=SAN)rows.push({t:(+x.updated_at)||Math.floor(Date.now()/1000),tk,px:mp,vol:dv,val,dir});
+          // Cộng dồn theo mã + chiều rồi mới ghi. Một nhịp 3 giây của một mã thường
+          // chỉ vài chục triệu; lọc thẳng ở đây là vứt mất quá nửa dòng tiền
+          // (đo 07/10/2026: giữ 48%, mất 52%). Cộng dồn thì giữ đủ 100%.
+          if(doTu==null)doTu=Math.floor(Date.now()/1000);
+          doFlow+=val;
+          const kb=tk+'|'+dir, ac=bu[kb]||(bu[kb]={val:0,vol:0});
+          ac.val+=val; ac.vol+=dv;
+          if(ac.val>=SAN){
+            rows.push({t:(+x.updated_at)||Math.floor(Date.now()/1000),tk,px:mp,vol:ac.vol,val:ac.val,dir});
+            ac.val=0; ac.vol=0;
+          }
           nCum++;
           prev[tk]={vol,gt,mp,ask,bid,dir,avg:(+x.average_price||0)*1000};
         } else prev[tk]={vol,gt,mp,ask,bid,dir:p&&p.dir,avg:(+x.average_price||0)*1000};
@@ -567,7 +580,8 @@ const SRC_24H=(function(){
     tick:false,
     note:'⚡ <b>Gần thời gian thực — nhịp '+(3)+' giây, không cần tài khoản.</b> Quét lại mỗi 3 giây, rồi gộp các lần khớp liên tiếp cùng mã cùng chiều thành một đợt. <b>Mức gộp chỉnh được trong Bộ lọc</b>: chọn <b>Không gộp</b> để thấy <b>từng lần khớp 3 giây</b> (nhớ hạ ngưỡng xuống 0,5–1 tỷ, vì từng lần khớp hiếm khi tới 3 tỷ), hoặc gộp 15/30/60 giây. Mặc định 60 giây để ngưỡng “trên 3 tỷ” giữ nguyên ý nghĩa như nến 1 phút. Mỗi dòng là một đợt — thấy ngay khi nó vừa bắt đầu và <b>lớn dần theo thời gian thực</b>, thay vì phải đợi hết phút mới hiện. <b>Mở trang là có ngay cả phiên:</b> nạp sẵn nến 1 phút của riêng hôm nay rồi chạy tiếp realtime, nên không mất phần đầu phiên. <b>Vì sao khớp lệnh liên tục không tách được từng lệnh:</b> không API công khai nào trả từng lệnh khớp — đo 30/09, bám theo <i>match_qtty</i> ở nhịp 1 giây chỉ bắt được 61% số lệnh (riêng HPG 9%). Muốn từng lệnh thật thì dùng <b>🔴 Tick DNSE</b>. Chiều <b>MUA/BÁN</b> xác định bằng <b>sổ lệnh</b>: khớp tại giá chào bán → <b>mua chủ động</b>, tại giá chào mua → <b>bán chủ động</b> — chính xác hơn hẳn quy tắc tick suy từ nến. <b>Hạn chế:</b> chỉ có <b>phiên hôm nay</b>; muốn xem lại phiên cũ thì chuyển sang <b>Nến 1 phút</b>. Tốn ~76KB mỗi lượt (≈88MB/giờ ở nhịp 3s) — đổi nhịp trong <b>Bộ lọc thông minh</b>.',
     days(){const d=vnDate(Math.floor(Date.now()/1000));return rows.length?[...new Set(rows.map(r=>vnDate(r.t)))].sort():[d];},
-    stats(){return {nLuot,nCum,kept:rows.length,nLoi,nhip,batDau};},
+    stats(){return {nLuot,nCum,kept:rows.length,nLoi,nhip,batDau,doFlow,doTu,
+      dangCho:Object.values(bu).reduce((s,a)=>s+a.val,0)};},
     async fetch(onTien){
       if(!rows.length)restore();
       if(!daNap){ await quet(); await napPhien(onTien); }   // quét seed mốc trước, rồi nạp lịch sử phiên
@@ -832,6 +846,21 @@ function render(){
   drawMap(secArr,bySym);
   radarFeed();
 
+  // Bảng rỗng KHÔNG đồng nghĩa với hỏng — thường chỉ là ngưỡng đang cao hơn thứ
+  // thị trường thực sự tạo ra lúc đó. Nói thẳng con số đo được thay vì để trống.
+  if(!EVT.length&&SOURCE===SRC_24H){
+    const s=SRC_24H.stats();
+    const giay=s.doTu?Math.max(1,Math.floor(Date.now()/1000)-s.doTu):0;
+    const moiPhut=giay>0?s.doFlow/(giay/60):0;
+    $('subTxt').innerHTML = s.nLuot<2
+      ? 'Đang nối nguồn realtime… chờ vài giây cho lần quét thứ hai — phải có hai mốc liên tiếp mới tính ra được lượng khớp mới.'
+      : (s.doFlow<=0
+        ? '⚠ Đã quét <b>'+s.nLuot+'</b> lượt nhưng chưa thấy khớp mới nào'+(s.nLoi?' · <b>'+s.nLoi+'</b> lượt lỗi mạng':'')+'. Ngoài giờ khớp lệnh thì đây là bình thường.'
+        : 'Chưa mã nào đạt ngưỡng <b>'+$('selTh').value+' tỷ</b>. Trong <b>'+Math.round(giay)+' giây</b> vừa theo dõi, cả rổ '
+          +UNI.length+' mã mới chạy <b>'+ty(s.doFlow)+'</b>'+(moiPhut?' (≈ <b>'+ty(moiPhut)+'</b>/phút)':'')
+          +' — chia cho từng mã thì còn rất nhỏ, nên chưa lệnh nào đủ lớn. Hạ ngưỡng trong <b>Bộ lọc</b> xuống 0,5–1 tỷ là thấy ngay.'
+          +(s.dangCho>0?' Hiện còn <b>'+ty(s.dangCho)+'</b> đang cộng dồn, chưa đủ ngưỡng để ghi thành dòng.':''));
+  }
   $('stat').textContent='✓ '+dmy(day)+' · '+new Date().toLocaleTimeString('vi-VN');
 }
 
