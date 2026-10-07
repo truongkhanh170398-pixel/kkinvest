@@ -129,6 +129,18 @@
     return c.text;
   }
 
+  /* ── mã đang xem ──────────────────────────────────────────────
+     Để server kéo đúng tin của mã đó về, kể cả khi câu hỏi không gõ tên mã
+     ("mã này có gì mới?"). Ưu tiên note đang mở, rồi tới ô nhập mã của trang. */
+  function maDangXem() {
+    try { if (window._noteAI && window._noteAI.tk) return window._noteAI.tk; } catch (e) {}
+    for (var id of ['ticker', 'tk', 'symbol', 'maCK']) {
+      var e = document.getElementById(id);
+      if (e && e.value && /^[A-Za-z]{3,4}$/.test(e.value.trim())) return e.value.trim().toUpperCase();
+    }
+    return '';
+  }
+
   /* ── markdown tối giản ────────────────────────────────────── */
   function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
   function md(s) {
@@ -270,7 +282,8 @@
       var kk = layKhoa(); if (kk) hd['X-Ai-Key'] = kk;
       var r = await fetch('/api/chat', {
         method: 'POST', headers: hd,
-        body: JSON.stringify({ hoiDap: hoiDap, boiCanh: layBoiCanh().text, trang: document.title, muc: $('aiMuc').value })
+        body: JSON.stringify({ hoiDap: hoiDap, boiCanh: layBoiCanh().text, trang: document.title,
+                               muc: $('aiMuc').value, ma: maDangXem() })
       });
       if (!r.ok || (r.headers.get('content-type') || '').indexOf('event-stream') < 0) {
         var j = null; try { j = await r.json(); } catch (e) {}
