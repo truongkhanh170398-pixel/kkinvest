@@ -346,6 +346,11 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-cache, no-transform');
   res.setHeader('X-Accel-Buffering', 'no');
   res.write(': dang chon model\n\n');
+  // Hàm serverless bị cắt ở 60 giây. Hạn chờ 22s/model × 3 model đã vượt trần
+  // (đo 07/10: một lượt chạy 60,4s rồi bị cắt giữa chừng, không ra câu trả lời).
+  // Nên đặt hạn TỔNG, và mỗi model chỉ được lấy phần thời gian còn lại.
+  const HET_HAN = Date.now() + 48000;
+  const conLai = () => HET_HAN - Date.now();
   const nhip = setInterval(() => { try { res.write(': .\n\n'); } catch (e) {} }, 8000);
   const dong = (o) => { clearInterval(nhip); try { res.write('data: ' + JSON.stringify(o) + '\n\n'); res.end(); } catch (e) {} };
 
@@ -359,6 +364,9 @@ export default async function handler(req, res) {
     }
 
     for (const model of ds) {
+      // Còn quá ít thời gian thì đừng bắt đầu model mới — thà báo lỗi tử tế
+      // còn hơn bị cắt ngang giữa câu trả lời dở dang.
+      if (conLai() < 9000) { cuoi = cuoi || { ma: 504, loi: 'các model đều nghĩ quá lâu' }; break; }
       daThu.push(NHA[nha].ten + '/' + model);
       let r;
       try {
@@ -375,12 +383,13 @@ export default async function handler(req, res) {
       if (r.ok && r.body) {
         let k = { co: false };
         try {
-          k = await chuyenTiep(res, r.body, nha === 'google' ? docGoogle : docOai, model, nha, 22000);
+          k = await chuyenTiep(res, r.body, nha === 'google' ? docGoogle : docOai, model, nha,
+                               Math.max(6000, Math.min(20000, conLai() - 6000)));
         } catch (e) { /* client ngắt giữa chừng */ }
         if (k.co) { dong({ xong: { het: k.het, model: model, nha: NHA[nha].ten } }); return; }
         // không ra chữ nào → ghi nhận rồi thử model kế tiếp
         cuoi = { ma: 504, loi: NHA[nha].ten + ': ' + model
-          + (k.quaHan ? ' nghĩ quá 22 giây chưa trả lời' : ' không trả về nội dung') };
+          + (k.quaHan ? ' nghĩ quá lâu chưa chịu trả lời' : ' không trả về nội dung') };
         continue;
       }
 
@@ -404,10 +413,12 @@ export default async function handler(req, res) {
   // Luồng SSE đã mở từ đầu nên lỗi cũng đi qua đây, không trả JSON nữa.
   dong(Object.assign({}, cuoi || {}, {
     loi: 'Không nhà nào trả lời được' + (cuoi && cuoi.loi ? ' — ' + cuoi.loi : ''),
-    huongDan: khoa.length < 2
-      ? 'Dán thêm khoá miễn phí của nhà khác (Groq gsk_… / OpenRouter sk-or-… / Cerebras csk-…), '
-        + 'ngăn bằng dấu phẩy — bên nào lỗi thì trang tự chuyển.'
-      : 'Chờ ít phút rồi hỏi lại, hoặc bấm 📋 để chép câu hỏi sang claude.ai.',
+    huongDan: (cuoi && cuoi.ma === 504)
+      ? 'Model đang nghĩ lâu bất thường. Chọn mức "Nhanh · free" ở trên rồi hỏi lại — model đó không suy nghĩ dài nên gần như luôn trả lời kịp.'
+      : (khoa.length < 2
+        ? 'Dán thêm khoá miễn phí của nhà khác (Groq gsk_… / OpenRouter sk-or-… / Cerebras csk-…), '
+          + 'ngăn bằng dấu phẩy — bên nào lỗi thì trang tự chuyển.'
+        : 'Chờ ít phút rồi hỏi lại, hoặc bấm 📋 để chép câu hỏi sang claude.ai.'),
     daThu: daThu.slice(0, 12)
   }));
 }
