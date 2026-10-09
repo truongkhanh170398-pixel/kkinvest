@@ -140,9 +140,13 @@
   <button type="submit">Đăng nhập</button><div style="color:var(--dn);font-size:12px;text-align:center;min-height:14px" id="lerr"></div>
 </form></div>
 <script>(function(){const A={user:"admin",pass:"hanhtrinhtutien"},K="vt_auth",g=document.getElementById('loginGate');
-  if(localStorage.getItem(K)==="1")g.classList.add('hidden');
+  const PHIEN=1;   // tăng số này để đăng xuất toàn bộ máy khác
+  const _bam=s=>{let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return(h>>>0).toString(36);};
+  const VE=_bam(A.user+"|"+A.pass+"|"+PHIEN);
+  if(localStorage.getItem(K)===VE) g.classList.add('hidden');
+  else localStorage.removeItem(K);   // mật khẩu đã đổi → phiên cũ hết hiệu lực
   document.getElementById('loginForm').addEventListener('submit',function(e){e.preventDefault();
-    if(document.getElementById('luser').value.trim()===A.user&&document.getElementById('lpass').value===A.pass){localStorage.setItem(K,"1");g.classList.add('hidden');}
+    if(document.getElementById('luser').value.trim()===A.user&&document.getElementById('lpass').value===A.pass){localStorage.setItem(K,VE);g.classList.add('hidden');}
     else document.getElementById('lerr').textContent="Sai tài khoản hoặc mật khẩu";});})();</script>
 
 <header><div class="wrap">
