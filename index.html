@@ -139,7 +139,7 @@
   <input id="luser" placeholder="Tên đăng nhập" autofocus><input id="lpass" type="password" placeholder="Mật khẩu">
   <button type="submit">Đăng nhập</button><div style="color:var(--dn);font-size:12px;text-align:center;min-height:14px" id="lerr"></div>
 </form></div>
-<script>(function(){const A={user:"admin",pass:"kdh2026"},K="vt_auth",g=document.getElementById('loginGate');
+<script>(function(){const A={user:"admin",pass:"hanhtrinhtutien"},K="vt_auth",g=document.getElementById('loginGate');
   if(localStorage.getItem(K)==="1")g.classList.add('hidden');
   document.getElementById('loginForm').addEventListener('submit',function(e){e.preventDefault();
     if(document.getElementById('luser').value.trim()===A.user&&document.getElementById('lpass').value===A.pass){localStorage.setItem(K,"1");g.classList.add('hidden');}
