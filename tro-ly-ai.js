@@ -108,8 +108,13 @@
 
   /* ── bối cảnh ─────────────────────────────────────────────── */
   function tuDongDoc() {
-    var goc = document.querySelector('.wrap') || document.body;
-    return (goc.innerText || '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+    // Phải gom TẤT CẢ .wrap. querySelector lấy cái đầu tiên, mà cái đầu tiên
+    // thường là header chỉ chứa thanh nav — trang chủ vì thế chỉ đọc ra 241 ký tự
+    // trong khi tin tức và bảng thị trường quốc tế nằm ở .wrap thứ hai.
+    var ds = document.querySelectorAll('.wrap'), t = '';
+    for (var i = 0; i < ds.length; i++) t += (ds[i].innerText || '') + '\n\n';
+    if (!t.trim()) t = (document.body.innerText || '');
+    return t.replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
   }
   function layBoiCanh() {
     var t = '';
