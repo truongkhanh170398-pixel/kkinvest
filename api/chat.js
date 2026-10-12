@@ -270,6 +270,71 @@ async function hoSoMa(ma) {
   return txt;
 }
 
+/* ─────────── bức tranh thị trường: VNINDEX + quốc tế ───────────
+   Dữ liệu quốc tế chỉ có ở trang Tổng quan, nên đứng ở trang mã mà hỏi "đêm qua
+   Mỹ thế nào" thì trước đây chịu. Server tự lấy để trang nào cũng trả lời được. */
+const QUOC_TE = [['^IXIC', 'Nasdaq'], ['^GSPC', 'S&P 500'], ['^DJI', 'Dow Jones'], ['^VIX', 'VIX'],
+  ['^N225', 'Nikkei 225'], ['^KS11', 'KOSPI'], ['^HSI', 'Hang Seng'],
+  ['GC=F', 'Vàng'], ['CL=F', 'Dầu WTI'], ['DX-Y.NYB', 'Chỉ số USD']];
+let nhoTT = null;
+
+async function buocTranh() {
+  if (nhoTT && Date.now() - nhoTT.luc < 300000) return nhoTT.txt;
+  const p = [];
+
+  // VNINDEX từ cùng nguồn các trang dùng
+  const vni = await barVNI();
+  if (vni && vni.c && vni.c.length > 2) {
+    const C = vni.c, i = C.length - 1;
+    const pc = n => (i - n >= 0) ? ((C[i] / C[i - n] - 1) * 100) : null;
+    const v = ['VNINDEX ' + so1(C[i]) + ' (' + (so1(pc(1)) >= 0 ? '+' : '') + so1(pc(1)) + '% phiên gần nhất)'];
+    for (const [ten, n] of [['1 tháng', 21], ['3 tháng', 63], ['12 tháng', 252]]) {
+      const x = pc(n); if (x != null) v.push(ten + ' ' + (x >= 0 ? '+' : '') + so1(x) + '%');
+    }
+    p.push('VNINDEX: ' + v.join(' · '));
+  }
+
+  // quốc tế từ Yahoo
+  const u = 'https://query1.finance.yahoo.com/v7/finance/spark?symbols='
+    + QUOC_TE.map(x => encodeURIComponent(x[0])).join(',') + '&range=5d&interval=1d';
+  let j = null;
+  try {
+    const r = await fetch(u, { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(9000) });
+    if (r.ok) j = await r.json();
+  } catch (e) {}
+  const ds = (j && ((j.spark && j.spark.result) || j.result)) || [];
+  const ten = {}; QUOC_TE.forEach(x => { ten[x[0]] = x[1]; });
+  const c = [];
+  for (const x of ds) {
+    const rp = x.response && x.response[0];
+    const m = rp && rp.meta;
+    if (!m || m.regularMarketPrice == null) continue;
+    const gia = m.regularMarketPrice;
+    // KHÔNG dùng chartPreviousClose: với range=5d nó là giá của 5 phiên trước,
+    // nên KOSPI ra -8,4% thay vì -3,65%. meta.previousClose thì nhiều chỉ số
+    // không có. Lấy thẳng từ chuỗi đóng cửa ngày.
+    const dong = ((rp.indicators && rp.indicators.quote && rp.indicators.quote[0] || {}).close || [])
+      .filter(v => v != null);
+    let truoc = null;
+    if (dong.length >= 2) {
+      const cuoi = dong[dong.length - 1];
+      // giá hiện tại trùng phiên cuối ⇒ sàn đã chốt, so với phiên liền trước
+      truoc = (cuoi && Math.abs(gia - cuoi) / cuoi < 1e-6) ? dong[dong.length - 2] : cuoi;
+    } else if (m.previousClose != null) truoc = m.previousClose;
+    const pct = truoc ? (gia / truoc - 1) * 100 : null;
+    // >12 giờ không có nhịp giá mới = sàn đó đã đóng, % là của phiên gần nhất
+    const cu = m.regularMarketTime && (Date.now() / 1000 - m.regularMarketTime) > 12 * 3600;
+    c.push((ten[x.symbol] || x.symbol) + ' ' + so1(gia)
+      + (pct != null ? ' (' + (pct >= 0 ? '+' : '') + so1(pct) + '%)' : '')
+      + (cu ? ' [phiên gần nhất, sàn đã đóng]' : ''));
+  }
+  if (c.length) p.push('Thị trường quốc tế (Yahoo Finance): ' + c.join(' · '));
+
+  const txt = p.length ? ('BỨC TRANH THỊ TRƯỜNG (server lấy lúc ' + new Date().toISOString() + ')\n' + p.join('\n')) : '';
+  nhoTT = { luc: Date.now(), txt };
+  return txt;
+}
+
 /* ─────────── hạn tốc độ ─────────── */
 const dem = new Map();
 function quaNhanh(ip) {
@@ -460,16 +525,16 @@ export default async function handler(req, res) {
 
   // Mã nhắc trong câu hỏi, hoặc mã trang đang mở → kéo tin & báo cáo thật về
   const dsMa = [...new Set(timMa(tin[tin.length - 1].content).concat(timMa(b.ma || '')))].slice(0, 2);
-  if (dsMa.length) {
-    const [tins, hoSo] = await Promise.all([
-      Promise.all(dsMa.map(layTin)).then(a => a.filter(Boolean)),
-      Promise.all(dsMa.map(hoSoMa)).then(a => a.filter(Boolean))
-    ]);
-    if (hoSo.length) sys += '\n\n' + hoSo.join('\n\n');
-    if (tins.length) sys += '\n\n' + tins.join('\n\n')
-      + '\n\nĐây là tiêu đề thật, có ngày tháng. Dùng để trả lời "đang có gì mới". '
-      + 'Chỉ nói những gì tiêu đề nêu — đừng tự suy ra nội dung bên trong báo cáo.';
-  }
+  const [tins, hoSo, tranh] = await Promise.all([
+    Promise.all(dsMa.map(layTin)).then(a => a.filter(Boolean)),
+    Promise.all(dsMa.map(hoSoMa)).then(a => a.filter(Boolean)),
+    buocTranh().catch(() => '')
+  ]);
+  if (tranh) sys += '\n\n' + tranh;
+  if (hoSo.length) sys += '\n\n' + hoSo.join('\n\n');
+  if (tins.length) sys += '\n\n' + tins.join('\n\n')
+    + '\n\nĐây là tiêu đề thật, có ngày tháng. Dùng để trả lời "đang có gì mới". '
+    + 'Chỉ nói những gì tiêu đề nêu — đừng tự suy ra nội dung bên trong báo cáo.';
 
   const max = DAU_RA[muc];
   let cuoi = null, daThu = [];
