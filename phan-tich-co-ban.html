@@ -1366,9 +1366,18 @@ function load(sectKey,tk){
   statusEl.textContent='● '+s.name.replace(/^[^ ]+ /,'')+u;
   statusEl.style.color=s.list.includes(tk)?'#6fe3ab':'#f0c26b';
   try{location.hash=tk;}catch(e){}
-  // nạp lại iframe với hash → trang con tự đọc hash và định giá
+  // Nạp iframe theo mã. Đổi mã TRONG CÙNG ngành thì URL chỉ khác phần #...,
+  // gán lại src là điều hướng cùng tài liệu nên iframe không tải lại — trước đây
+  // trang con giữ nguyên mã cũ, thành ra note nói BMP mà biểu đồ vẫn là DPM.
+  // Nên đổi thẳng hash của iframe (trang con có listener hashchange), chỉ gán
+  // src khi thật sự sang trang khác.
   frame.style.height='1200px';
-  frame.src=s.file+'#'+encodeURIComponent(tk);
+  const dich=s.file+'#'+encodeURIComponent(tk);
+  const srcCu=frame.getAttribute('src')||'';
+  if(srcCu.split('#')[0]===s.file){
+    try{ frame.contentWindow.location.hash=encodeURIComponent(tk); }
+    catch(e){ frame.src=dich; }
+  } else frame.src=dich;
 }
 function analyze(){
   const tk=(tkEl.value||'').trim().toUpperCase();

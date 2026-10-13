@@ -856,7 +856,19 @@ function renderSize(tk){
   document.getElementById('analyzeBtn').addEventListener('click',()=>loadTicker((tkEl.value||'').trim().toUpperCase()));
   tkEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();loadTicker((tkEl.value||'').trim().toUpperCase());}});
 })();
-if(typeof window.loadTicker==='function'){const _h=(location.hash||'').replace('#','').trim().toUpperCase();window.loadTicker(_h||'KDH');}
+(function(){
+  // Đọc mã từ hash. Phải nghe hashchange nữa: trang cha đổi mã trong cùng ngành
+  // chỉ thay phần #... nên iframe KHÔNG tải lại, chạy một lần là giữ mã cũ.
+  const _ma=()=>(location.hash||"").replace("#","").trim().toUpperCase()||"KDH";
+  let _cu=null;
+  const _nap=()=>{
+    const m=_ma(); if(m===_cu)return; _cu=m;
+    if(typeof window.loadTicker!=="function")return;
+    window.loadTicker(m);
+  };
+  _nap();
+  window.addEventListener("hashchange",_nap);
+})();
 // Giá hiện tại tự chạy theo thị trường: làm mới ngầm mỗi 45s cho mã đang xem
 setInterval(()=>{const el=document.getElementById('ticker');if(el&&el.value.trim()&&typeof fetchPrice==='function')fetchPrice(true);},45000);
 
