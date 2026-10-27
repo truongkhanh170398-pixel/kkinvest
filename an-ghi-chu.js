@@ -19,7 +19,7 @@
       'font:600 14px "Segoe UI",system-ui,sans-serif;cursor:pointer;line-height:1;padding:0;' +
       'opacity:.5;transition:opacity .15s,color .15s}' +
     '#btnGhiChu:hover{opacity:1;color:#e2b33b;border-color:#e2b33b}' +
-    '@media(max-width:560px){#btnGhiChu{left:8px;bottom:8px}}';
+    '@media(max-width:560px){#btnGhiChu{left:8px;bottom:8px;width:44px;height:44px;font-size:17px}}';
   document.head.appendChild(css);
 
   function danhDau() {

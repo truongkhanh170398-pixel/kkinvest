@@ -22,6 +22,8 @@
       'padding:11px 17px;font:700 13px "Segoe UI",system-ui,sans-serif;cursor:pointer;',
       'box-shadow:0 6px 22px rgba(0,0,0,.45)}',
     '#aiFab:hover{filter:brightness(1.08)}',
+    // dien thoai: nut cao 39px, duoi nguong cham 44px cua Apple
+    '@media(max-width:560px){#aiFab{min-height:44px;padding:12px 18px;right:14px;bottom:14px}}',
     '#aiWrap{position:fixed;right:18px;bottom:18px;z-index:9999;width:min(460px,calc(100vw - 24px));',
       'height:min(680px,calc(100vh - 36px));background:#0e1525;border:1px solid #1c2740;border-radius:14px;',
       'display:none;flex-direction:column;overflow:hidden;box-shadow:0 14px 48px rgba(0,0,0,.6);',

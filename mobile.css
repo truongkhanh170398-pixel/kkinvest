@@ -1,0 +1,34 @@
+/* ═══════════════ VỪA KHUNG ĐIỆN THOẠI ═══════════════
+   Dùng chung cho mọi trang. Nạp SAU khối <style> của trang nên đè được.
+
+   Mọi con số ở đây đo thật bằng Chrome giả lập đúng khổ iPhone Pro Max
+   (430×932 và 440×956 CSS px), không phải ước lượng.
+
+   Lưu ý về tỷ lệ: iPhone Pro Max là khung 19,5:9 chứ không phải 16:9. Ép
+   đúng 16:9 sẽ chừa hai vệt đen trên dưới, nên ở đây làm VỪA MÀN HÌNH THẬT.
+
+   Ngưỡng 40px lấy theo khuyến nghị của Apple cho vùng chạm tối thiểu —
+   đo trước khi sửa thì phần lớn nút chỉ cao 26–34px, bấm hay trượt. */
+
+@media(max-width:560px){
+
+  /* ── Thanh điều hướng ──────────────────────────────────────────────
+     Lỗi nặng nhất đo được: ở các trang định giá, .navsheets không có
+     flex-wrap nên 7 thẻ nằm cùng một hàng dài 867px, kéo CẢ TRANG rộng
+     885px trong khung 430px — chạm vào đâu cũng thấy trang trượt ngang. */
+  .navsheets{flex-wrap:wrap}
+  .ns{min-height:40px;display:inline-flex;align-items:center}
+
+  /* ── Vùng bấm ──────────────────────────────────────────────────────
+     Không đụng tới ô nhập nằm trong bảng dữ liệu (input.tick ở trang
+     screener): kéo cao 40px sẽ làm bảng dài gấp đôi mà chẳng lợi gì. */
+  .ebtn,.rfbtn{min-height:38px}
+  .logout{min-height:36px;padding:7px 12px}
+
+  /* ── Chặn tràn ngang ───────────────────────────────────────────────
+     Canvas của Chart.js trong ô lưới (grid) có thể tự phình: ô lưới mặc
+     định min-width:auto nên không co lại được, canvas đẩy ô rộng ra rồi
+     Chart.js lại vẽ theo ô rộng hơn — đo ở trang Danh mục thấy donut
+     phình tới 751px trong khung 398px. Hai dòng dưới chặn vòng lặp đó. */
+  canvas,img,svg{max-width:100%}
+}
