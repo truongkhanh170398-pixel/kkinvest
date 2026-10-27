@@ -1087,6 +1087,9 @@ $('segSrc').querySelectorAll('button').forEach(b=>b.onclick=async()=>{
   SOURCE = dnse?SRC_DNSE:(x==='rt'?SRC_24H:SRC_MINUTE);
   prevKeys=new Set(); setAuto();
   await load(true);
+  // Chọn nguồn tick là nối luôn. Khoá nằm ở máy chủ nên không cần hỏi gì thêm;
+  // bắt bấm thêm nút "Kết nối tick" chỉ làm người dùng tưởng nguồn bị hỏng.
+  if(dnse && !SRC_DNSE.stats().connected) $('btnDnse').onclick();
 });
 $('btnDnse').onclick=async()=>{
   $('btnDnse').disabled=true;
