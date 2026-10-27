@@ -185,6 +185,43 @@
   .bell{position:relative}
   .bell.on{background:var(--up);color:#04140c;border-color:var(--up)}
   .bcount{position:absolute;top:-6px;right:-6px;background:var(--dn);color:#fff;font-size:9.5px;font-weight:900;padding:1px 5px;border-radius:9px}
+
+  /* ═══ ĐIỆN THOẠI ═══ Đo thật bằng Chrome ở khổ iPhone Pro Max (440×956 và
+     430×932 CSS px). Ba lỗi đo được, không phải đoán:
+       1. Hàng nút .hact rộng 644px trong panel chỉ 396px, mà .panel có
+          overflow:hidden → bị CẮT MẤT, không bấm được "20 phiên"/"Từ đầu năm"
+          hay đổi sàn HNX/UPCOM. Nay cho nó tụt xuống dòng riêng và xuống hàng.
+       2. Bảng 6 cột rộng 441–453px trong ô 396px → phải kéo ngang mới xem được
+          cột Giá trị. Thu đệm ô lại cho vừa đúng bề ngang.
+       3. Nút cao 26–31px, dưới ngưỡng 40px nên ngón tay bấm trượt.
+     Lưu ý: iPhone Pro Max là khung 19,5:9 chứ không phải 16:9 — ép 16:9 sẽ để
+     lại hai vệt đen trên dưới, nên ở đây làm vừa đúng màn hình thật. */
+  @media(max-width:560px){
+    .wrap{padding:0 12px}
+    h1{font-size:22px;gap:8px}
+    .hleft{min-width:0}
+    .sub{font-size:13px}
+
+    /* hàng nút: xuống dòng riêng, trải hết bề ngang, không còn bị panel cắt */
+    .hd{flex-wrap:wrap}
+    .hact{margin-left:0;width:100%;flex-wrap:wrap;justify-content:flex-start;gap:6px}
+    .seg{flex-wrap:wrap}
+    .seg.sm button{font-size:11px;padding:7px 9px}
+    .hrow{justify-content:flex-start}
+
+    /* vùng bấm đủ to cho ngón tay */
+    .seg>button{min-height:36px}
+    .ctl{min-height:40px;padding:9px 13px}
+    select,.frow input{min-height:38px}
+    .srch{min-height:38px;width:auto;flex:1 1 130px}
+    .iconbtn{width:40px;height:38px}
+
+    /* 6 cột vừa khít bề ngang, hết phải kéo ngang bảng */
+    table{font-size:12px}
+    th,td{padding:8px 6px}
+    thead th{font-size:10px}
+    .tag{padding:3px 7px;font-size:10.5px}
+  }
 </style>
 </head>
 <body>
