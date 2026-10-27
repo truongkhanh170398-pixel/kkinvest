@@ -474,11 +474,11 @@ const SRC_REALTIME={
   load(day,thVnd){return this._rows.filter(r=>vnDate(r.t)===day&&r.val>=thVnd);}
 };
 
-/* ── NGUỒN C: TICK THẬT qua DNSE MQTT (từng lệnh khớp) ────────────────────
+/* ── NGUỒN C: TICK THẬT qua DNSE WebSocket (từng lệnh khớp) ────────────────────
    Dùng chính cơ chế đã chạy ở index.html: người dùng tự đăng nhập tài khoản
    DNSE ngay trên trình duyệt (mật khẩu KHÔNG gửi đi đâu khác, KHÔNG lưu lại),
    rồi subscribe topic tick của toàn rổ. Mỗi message = MỘT LỆNH KHỚP THẬT.
-   Hạn chế bản chất của MQTT: chỉ nhận được từ lúc kết nối trở đi, không có
+   Hạn chế bản chất của Luồng WS: chỉ nhận được từ lúc kết nối trở đi, không có
    lịch sử — nên tick nhận được sẽ ghi vào localStorage theo ngày để F5 không mất. */
 /* ═══════════ NGUỒN 3: REALTIME 24hMoney (không cần tài khoản) ═══════════════
    24hMoney KHÔNG có API tick từng lệnh (đã dò hết 170 endpoint: mịn nhất là 1 phút).
@@ -1056,7 +1056,7 @@ async function load(first){
 }
 function setAuto(){ if(timer){clearInterval(timer);timer=null;}
   if(!$('chkAuto').checked)return;
-  // DNSE tự đẩy qua MQTT (vòng 5s riêng). SRC_24H tự quét nền theo nhịp đã chọn nên ở đây
+  // DNSE tự đẩy qua luồng WS (vòng 3s riêng). SRC_24H tự quét nền theo nhịp đã chọn nên ở đây
   // chỉ cần VẼ LẠI; còn nến 1 phút thì mỗi lượt là tải lại 12,8MB nên giữ 20s.
   if(SOURCE===SRC_24H) timer=setInterval(()=>{if(inSession())load(false);},+$('selNhip').value);
   else                 timer=setInterval(()=>{if(inSession()&&SOURCE===SRC_MINUTE)load(false);},20000); }
@@ -1114,22 +1114,25 @@ $('btnSoat').onclick=async()=>{
   let k=null; try{ k=SRC_DNSE.doiSoat(); }catch(e){}
   if(!k||!k.rows.length){
     const st=SRC_DNSE.stats();
-    let h='<div class="ndtile f" style="margin-bottom:8px"><div class="k">Chẩn đoán luồng tick DNSE</div>'
-      +'<div class="n" style="font-size:16px">'+(st.nRaw?('nhận '+st.nRaw+' message nhưng đọc ra 0 tick'):'chưa nhận được message nào')+'</div>'
-      +'<div class="bs">'+(st.connected?'đã nối MQTT':'CHƯA nối được MQTT')+' · '+st.nRaw+' message thô · '+st.nTick+' tick đọc được</div></div>';
-    if(st.loiSub&&st.loiSub.length)
-      h+='<div class="ndrow" style="color:#f1a3a3">Lỗi/ghi chú subscribe: '+st.loiSub.slice(0,3).join(' · ')+'</div>';
-    if(st.topic&&st.topic.length)
-      h+='<div class="ndrow" style="color:var(--muted)">Topic thực nhận được: '+st.topic.map(x=>x[0]+' ('+x[1]+')').join('<br>')+'</div>';
-    if(st.mauRaw&&st.mauRaw.length)
-      h+='<div class="ndrow" style="color:var(--muted);display:block">Mẫu message đầu tiên:<br><code style="font-size:11px;word-break:break-all">'
-        +st.mauRaw.map(m=>m.topic+'<br>'+m.txt.replace(/</g,'&lt;')).join('<br><br>')+'</code></div>';
-    if(!st.nRaw)h+='<div class="ndrow" style="color:var(--muted)">Nếu ngoài giờ giao dịch thì không có tick là bình thường. Trong giờ mà vẫn 0: chờ 20 giây để trang tự dò topic rồi bấm lại nút này.</div>';
+    let h='<div class="ndtile '+(st.connected?'p':'f')+'" style="margin-bottom:8px">'
+      +'<div class="k">Chẩn đoán luồng tick DNSE</div>'
+      +'<div class="n" style="font-size:16px">'
+      +(st.connected?(st.nTick?('đã nhận '+st.nTick+' tick, chưa đủ để đối soát'):'đã nối nhưng chưa có tick nào')
+                    :'CHƯA nối được luồng')+'</div>'
+      +'<div class="bs">'+(st.connected?'● đang nối':'○ chưa nối')+' · '+st.nTick+' tick · '
+      +st.soMa+' mã có khớp · giữ '+st.kept+' lệnh'+(st.nLoi?' · '+st.nLoi+' lỗi':'')+'</div></div>';
+    h+='<div class="ndrow" style="color:var(--muted)">Khoá: '
+      +(st.coKhoaTay?'đang dùng khoá dán trong trình duyệt này'
+                    :'lấy từ máy chủ (DNSE_API_KEY). Chưa đặt thì bấm 🔑 để dán tạm.')+'</div>';
+    if(!st.connected)
+      h+='<div class="ndrow" style="color:var(--muted)">Bấm <b>Kết nối tick</b>. Nếu báo lỗi khoá thì bấm <b>🔑 Khoá</b> để dán key/secret DNSE.</div>';
+    else if(!st.nTick)
+      h+='<div class="ndrow" style="color:var(--muted)">Ngoài giờ khớp lệnh thì không có tick là bình thường. Trong giờ mà vẫn 0 thì chờ thêm ít giây rồi bấm lại.</div>';
     body.innerHTML=h;
     return;
   }
   const s=k.tong, f=n=>Math.round(n).toLocaleString('vi-VN');
-  const danh=s.tyLe>=95?['ok','Khớp — tick nhận gần như đầy đủ']
+  const danh=s.tyLe>=95?['ok','Khớp — không sót lệnh nào']
     :s.tyLe>=70?['mid','Thiếu một phần — nối trễ sau giờ mở cửa hoặc rớt kết nối']
     :['no','Thiếu nhiều — kiểm lại kết nối hoặc nối lại từ đầu phiên'];
   body.innerHTML=
