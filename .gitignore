@@ -17,3 +17,6 @@ _backup_original_skills/
 humanizer-main/
 _test_run/
 *.skill
+
+# Khoa DNSE chay o may - TUYET DOI khong commit
+dnse-key.txt
