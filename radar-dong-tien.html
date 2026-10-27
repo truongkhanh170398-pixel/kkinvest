@@ -853,6 +853,24 @@ function render(){
 
   // Bảng rỗng KHÔNG đồng nghĩa với hỏng — thường chỉ là ngưỡng đang cao hơn thứ
   // thị trường thực sự tạo ra lúc đó. Nói thẳng con số đo được thay vì để trống.
+  // Nguồn tick không có lịch sử: nối lúc nào chỉ thấy từ lúc đó. Nối sát giờ
+  // đóng cửa thì bảng trống là đúng, không phải hỏng — phải nói rõ ra.
+  if(!EVT.length&&SOURCE===SRC_DNSE){
+    const s=SRC_DNSE.stats();
+    const giay=s.batDau?Math.max(1,Math.floor(Date.now()/1000)-s.batDau):0;
+    const phut=Math.round(giay/60);
+    const nguong=$('selTh').value;
+    $('subTxt').innerHTML = !s.connected
+      ? 'Chưa nối được luồng tick. Bấm <b>Kết nối tick</b>, hoặc bấm <b>🔎 Đối soát dữ liệu</b> để xem vướng ở đâu.'
+      : (!s.nTick
+        ? 'Đã nối <b>200 mã</b> nhưng chưa có lệnh nào khớp'+(phut?' trong '+phut+' phút qua':'')
+          +'. Ngoài giờ khớp lệnh liên tục (sau 14h30) thì đây là bình thường.'
+        : 'Đã nhận <b>'+s.nTick.toLocaleString('vi-VN')+' lệnh khớp</b> từ <b>'+s.soMa+' mã</b>'
+          +(phut?' trong '+phut+' phút':'')+', nhưng chưa lệnh nào đạt ngưỡng <b>'+nguong+' tỷ</b>. '
+          +'Hạ ngưỡng trong <b>Bộ lọc</b> để thấy nhiều hơn. '
+          +'<b>Lưu ý:</b> nguồn tick <b>không có lịch sử</b> — chỉ thấy từ lúc anh bấm kết nối, '
+          +'nên mở trang càng sớm trong phiên thì càng đủ.');
+  }
   if(!EVT.length&&SOURCE===SRC_24H){
     const s=SRC_24H.stats();
     const giay=s.doTu?Math.max(1,Math.floor(Date.now()/1000)-s.doTu):0;
