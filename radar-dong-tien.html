@@ -220,7 +220,7 @@
             <div class="dropmenu" id="filtMenu">
               <h4>Ngưỡng phát hiện</h4>
               <div class="frow">Giá trị tối thiểu
-                <select id="selTh"><option value="0.05">≥ 0,05 tỷ · cho nguồn tick</option><option value="0.1">≥ 0,1 tỷ · cho nguồn tick</option><option value="0.3">≥ 0,3 tỷ · cho nguồn tick</option><option value="0.5">≥ 0,5 tỷ</option><option value="1">≥ 1 tỷ</option><option value="2">≥ 2 tỷ</option><option value="3" selected>≥ 3 tỷ</option><option value="5">≥ 5 tỷ</option><option value="10">≥ 10 tỷ</option></select></div>
+                <select id="selTh"><option value="0.1">≥ 0,1 tỷ</option><option value="0.3">≥ 0,3 tỷ</option><option value="0.5">≥ 0,5 tỷ</option><option value="1">≥ 1 tỷ</option><option value="2">≥ 2 tỷ</option><option value="3" selected>≥ 3 tỷ</option><option value="5">≥ 5 tỷ</option><option value="10">≥ 10 tỷ</option></select></div>
               <h4>Phạm vi</h4>
               <div class="frow">Ngành <select id="selSec"><option value="">Tất cả ngành</option></select></div>
               <div class="frow">Nhóm <select id="selGrp"><option value="">Toàn thị trường</option><option value="VN30">Chỉ VN30</option></select></div>
@@ -624,8 +624,8 @@ const SRC_DNSE=(function(){
   // bị CORS và mở từ máy người dùng nên có IP Việt Nam.
   // Chữ ký auth chỉ là phép tính trên key:timestamp:nonce, không cần gọi mạng,
   // nên MÁY CHỦ ký và SECRET KHÔNG RỜI MÁY CHỦ.
-  const KEEP_MIN=3e7, CAP=20000;     // giữ lệnh ≥30 triệu — đo 27/10: lệnh đơn lẻ
-                                     // lớn nhất CẢ THỊ TRƯỜNG một buổi sáng chỉ 549 triệu
+  const KEEP_MIN=5e7, CAP=25000;     // giữ lệnh ≥50 triệu; cả phiên 27/10 có 447
+                                     // lệnh ≥1 tỷ, 35 lệnh ≥3 tỷ nên ngần này là đủ rộng
   const TRAN_MA=200;                 // trần channel của tier normalUser
   let rows=[], lastPx={}, ws=null, nTick=0, connected=false, nLoi=0;
   let batDauLuc=null, maCo={}, lanThu=0, dangNoi=false, onStat=null;
@@ -642,11 +642,14 @@ const SRC_DNSE=(function(){
 
   function nhan(m){
     const tk=m.symbol||m.s; if(!tk)return;
-    const gia=(+m.matchPrice||0)*1000;              // DNSE trả theo NGHÌN đồng
-    const kl=+m.matchQtty||0;
+    const gia=(+m.matchPrice||0)*1000;              // DNSE trả giá theo NGHÌN đồng
+    const kl=(+m.matchQtty||0)*10;                  // và KHỐI LƯỢNG theo LÔ 10 CỔ PHIẾU
+    // Sai chỗ nhân 10 này là lệch đúng 10 lần: MWG lúc 10:23:00 ngày 27/10 là
+    // 40.000 CP = 3,06 tỷ, nếu quên thì ra 4.000 CP = 0,31 tỷ và tưởng thị
+    // trường không có lệnh lớn. Đối chiếu SSI iBoard: DNSE 311.720 / SSI 3.161.000.
     if(!(gia>0&&kl>0))return;
     nTick++; maCo[tk]=(maCo[tk]||0)+1;
-    const lk=+m.totalVolumeTraded||0;
+    const lk=(+m.totalVolumeTraded||0)*10;   // cùng đơn vị LÔ 10 CP như matchQtty
     const o=soat[tk]||(soat[tk]={kl:0,n:0,luyKeDau:null,luyKeCuoi:null});
     // luyKeDau lấy TRƯỚC khi cộng tick đầu tiên, nếu không sẽ thừa đúng lệnh đó
     if(o.luyKeDau==null&&lk>0)o.luyKeDau=lk-kl;
@@ -670,7 +673,7 @@ const SRC_DNSE=(function(){
     if(val<KEEP_MIN)return;                          // lọc ngay để khỏi phình bộ nhớ
     const giay=(m.time&&m.time.Seconds)||(m.multicastReceiveTime&&m.multicastReceiveTime.Seconds)
       ||Math.floor(Date.now()/1000);
-    rows.push({t:giay,tk,px:gia,vol:kl,val,dir,luyKe:+m.totalVolumeTraded||0});
+    rows.push({t:giay,tk,px:gia,vol:kl,val,dir,luyKe:(+m.totalVolumeTraded||0)*10});
     if(rows.length>CAP)rows=rows.slice(-CAP);
   }
 
@@ -741,7 +744,7 @@ const SRC_DNSE=(function(){
   return {
     label:'Tick DNSE · từng lệnh khớp',
     tick:true,
-    note:'✅ <b>Nguồn tick thật — mỗi dòng là MỘT LỆNH KHỚP đơn lẻ</b>, nhận trực tiếp từ luồng WebSocket của DNSE Open API. Đối soát 27/10/2026: tổng khối lượng tick khớp <b>100,0%</b> số luỹ kế chính thức, không sót lệnh nào. <b>Đáng chú ý:</b> quét cả rổ 218 mã một buổi sáng (57.657 lệnh) thì lệnh đơn lẻ lớn nhất toàn thị trường chỉ <b>549 triệu</b> — không có lệnh nào ≥1 tỷ. Sàn khớp lệnh lớn thành nhiều mẩu nhỏ, nên mọi dòng “≥3 tỷ” ở các nguồn khác đều là <b>gộp nhiều lệnh</b>. Vì thế ở nguồn này hãy chọn ngưỡng <b>0,05–0,3 tỷ</b>. <b>Chiều MUA/BÁN</b> suy bằng quy tắc tick ở cấp từng lệnh (so giá với lệnh liền trước cùng mã) — luồng WS không kèm sẵn chiều. <b>Bản chất:</b> luồng chỉ đẩy từ lúc kết nối trở đi, <b>không có lịch sử</b>; mở trang càng sớm càng đủ. Tick nhận được lưu trong máy anh theo ngày nên F5 không mất. Trần '+TRAN_MA+' mã mỗi kết nối.',
+    note:'✅ <b>Nguồn tick thật — mỗi dòng là MỘT LỆNH KHỚP đơn lẻ</b>, nhận trực tiếp từ luồng WebSocket của DNSE Open API. Không gộp, không suy từ nến. <b>Đối soát 27/10/2026:</b> khối lượng tick khớp <b>100,0%</b> số luỹ kế của sàn, và lệnh lớn nhất của MWG trong phiên — <b>40.000 CP ở giá 76.500 lúc 10:23:00, tức 3,06 tỷ</b> — trùng khớp với bảng khớp lệnh của VNDirect, TradingView và bảng giá công ty chứng khoán. Cả rổ 218 mã phiên đó có <b>447 lệnh ≥1 tỷ, 35 lệnh ≥3 tỷ</b>, lớn nhất 11,63 tỷ (PET). <b>Đơn vị:</b> DNSE trả giá theo nghìn đồng và khối lượng theo <b>lô 10 cổ phiếu</b> — trang đã quy đổi; quên nhân 10 là mọi giá trị nhỏ đi đúng 10 lần. <b>Chiều MUA/BÁN</b> suy bằng quy tắc tick ở cấp từng lệnh vì luồng WS không kèm sẵn chiều; đối chiếu với chiều thật từ REST trên 9.488 lệnh thì đúng <b>93,2%</b>. <b>Bản chất:</b> luồng chỉ đẩy từ lúc kết nối trở đi, <b>không có lịch sử</b>; mở trang càng sớm càng đủ. Tick nhận được lưu trong máy anh theo ngày nên F5 không mất. Trần '+TRAN_MA+' mã mỗi kết nối.',
     days(){const d=vnDate(Math.floor(Date.now()/1000));return rows.length?[...new Set(rows.map(r=>vnDate(r.t)))].sort():[d];},
     stats(){return {nTick,connected,kept:rows.length,nLoi,batDau:batDauLuc,
       soMa:Object.keys(maCo).length,coKhoaTay:!!khoaTay()};},

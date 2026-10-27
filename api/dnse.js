@@ -52,10 +52,16 @@ async function goiDnse(path, params, key, secret, ms) {
   } finally { clearTimeout(to); }
 }
 
-// Giá DNSE trả theo NGHÌN đồng (HPG 21.1 = 21.100đ) — nhân 1000 cho đồng nhất với radar
+// Hai đơn vị PHẢI quy đổi, sai một cái là lệch 10 lần:
+//  · matchPrice theo NGHÌN đồng (MWG 76.5 = 76.500đ) → ×1000
+//  · matchQtty theo LÔ 10 CỔ PHIẾU → ×10
+// Bằng chứng (27/10/2026): MWG totalVolumeTraded 311.720 trong khi SSI iBoard
+// báo 3.161.000 CP; grossTradeAmount 236 tỷ khớp SSI 239 tỷ, mà
+// totalVolumeTraded×giá chỉ ra 23,5 tỷ — đúng 1/10.
+const LO_CP = 10;
 function gonLenh(ma, t) {
   const gia = (+t.matchPrice || 0) * 1000;
-  const kl = +t.matchQtty || 0;
+  const kl = (+t.matchQtty || 0) * LO_CP;
   return {
     tk: ma,
     t: Math.floor(new Date(String(t.time).replace(' ', 'T') + '+07:00').getTime() / 1000),
@@ -64,7 +70,7 @@ function gonLenh(ma, t) {
     vol: kl,
     val: gia * kl,
     dir: t.side === 'SELL' ? 'S' : 'B',     // chiều THẬT do sàn công bố
-    luyKe: +t.totalVolumeTraded || 0
+    luyKe: (+t.totalVolumeTraded || 0) * LO_CP
   };
 }
 
