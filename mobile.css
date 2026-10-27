@@ -22,8 +22,12 @@
   /* ── Vùng bấm ──────────────────────────────────────────────────────
      Không đụng tới ô nhập nằm trong bảng dữ liệu (input.tick ở trang
      screener): kéo cao 40px sẽ làm bảng dài gấp đôi mà chẳng lợi gì. */
-  .ebtn,.rfbtn{min-height:38px}
-  .logout{min-height:36px;padding:7px 12px}
+  /* Chọn lọc theo THẺ nên độ ưu tiên thấp nhất: trang nào tự đặt min-height
+     bằng class thì vẫn thắng. Đo trước khi sửa: nút không có cỡ riêng chỉ cao
+     28px, ô nhập mã ở Phân tích kỹ thuật chỉ 17px. */
+  button{min-height:40px}
+  .tksearch{min-height:40px;display:flex;align-items:center}
+  input[type=checkbox]{width:20px;height:20px}   /* mặc định 13px, gấp đôi vùng chạm */
 
   /* ── Chặn tràn ngang ───────────────────────────────────────────────
      Canvas của Chart.js trong ô lưới (grid) có thể tự phình: ô lưới mặc
