@@ -43,7 +43,12 @@ async function goiDnse(path, params, key, secret, ms) {
     let j = null; try { j = JSON.parse(txt); } catch (e) {}
     return { ma: r.status, j, txt };
   } catch (e) {
-    return { ma: 0, loi: (e && e.name === 'AbortError') ? 'quá thời gian chờ' : String(e && e.message || e) };
+    // "fetch failed" của undici giấu nguyên nhân thật trong e.cause — phải moi ra,
+    // không thì không biết là DNS, chặn theo vùng, hay TLS.
+    const c = e && e.cause;
+    const vi = c ? [c.code, c.errno, c.syscall, c.hostname, c.message].filter(Boolean).join(' ') : '';
+    return { ma: 0, loi: (e && e.name === 'AbortError') ? 'quá thời gian chờ'
+      : (String(e && e.message || e) + (vi ? ' — ' + vi : '')).slice(0, 200) };
   } finally { clearTimeout(to); }
 }
 
