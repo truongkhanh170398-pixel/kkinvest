@@ -1156,6 +1156,7 @@ $('segSrc').querySelectorAll('button').forEach(b=>b.onclick=async()=>{
   $('segSrc').querySelectorAll('button').forEach(x=>x.classList.remove('on'));
   b.classList.add('on');
   const x=b.dataset.x, dnse=x==='dnse';
+  try{localStorage.setItem('radar_nguon',x);}catch(e){}   // nhớ để lần sau vào là đúng nguồn
   $('dnseBox').className='hrow'+(dnse?'':' hide');
   if(SOURCE&&SOURCE.dung)SOURCE.dung();                 // tắt vòng quét của nguồn đang chạy
   SOURCE = dnse?SRC_DNSE:(x==='rt'?SRC_24H:SRC_MINUTE);
@@ -1239,12 +1240,24 @@ $('chkNen').onchange=()=>{prevKeys=new Set();render();};
 $('selSec').innerHTML='<option value="">Tất cả ngành</option>'+Object.keys(SECTORS).map(s=>'<option>'+s+'</option>').join('');
 
 radarInit();
-// Ngoài giờ giao dịch, realtime chưa thu được cụm nào (nguồn này không có lịch sử) → mở bằng nến 1 phút.
-if(!inSession()&&!localStorage.getItem('radar_24h_v2_'+vnDate(Math.floor(Date.now()/1000)))){
-  SOURCE=SRC_MINUTE;
-  $('segSrc').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.x==='min'));
+// Mở trang là vào luôn nguồn đã chọn lần trước — kể cả trên điện thoại. Chọn Tick
+// DNSE một lần thì từ đó cứ mở trang là tự nối luồng và quét lệnh lớn, không phải
+// bấm lại gì. Tick nhận được ghi vào máy theo ngày nên F5 hay đóng mở không mất.
+let nguonLuu=''; try{nguonLuu=localStorage.getItem('radar_nguon')||'';}catch(e){}
+if(nguonLuu==='dnse'){
+  SOURCE=SRC_DNSE;
+  $('segSrc').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.x==='dnse'));
+  $('dnseBox').className='hrow';
+  setAuto(); load(true);
+  $('btnDnse').onclick();          // nối luồng tick ngay, không chờ bấm
+}else{
+  // Ngoài giờ giao dịch, realtime chưa thu được cụm nào (nguồn này không có lịch sử) → mở bằng nến 1 phút.
+  if(nguonLuu==='min'||(!inSession()&&!localStorage.getItem('radar_24h_v2_'+vnDate(Math.floor(Date.now()/1000))))){
+    SOURCE=SRC_MINUTE;
+    $('segSrc').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.x==='min'));
+  }
+  setAuto(); load(true);
 }
-setAuto(); load(true);
 
 /* ═══════════════ DÒNG TIỀN THEO NHÓM NHÀ ĐẦU TƯ (nguồn 24hMoney) ═══════════════
    Nước ngoài & Tự doanh: số công bố. Trong nước = Tổng GTGD sàn − NN − TD (phần bù).
