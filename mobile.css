@@ -31,4 +31,19 @@
      Chart.js lại vẽ theo ô rộng hơn — đo ở trang Danh mục thấy donut
      phình tới 751px trong khung 398px. Hai dòng dưới chặn vòng lặp đó. */
   canvas,img,svg{max-width:100%}
+
+  /* Cùng một họ lỗi: ô con của grid/flex mặc định min-width:auto nên KHÔNG
+     co lại được, một cái bảng rộng bên trong là đẩy cả trang ra. Đo được
+     .out 555px ở Valuation Terminal và .allocrow 785px ở Danh mục. Cho
+     những ô đó co lại được thì bảng tự cuộn trong khung của nó, trang
+     không bị kéo ngang nữa. */
+  .out>*,.layout>*,.gridc>*,.pgrid>*,.two>*,.allocrow>*,.cards>*,.g1>*,.g2>*{min-width:0}
+
+  /* Thanh tab đặt width:max-content nên không co được — cho nó cuộn ngang
+     trong khung của nó thay vì kéo cả trang (đo: 595px ở Sức mạnh ngành). */
+  .tabs{width:auto;max-width:100%;overflow-x:auto}
+
+  /* Ô nhập của bảng thông số định giá chỉ cao 29px, chạm rất khó. 36px là
+     mức vừa phải; kéo hẳn lên 44px sẽ làm bảng thông số dài thêm quá nhiều. */
+  .fld input,.fld select{min-height:36px}
 }
