@@ -86,6 +86,31 @@ export default async function handler(req, res) {
   }
 
   const q = req.query || {};
+
+  // ── Ký bản tin auth cho WebSocket ──
+  // Đây mới là đường dùng được thật. REST bị khoá cả hai đầu: máy chủ Vercel
+  // không với tới DNSE (chặn IP ngoài VN — UND_ERR_CONNECT_TIMEOUT, thử cả vùng
+  // Singapore), còn trình duyệt thì bị CORS chặn (DNSE không trả header nào).
+  // WebSocket KHÔNG bị CORS, lại mở từ máy người dùng nên qua được chặn IP.
+  // Chữ ký auth chỉ phụ thuộc key/timestamp/nonce — thuần tính toán, không cần
+  // gọi mạng — nên máy chủ ký được và SECRET KHÔNG BAO GIỜ RỜI MÁY CHỦ.
+  if (q.viec === 'auth') {
+    const timestamp = Math.floor(Date.now() / 1000);
+    // nonce PHẢI là chuỗi. SDK chính chủ dnse-py gửi số nguyên và bị server trả
+    // "nonce is required" — đã đo 27/10/2026.
+    const nonce = String(Date.now() * 1000);
+    const sig = crypto.createHmac('sha256', secret)
+      .update(key + ':' + timestamp + ':' + nonce).digest('hex');
+    res.setHeader('Cache-Control', 'no-store');
+    res.status(200).json({
+      ws: 'wss://ws-openapi.dnse.com.vn/v1/stream?encoding=json',
+      auth: { action: 'auth', api_key: key, signature: sig, timestamp, nonce },
+      // trần của tier normalUser, đo được từ bản tin auth_success
+      tranMa: 200, tranTin: 100
+    });
+    return;
+  }
+
   const dsMa = String(q.ma || '').toUpperCase().split(',')
     .map(s => s.trim()).filter(s => /^[A-Z0-9]{3,8}$/.test(s)).slice(0, TOI_DA_MA);
   if (!dsMa.length) { res.status(400).json({ loi: 'Thiếu tham số ma (danh sách mã, ngăn bằng dấu phẩy)' }); return; }
