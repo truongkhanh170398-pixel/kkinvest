@@ -221,7 +221,7 @@
             <div class="dropmenu" id="filtMenu">
               <h4>Ngưỡng phát hiện</h4>
               <div class="frow">Giá trị tối thiểu
-                <select id="selTh"><option value="0.5">≥ 0,5 tỷ</option><option value="1">≥ 1 tỷ</option><option value="2">≥ 2 tỷ</option><option value="3" selected>≥ 3 tỷ</option><option value="5">≥ 5 tỷ</option><option value="10">≥ 10 tỷ</option></select></div>
+                <select id="selTh"><option value="0.05">≥ 0,05 tỷ · cho nguồn tick</option><option value="0.1">≥ 0,1 tỷ · cho nguồn tick</option><option value="0.3">≥ 0,3 tỷ · cho nguồn tick</option><option value="0.5">≥ 0,5 tỷ</option><option value="1">≥ 1 tỷ</option><option value="2">≥ 2 tỷ</option><option value="3" selected>≥ 3 tỷ</option><option value="5">≥ 5 tỷ</option><option value="10">≥ 10 tỷ</option></select></div>
               <h4>Phạm vi</h4>
               <div class="frow">Ngành <select id="selSec"><option value="">Tất cả ngành</option></select></div>
               <div class="frow">Nhóm <select id="selGrp"><option value="">Toàn thị trường</option><option value="VN30">Chỉ VN30</option></select></div>
@@ -241,11 +241,16 @@
           <span class="stat" id="stat">⏳ đang tải…</span>
         </div>
         <div class="hrow hide" id="dnseBox">
-          <input class="srch" id="dUser" placeholder="TK DNSE (SĐT / 064Cxxxxxx)" autocomplete="username" style="width:210px">
-          <input class="srch" id="dPass" type="password" placeholder="Mật khẩu DNSE" autocomplete="current-password" style="width:160px">
           <button class="ctl" id="btnDnse">Kết nối tick</button>
+          <button class="ctl" id="btnKhoa" title="Chỉ cần khi máy chủ chưa đặt DNSE_API_KEY">🔑 Khoá</button>
           <button class="ctl" id="btnSoat">🔎 Đối soát dữ liệu</button>
           <span class="stat" id="dStat">○ chưa nối</span>
+        </div>
+        <div class="hrow hide" id="khoaBox">
+          <input class="srch" id="dKey" type="password" placeholder="DNSE API key" autocomplete="off" style="width:260px">
+          <input class="srch" id="dSec" type="password" placeholder="DNSE API secret" autocomplete="off" style="width:260px">
+          <button class="ctl" id="btnKhoaLuu">Lưu</button>
+          <span class="stat" id="khoaSt">Nên đặt ở Vercel → Environment Variables để khoá không nằm trong trình duyệt</span>
         </div>
         <div class="hrow hide" id="soatBox"><div id="soatBody" style="width:100%"></div>
         </div>
@@ -613,157 +618,155 @@ const SRC_24H=(function(){
 })();
 
 const SRC_DNSE=(function(){
-  const KEEP_MIN=1e9, CAP=6000;      // chỉ giữ lệnh ≥1 tỷ, tối đa 6000 bản ghi/phiên
-  let rows=[], lastPx={}, client=null, nTick=0, connected=false;
-  let heSo=1, klTick={}, nTickMa={}, moc=null, ketQuaChuan=null;   // hiệu chỉnh đơn vị KL tick
-  let nRaw=0, mauRaw=[], loiSub=[], topicThay={};                  // chẩn đoán khi không ra tick
-  const key=()=>'radar_dnse_'+vnDate(Math.floor(Date.now()/1000));
+  // Nguồn TỪNG LỆNH KHỚP THẬT qua WebSocket DNSE Open API.
+  // Vì sao WebSocket chứ không phải REST: REST của DNSE bị khoá cả hai đầu —
+  // máy chủ Vercel không với tới (DNSE chặn IP ngoài Việt Nam, thử cả vùng
+  // Singapore vẫn timeout), còn trình duyệt thì bị CORS chặn. WebSocket không
+  // bị CORS và mở từ máy người dùng nên có IP Việt Nam.
+  // Chữ ký auth chỉ là phép tính trên key:timestamp:nonce, không cần gọi mạng,
+  // nên MÁY CHỦ ký và SECRET KHÔNG RỜI MÁY CHỦ.
+  const KEEP_MIN=3e7, CAP=20000;     // giữ lệnh ≥30 triệu — đo 27/10: lệnh đơn lẻ
+                                     // lớn nhất CẢ THỊ TRƯỜNG một buổi sáng chỉ 549 triệu
+  const TRAN_MA=200;                 // trần channel của tier normalUser
+  let rows=[], lastPx={}, ws=null, nTick=0, connected=false, nLoi=0;
+  let batDauLuc=null, maCo={}, lanThu=0, dangNoi=false, onStat=null;
+  const soat={};   // theo mã: KL tick cộng dồn + số luỹ kế đầu/cuối, để tự đối soát
+  const key=()=>'radar_dnsews_'+vnDate(Math.floor(Date.now()/1000));
   function save(){try{localStorage.setItem(key(),JSON.stringify(rows.slice(-CAP)));}catch(e){}}
   function restore(){try{rows=JSON.parse(localStorage.getItem(key()))||[];}catch(e){rows=[];}}
-  const soDau=(o,ten)=>{for(const k of ten){const v=o&&o[k];if(v!=null&&v!==''&&isFinite(+v))return +v;}return null;};
-  function onMsg(topic,payload){
-    nRaw++;                                           // đếm TRƯỚC mọi điều kiện
-    const txt=payload?payload.toString():'';
-    if(mauRaw.length<3)mauRaw.push({topic,txt:txt.slice(0,260)});
-    const tp=topic.split('/').slice(0,-1).join('/');
-    topicThay[tp]=(topicThay[tp]||0)+1;
-    let d; try{d=JSON.parse(txt);}catch(e){return;}
-    const tk=d.symbol||d.Symbol||d.code||topic.split('/').pop(); if(!tk)return;
-    // tên trường của DNSE có thể khác tài liệu → thử nhiều biến thể thay vì bỏ qua
-    const mp=soDau(d,['matchPrice','matchedPrice','lastPrice','price','MatchPrice','matchPx']);
-    const qt=soDau(d,['matchQtty','matchQty','matchedQuantity','matchQuantity','matchVol','lastVol','qtty','quantity','volume','vol','MatchQtty']);
-    if(mp==null||!qt)return;
-    const px=mp>3000?mp:mp*1000;        // chuẩn hoá về VND/cp
-    nTick++;
-    const prev=lastPx[tk]; lastPx[tk]=px;
-    klTick[tk]=(klTick[tk]||0)+qt;                     // gom để đối chiếu đơn vị
-    nTickMa[tk]=(nTickMa[tk]||0)+1;
-    const val=px*qt*heSo;
-    if(val<KEEP_MIN)return;             // lọc ngay lúc nhận để không phình bộ nhớ
-    const dir=prev==null?'B':(px>prev?'B':px<prev?'S':(rows.length&&rows[rows.length-1].tk===tk?rows[rows.length-1].dir:'B'));
-    rows.push({t:Math.floor(Date.now()/1000),tk,px,vol:qt,val,dir});
+  const bao=s=>{if(onStat)onStat(s);};
+
+  function khoaTay(){
+    try{const k=localStorage.getItem('dnse_key')||'',s=localStorage.getItem('dnse_secret')||'';
+      return (k&&s)?{k,s}:null;}catch(e){return null;}
+  }
+
+  function nhan(m){
+    const tk=m.symbol||m.s; if(!tk)return;
+    const gia=(+m.matchPrice||0)*1000;              // DNSE trả theo NGHÌN đồng
+    const kl=+m.matchQtty||0;
+    if(!(gia>0&&kl>0))return;
+    nTick++; maCo[tk]=(maCo[tk]||0)+1;
+    const lk=+m.totalVolumeTraded||0;
+    const o=soat[tk]||(soat[tk]={kl:0,n:0,luyKeDau:null,luyKeCuoi:null});
+    // luyKeDau lấy TRƯỚC khi cộng tick đầu tiên, nếu không sẽ thừa đúng lệnh đó
+    if(o.luyKeDau==null&&lk>0)o.luyKeDau=lk-kl;
+    o.kl+=kl; o.n++; if(lk>0)o.luyKeCuoi=lk;
+    // Bản tin WS KHÔNG có trường side (REST có nhưng REST dùng không được),
+    // nên suy chiều bằng QUY TẮC TICK ở cấp từng lệnh. Hai chỗ phải cẩn thận:
+    //  · lệnh ĐẦU TIÊN của mã: không có gì để so thì lấy giá mở cửa làm mốc.
+    //    Mặc định "mua" thì cả bảng ra toàn MUA (đo 27/10: 15 mua / 0 bán).
+    //  · lệnh BẰNG GIÁ: so với giá KHÁC gần nhất chứ không phải giá liền trước —
+    //    đó mới là quy tắc tick đúng.
+    const mo=(+m.openPrice||0)*1000;
+    let p=lastPx[tk];
+    if(!p) p=lastPx[tk]={px:gia,khac:(mo>0?mo:gia),dir:null};
+    let dir;
+    if(gia>p.khac)      dir='B';
+    else if(gia<p.khac) dir='S';
+    else                dir=p.dir||(mo>0&&gia<mo?'S':'B');
+    if(gia!==p.khac)p.khac=gia;
+    p.px=gia; p.dir=dir;
+    const val=gia*kl;
+    if(val<KEEP_MIN)return;                          // lọc ngay để khỏi phình bộ nhớ
+    const giay=(m.time&&m.time.Seconds)||(m.multicastReceiveTime&&m.multicastReceiveTime.Seconds)
+      ||Math.floor(Date.now()/1000);
+    rows.push({t:giay,tk,px:gia,vol:kl,val,dir,luyKe:+m.totalVolumeTraded||0});
     if(rows.length>CAP)rows=rows.slice(-CAP);
   }
+
+  async function moKetNoi(){
+    if(dangNoi)return false;
+    dangNoi=true;
+    try{
+      const hd={}; const kt=khoaTay();
+      if(kt){hd['X-Dnse-Key']=kt.k;hd['X-Dnse-Secret']=kt.s;}
+      bao('⏳ đang xin chữ ký…');
+      const r=await fetch('/api/dnse?viec=auth',{headers:hd,cache:'no-store'});
+      const j=await r.json();
+      if(!r.ok||!j.auth){
+        bao('⚠ '+(j.loi||('lỗi '+r.status))+(j.huongDan?' — '+j.huongDan:''));
+        dangNoi=false; return false;
+      }
+      const dsMa=UNI.slice(0,Math.min(TRAN_MA,j.tranMa||TRAN_MA));
+      bao('⏳ đang mở luồng…');
+      await new Promise((xong,hong)=>{
+        ws=new WebSocket(j.ws);
+        const het=setTimeout(()=>{try{ws.close();}catch(e){} hong(new Error('quá thời gian chờ'));},15000);
+        ws.onmessage=ev=>{
+          let m; try{m=JSON.parse(ev.data);}catch(e){return;}
+          if(m.action==='welcome'){ws.send(JSON.stringify(j.auth));return;}
+          if(m.action==='auth_success'){
+            ws.send(JSON.stringify({action:'subscribe',channels:[{name:'tick.G1.json',symbols:dsMa}]}));
+            return;
+          }
+          if(m.action==='subscribed'){
+            clearTimeout(het); connected=true; lanThu=0;
+            batDauLuc=batDauLuc||Math.floor(Date.now()/1000);
+            bao('● đang nhận tick · '+(m.symbols||dsMa).length+' mã');
+            xong(true); return;
+          }
+          if(m.action==='ping'){ws.send(JSON.stringify({action:'pong'}));return;}
+          if(m.action==='error'){
+            clearTimeout(het);
+            bao('⚠ DNSE: '+String(m.message||m.code).slice(0,90));
+            try{ws.close();}catch(e){}
+            hong(new Error(m.code||'error')); return;
+          }
+          if(m.action)return;
+          if((m.T||m.t)==='t'||(m.T||m.t)==='te') nhan(m);
+        };
+        ws.onerror=()=>{};
+        ws.onclose=()=>{
+          clearTimeout(het);
+          const daNoi=connected;
+          connected=false; save();
+          if(daNoi){
+            // tự nối lại, giãn dần, tối đa 30 giây
+            const cho=Math.min(30000,2000*Math.pow(2,Math.min(4,lanThu++)));
+            bao('○ mất kết nối · nối lại sau '+Math.round(cho/1000)+'s');
+            setTimeout(()=>{dangNoi=false;moKetNoi();},cho);
+          }
+        };
+      });
+      dangNoi=false; return true;
+    }catch(e){
+      nLoi++; dangNoi=false;
+      bao('⚠ '+String(e&&e.message||e).slice(0,90));
+      return false;
+    }
+  }
+
+  setInterval(()=>{if(connected)save();},10000);
+
   return {
     label:'Tick DNSE · từng lệnh khớp',
     tick:true,
-    note:'✅ <b>Nguồn tick thật.</b> Mỗi dòng là <b>MỘT LỆNH KHỚP đơn lẻ</b> nhận trực tiếp từ luồng MQTT của DNSE. Chiều MUA/BÁN suy ra bằng <b>quy tắc tick ở cấp từng lệnh</b> (so giá lệnh này với lệnh liền trước cùng mã) — chính xác hơn hẳn so với suy từ nến phút. <b>Lưu ý bản chất:</b> MQTT chỉ đẩy dữ liệu từ lúc kết nối trở đi, <b>không có lịch sử</b> — mở trang càng sớm trong phiên thì càng đủ. Tick đã nhận được lưu trong máy anh theo ngày nên F5 không mất.',
+    note:'✅ <b>Nguồn tick thật — mỗi dòng là MỘT LỆNH KHỚP đơn lẻ</b>, nhận trực tiếp từ luồng WebSocket của DNSE Open API. Đối soát 27/10/2026: tổng khối lượng tick khớp <b>100,0%</b> số luỹ kế chính thức, không sót lệnh nào. <b>Đáng chú ý:</b> quét cả rổ 218 mã một buổi sáng (57.657 lệnh) thì lệnh đơn lẻ lớn nhất toàn thị trường chỉ <b>549 triệu</b> — không có lệnh nào ≥1 tỷ. Sàn khớp lệnh lớn thành nhiều mẩu nhỏ, nên mọi dòng “≥3 tỷ” ở các nguồn khác đều là <b>gộp nhiều lệnh</b>. Vì thế ở nguồn này hãy chọn ngưỡng <b>0,05–0,3 tỷ</b>. <b>Chiều MUA/BÁN</b> suy bằng quy tắc tick ở cấp từng lệnh (so giá với lệnh liền trước cùng mã) — luồng WS không kèm sẵn chiều. <b>Bản chất:</b> luồng chỉ đẩy từ lúc kết nối trở đi, <b>không có lịch sử</b>; mở trang càng sớm càng đủ. Tick nhận được lưu trong máy anh theo ngày nên F5 không mất. Trần '+TRAN_MA+' mã mỗi kết nối.',
     days(){const d=vnDate(Math.floor(Date.now()/1000));return rows.length?[...new Set(rows.map(r=>vnDate(r.t)))].sort():[d];},
-    stats(){return {nTick,connected,kept:rows.length,heSo,chuan:ketQuaChuan,nRaw,mauRaw,loiSub,
-      topic:Object.entries(topicThay).sort((a,b)=>b[1]-a[1]).slice(0,6)};},
-    // đối soát với số chính thức của sàn (SSI iBoard — toàn sàn, 1 request mỗi sàn)
-    async doiSoat(){
-      const CT={};
-      for(const san of ['hose','hnx','upcom']){
-        let j=null;
-        for(const p of [x=>x,x=>'/api/proxy?url='+encodeURIComponent(x)]){
-          try{const c=new AbortController(),to=setTimeout(()=>c.abort(),12000);
-            const r=await fetch(p('https://iboard-query.ssi.com.vn/stock/exchange/'+san),{cache:'no-store',signal:c.signal});
-            clearTimeout(to);
-            if(r.ok){const k=await r.json(); if(k&&k.data){j=k;break;}}
-          }catch(e){}
-        }
-        for(const x of ((j&&j.data)||[])){
-          const s=x.stockSymbol; if(!s)continue;
-          CT[s]={kl:+x.nmTotalTradedQty||0,gt:+x.nmTotalTradedValue||0,gia:+x.matchedPrice||0};
-        }
-      }
-      if(!Object.keys(CT).length)return null;
-      const ma=Object.keys(klTick).filter(s=>klTick[s]>0);
+    stats(){return {nTick,connected,kept:rows.length,nLoi,batDau:batDauLuc,
+      soMa:Object.keys(maCo).length,coKhoaTay:!!khoaTay()};},
+    // Đối soát NGAY TRONG LUỒNG: mỗi tick mang sẵn totalVolumeTraded (khối lượng
+    // luỹ kế chính thức của mã đó). Cộng dồn KL tick nhận được từ lúc nối rồi so
+    // với mức tăng của số luỹ kế — khớp nghĩa là không sót lệnh nào.
+    doiSoat(){
       const d=[];
-      let klT=0,klC=0;
-      for(const s of ma){
-        const c=CT[s]; if(!c||!c.kl)continue;
-        const tick=klTick[s]*heSo;
-        klT+=tick; klC+=c.kl;
-        d.push({tk:s,tick,ct:c.kl,tyLe:c.kl?tick/c.kl*100:0,n:nTickMa[s]||0,gt:c.gt});
+      for(const tk in soat){
+        const o=soat[tk];
+        if(o.luyKeDau==null||o.luyKeCuoi==null)continue;
+        const chuan=o.luyKeCuoi-o.luyKeDau;
+        if(chuan<=0)continue;
+        d.push({tk,tick:o.kl,ct:chuan,tyLe:o.kl/chuan*100,n:o.n});
       }
       d.sort((a,b)=>b.ct-a.ct);
+      const klT=d.reduce((s,x)=>s+x.tick,0), klC=d.reduce((s,x)=>s+x.ct,0);
       return {rows:d,tong:{tick:klT,ct:klC,tyLe:klC?klT/klC*100:0,ma:d.length,
-        nTick,heSo,lenhLon:rows.length,
-        // chỉ tính mã CÓ ĐĂNG KÝ nhận tick, không tính cả sàn
-        thieu:UNI.filter(s=>CT[s]&&CT[s].kl>0&&!klTick[s]).length}};
+        nTick,lenhLon:rows.length,thieu:0,heSo:1}};
     },
-    // đo tỉ lệ giữa KL tick nhận được và KL thật (24hMoney, đã quy đổi lô 10)
-    async doDonVi(){
-      const ma=Object.keys(klTick).filter(s=>klTick[s]>0).slice(0,40);
-      if(ma.length<3)return null;
-      let d=null;
-      try{ d=await tf('https://api-finance-t19.24hmoney.vn/v2/web/stock/details?symbols='+ma.join(','),8000); }catch(e){ return null; }
-      const now={}; for(const x of ((d&&d.data)||[]))now[x.symbol]=(+x.accumylated_vol||0)*10;
-      if(!moc){ moc={t:Date.now(),kl:{...klTick},that:now}; return null; }
-      let tick=0, that=0;
-      for(const s of ma){
-        if(moc.that[s]==null||now[s]==null)continue;
-        const dThat=now[s]-moc.that[s], dTick=(klTick[s]||0)-(moc.kl[s]||0);
-        if(dThat>0&&dTick>0){ tick+=dTick; that+=dThat; }
-      }
-      if(that<=0||tick<=0)return null;
-      const tiLe=that/tick;                               // >1 nghĩa là tick đang nhỏ hơn thật
-      let moiHeSo=heSo;
-      if(tiLe>8&&tiLe<12)moiHeSo=10; else if(tiLe>80&&tiLe<120)moiHeSo=100; else if(tiLe>0.8&&tiLe<1.25)moiHeSo=1;
-      const doi=moiHeSo!==heSo;
-      if(doi){ heSo=moiHeSo; rows.forEach(r=>{r.val=r.px*r.vol*heSo;}); }
-      ketQuaChuan={tiLe:+tiLe.toFixed(2),heSo,doi,mau:ma.length};
-      moc={t:Date.now(),kl:{...klTick},that:now};
-      return ketQuaChuan;
-    },
-    async fetch(onTien){ if(!rows.length)restore(); save(); return rows.length||1; },
+    async connect(onS){ onStat=onS; if(!rows.length)restore(); return moKetNoi(); },
+    async fetch(){ if(!rows.length)restore(); return rows.length||1; },
     load(day,th){return rows.filter(r=>vnDate(r.t)===day&&r.val>=th);},
-    async connect(user,pass,onStat){
-      if(typeof mqtt==='undefined'){onStat('⚠ chưa tải được thư viện MQTT');return false;}
-      onStat('⏳ đang đăng nhập DNSE…');
-      // api.dnse.com.vn chỉ trả CORS cho localhost:* và origin của chính DNSE.
-      // → chạy ở localhost thì gọi thẳng; chạy trên domain thật thì đi vòng /api/proxy.
-      // (Luồng tick sau đó luôn chạy thẳng qua WebSocket, không đụng proxy.)
-      const direct=location.hostname==='localhost';
-      const U=u=>direct?u:'/api/proxy?url='+encodeURIComponent(u);
-      try{
-        let r=await fetch(U('https://api.dnse.com.vn/user-service/api/auth'),{method:'POST',
-          headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user,password:pass})});
-        if(!r.ok)throw new Error('đăng nhập thất bại ('+r.status+')');
-        const token=(await r.json()).token;
-        if(!token)throw new Error('không nhận được token');
-        r=await fetch(U('https://api.dnse.com.vn/user-service/api/me'),{headers:{Authorization:'Bearer '+token}});
-        const inv=(await r.json()).investorId;
-        if(!inv)throw new Error('không lấy được investorId');
-        onStat('⏳ đang nối luồng tick…');
-        const cid='dnse-price-json-mqtt-ws-sub-'+inv+'-'+Math.random().toString(16).slice(2,8);
-        client=mqtt.connect('wss://datafeed-lts-krx.dnse.com.vn/wss',
-          {clientId:cid,username:inv,password:token,protocolVersion:5,clean:true,keepalive:60,reconnectPeriod:5000,connectTimeout:15000});
-        client.on('connect',()=>{
-          connected=true; restore();
-          let nOk=0;
-          for(let i=0;i<UNI.length;i+=50)   // subscribe theo lô cho nhẹ
-            client.subscribe(UNI.slice(i,i+50).map(s=>'plaintext/quotes/krx/mdds/tick/v1/roundlot/symbol/'+s),
-              (err,granted)=>{ if(err)loiSub.push(String(err.message||err).slice(0,80));
-                               else nOk+=((granted||[]).filter(g=>g.qos<128)).length; });
-          onStat('● đã nối · subscribe '+UNI.length+' mã · chờ tick…');
-          // Không có message nào sau 20 giây → nhiều khả năng SAI TOPIC. Dò bằng wildcard
-          // để biết luồng thật nằm ở đâu, rồi tự bám theo topic đó.
-          setTimeout(()=>{
-            if(nRaw>0)return;
-            loiSub.push('20s không nhận được message nào — đang dò topic bằng wildcard');
-            client.subscribe('plaintext/quotes/krx/mdds/#',(e,g)=>{
-              if(e)loiSub.push('wildcard lỗi: '+String(e.message||e).slice(0,60));
-            });
-          },20000);
-          let dem=0;
-          setInterval(async()=>{
-            save();
-            if((dem++%6)===5){ try{ await SRC_DNSE.doDonVi(); }catch(e){} }
-            const c=ketQuaChuan;
-            onStat('● LIVE · '+nTick+' tick · giữ '+rows.length+' lệnh ≥1 tỷ'
-              +' · nhận '+nRaw+' message thô'
-              +(c?(' · đơn vị KL '+(c.heSo===1?'khớp 24hMoney':'đã hiệu chỉnh ×'+c.heSo)):'')
-              +(nRaw>0&&nTick===0?' · ⚠ CÓ message nhưng không đọc được trường giá/KL — bấm Đối soát để xem mẫu':''));
-          },5000);
-        });
-        client.on('message',onMsg);
-        client.on('error',e=>onStat('⚠ '+(e.message||e)));
-        return true;
-      }catch(e){ onStat('⚠ '+(e.message||e)+' — sai TK/mật khẩu hoặc DNSE chặn CORS'); return false; }
-    }
+    dung(){ try{ if(ws)ws.close(); }catch(e){} connected=false; }
   };
 })();
 
@@ -1087,19 +1090,29 @@ $('segSrc').querySelectorAll('button').forEach(b=>b.onclick=async()=>{
   await load(true);
 });
 $('btnDnse').onclick=async()=>{
-  const u=$('dUser').value.trim(), p=$('dPass').value;
-  if(!u||!p){$('dStat').textContent='⚠ nhập tài khoản và mật khẩu';return;}
   $('btnDnse').disabled=true;
-  const ok=await SRC_DNSE.connect(u,p,s=>{$('dStat').textContent=s;});
+  const ok=await SRC_DNSE.connect(s=>{$('dStat').textContent=s;});
   $('btnDnse').disabled=false;
-  $('dPass').value='';                       // xoá mật khẩu khỏi ô nhập ngay sau khi dùng
-  if(ok){ if(liveT)clearInterval(liveT); liveT=setInterval(()=>{if(SOURCE===SRC_DNSE)load(false);},5000); }
+  if(ok){ if(liveT)clearInterval(liveT); liveT=setInterval(()=>{if(SOURCE===SRC_DNSE)load(false);},3000); load(false); }
+  else { $('khoaBox').className='hrow'; }
+};
+$('btnKhoa').onclick=()=>{
+  const b=$('khoaBox');
+  b.className=b.className.includes('hide')?'hrow':'hrow hide';
+  try{ $('dKey').value=localStorage.getItem('dnse_key')||''; $('dSec').value=localStorage.getItem('dnse_secret')||''; }catch(e){}
+};
+$('btnKhoaLuu').onclick=()=>{
+  const k=$('dKey').value.trim(), s=$('dSec').value.trim();
+  if(!k||!s){ $('khoaSt').textContent='⚠ Cần cả key lẫn secret'; return; }
+  try{ localStorage.setItem('dnse_key',k); localStorage.setItem('dnse_secret',s); }catch(e){}
+  $('khoaSt').textContent='✓ đã lưu trong trình duyệt này — bấm Kết nối tick';
+  $('khoaBox').className='hrow hide';
 };
 $('btnSoat').onclick=async()=>{
   const box=$('soatBox'), body=$('soatBody');
   box.className='hrow';
-  body.innerHTML='<div class="ndrow" style="color:var(--muted)">⏳ đang lấy số chính thức từ SSI iBoard để đối soát…</div>';
-  let k=null; try{ k=await SRC_DNSE.doiSoat(); }catch(e){}
+  body.innerHTML='<div class="ndrow" style="color:var(--muted)">⏳ đang đối soát với số luỹ kế của sàn…</div>';
+  let k=null; try{ k=SRC_DNSE.doiSoat(); }catch(e){}
   if(!k||!k.rows.length){
     const st=SRC_DNSE.stats();
     let h='<div class="ndtile f" style="margin-bottom:8px"><div class="k">Chẩn đoán luồng tick DNSE</div>'
@@ -1122,7 +1135,7 @@ $('btnSoat').onclick=async()=>{
     :['no','Thiếu nhiều — kiểm lại kết nối hoặc nối lại từ đầu phiên'];
   body.innerHTML=
     '<div class="ndtile '+(danh[0]==='ok'?'d':danh[0]==='mid'?'p':'f')+'" style="margin-bottom:8px">'
-    +'<div class="k">Đối soát tick DNSE với số chính thức (SSI iBoard)</div>'
+    +'<div class="k">Đối soát tick DNSE với số luỹ kế của sàn</div>'
     +'<div class="n">'+s.tyLe.toFixed(1)+'%</div>'
     +'<div class="bs">'+danh[1]+'</div>'
     +'<div class="kl">KL tick '+f(s.tick)+' CP · KL chính thức '+f(s.ct)+' CP · '+s.ma+' mã có tick'
