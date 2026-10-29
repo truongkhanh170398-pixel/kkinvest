@@ -107,13 +107,23 @@ function layRo() {
 }
 
 /* ── gom cả rổ ──────────────────────────────────────────────── */
-let nho = { ngay: '', luc: 0, lenh: [], soMa: 0, tongLenh: 0 };
+let nho = { ngay: '', luc: 0, lenh: [], soMa: 0, tongLenh: 0, den: 0 };
+let dangGom = null;   // gom đang chạy — request sau bám vào, không gom chồng
+
+// Khoá chống trùng khi ghép phần mới vào phần cũ. Dùng đúng những trường mà
+// một lệnh khớp không thể trùng nhau: thời điểm + mã + giá + khối lượng.
+const khoaLenh = x => x.t + '|' + x.tk + '|' + x.px + '|' + x.vol;
 
 async function gomTatCa() {
   const d = new Date(Date.now() + 7 * 3600e3);
   const ngay = d.toISOString().slice(0, 10);
-  const tu = Math.floor(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 2, 0, 0) / 1000); // 9h VN
+  const moCua = Math.floor(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 2, 0, 0) / 1000); // 9h VN
   const den = Math.floor(Date.now() / 1000);
+  // Lần đầu trong ngày thì quét cả phiên; những lần sau chỉ lấy PHẦN MỚI kể từ
+  // mốc đã quét. Quét cả phiên mất hơn 120 giây với 329k lệnh, lấy phần mới chỉ
+  // vài giây — đây là khác biệt giữa 'cổng không bao giờ trả lời' và 'tức thì'.
+  const tiep = (nho.ngay === ngay && nho.den > 0);
+  const tu = tiep ? Math.max(moCua, nho.den - 120) : moCua;   // lùi 2 phút cho chắc
   const UNI = layRo();
 
   const ra = [];
@@ -138,28 +148,80 @@ async function gomTatCa() {
       + ' mã · ' + tongLenh.toLocaleString('vi-VN') + ' lệnh · giữ ' + ra.length);
   }
   ra.sort((a, b) => a.t - b.t);
-  nho = { ngay, luc: Date.now(), lenh: ra, soMa: UNI.length, tongLenh };
-  console.log('\r  xong: ' + tongLenh.toLocaleString('vi-VN') + ' lệnh cả phiên · giữ '
-    + ra.length.toLocaleString('vi-VN') + ' lệnh ≥' + (NGUONG_MIN / 1e6) + ' triệu · '
+  // ghép phần mới vào phần đã có, bỏ trùng ở chỗ hai lần quét chồng lên nhau
+  let gop = ra;
+  if (tiep) {
+    const thay = new Set(nho.lenh.map(khoaLenh));
+    gop = nho.lenh.concat(ra.filter(x => !thay.has(khoaLenh(x))));
+    gop.sort((a, b) => a.t - b.t);
+    tongLenh += nho.tongLenh;
+  }
+  nho = { ngay, luc: Date.now(), lenh: gop, soMa: UNI.length, tongLenh, den };
+  console.log('\r  ' + (tiep ? 'cập nhật' : 'xong') + ': ' + tongLenh.toLocaleString('vi-VN')
+    + ' lệnh cả phiên · giữ '
+    + gop.length.toLocaleString('vi-VN') + ' lệnh ≥' + (NGUONG_MIN / 1e6) + ' triệu · '
     + ((Date.now() - t0) / 1000).toFixed(1) + 's' + (loi ? ' · ' + loi + ' mã lỗi' : '') + '        ');
-  const n3 = ra.filter(x => x.val >= 3e9).length;
-  console.log('  trong đó ' + ra.filter(x => x.val >= 1e9).length + ' lệnh ≥1 tỷ · ' + n3 + ' lệnh ≥3 tỷ');
+  const n3 = gop.filter(x => x.val >= 3e9).length;
+  console.log('  trong đó ' + gop.filter(x => x.val >= 1e9).length + ' lệnh ≥1 tỷ · ' + n3 + ' lệnh ≥3 tỷ');
   return nho;
 }
 
-/* ── cổng nhỏ cho trang radar gọi vào ───────────────────────── */
+/* ── máy chủ nhỏ ở 127.0.0.1: vừa phục vụ trang radar, vừa trả lịch sử ──
+ *
+ * Vì sao phải tự phục vụ trang: Chrome 138+ có Local Network Access — trang
+ * https://kkinvest.vercel.app gọi vào http://127.0.0.1 là bị chặn thẳng
+ * ("Permission was denied for this request to access the loopback address
+ * space"), phải người dùng bấm cho phép mới chạy. Mở trang từ chính địa chỉ
+ * nội bộ này thì hai bên cùng một nguồn gốc, không có gì để chặn.
+ * Các lời gọi /api/... được đổi sang tên miền thật vì hàm serverless nằm ở đó
+ * (api/dnse đã đặt Access-Control-Allow-Origin: *).
+ */
+const TEN_MIEN = 'https://kkinvest.vercel.app';
+const KIEU = { '.html':'text/html; charset=utf-8', '.js':'text/javascript; charset=utf-8',
+  '.css':'text/css; charset=utf-8', '.json':'application/json; charset=utf-8',
+  '.svg':'image/svg+xml', '.png':'image/png', '.jpg':'image/jpeg', '.ico':'image/x-icon' };
+
+function phucVuTep(res, ten) {
+  const duong = path.join(__dirname, ten);
+  // chỉ phục vụ tệp nằm trong chính thư mục này, không cho đi ngược ra ngoài
+  if (!duong.startsWith(__dirname) || !fs.existsSync(duong) || !fs.statSync(duong).isFile()) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Không có tệp ' + ten); return;
+  }
+  const duoi = path.extname(duong).toLowerCase();
+  let noi = fs.readFileSync(duong);
+  if (duoi === '.html' || duoi === '.js') {
+    // '/api/... → 'https://kkinvest.vercel.app/api/...  (giữ nguyên dấu nháy)
+    noi = Buffer.from(String(noi).replace(/(['"`])\/api\//g, '$1' + TEN_MIEN + '/api/'), 'utf8');
+  }
+  res.writeHead(200, { 'Content-Type': KIEU[duoi] || 'application/octet-stream' });
+  res.end(noi);
+}
+
 http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Access-Control-Allow-Private-Network', 'true');   // cho bản Chrome cũ
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', '*');
   if (req.method === 'OPTIONS') { res.writeHead(204).end(); return; }
 
   const u = new URL(req.url, 'http://x');
-  if (u.pathname !== '/lenh') { res.writeHead(404).end('{"loi":"chỉ có /lenh"}'); return; }
+
+  if (u.pathname !== '/lenh') {
+    const ten = u.pathname === '/' ? 'radar-dong-tien.html' : decodeURIComponent(u.pathname.slice(1));
+    phucVuTep(res, ten); return;
+  }
 
   try {
     const hnay = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10);
-    const cuQua = Date.now() - nho.luc > 60000;        // làm mới tối đa 1 phút/lần
-    if (nho.ngay !== hnay || cuQua) await gomTatCa();
+    // Gom chỉ chạy MỘT lần tại một thời điểm: request đến giữa chừng thì bám vào
+    // lần gom đang chạy. Trước đây mỗi request lại gom riêng, gom chồng lên nhau
+    // nên cổng không bao giờ trả lời kịp.
+    if (nho.ngay !== hnay || Date.now() - nho.luc > 15000) {
+      if (!dangGom) dangGom = gomTatCa().finally(() => { dangGom = null; });
+      await dangGom;
+    }
     const min = Math.max(0, +u.searchParams.get('min') || 0);
     const lenh = min ? nho.lenh.filter(x => x.val >= min) : nho.lenh;
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -170,8 +232,12 @@ http.createServer(async (req, res) => {
     res.end(JSON.stringify({ loi: String(e && e.message || e) }));
   }
 }).listen(CONG, '127.0.0.1', async () => {
-  console.log('\n  Trình nạp lịch sử DNSE đang chạy tại http://127.0.0.1:' + CONG);
-  console.log('  Cứ để cửa sổ này mở, rồi vào trang Radar dòng tiền → Tick DNSE.\n');
-  try { await gomTatCa(); } catch (e) { console.error('  Lỗi: ' + e.message); }
-  console.log('\n  Sẵn sàng. Trang sẽ tự lấy lịch sử khi anh bấm Kết nối tick.');
+  console.log('\n  ╔══════════════════════════════════════════════════════╗');
+  console.log('  ║  MỞ TRANG RADAR Ở:  http://127.0.0.1:' + CONG + '            ║');
+  console.log('  ╚══════════════════════════════════════════════════════╝');
+  console.log('  Mở bằng địa chỉ này thì trang lấy được lịch sử cả phiên.');
+  console.log('  Cứ để cửa sổ này chạy suốt phiên.\n');
+  try { dangGom = gomTatCa(); await dangGom; } catch (e) { console.error('  Lỗi: ' + e.message); }
+  finally { dangGom = null; }
+  console.log('\n  Sẵn sàng.');
 });
