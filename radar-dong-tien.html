@@ -676,8 +676,11 @@ const SRC_DNSE=(function(){
   let rows=[], lastPx={}, nTick=0, connected=false, nLoi=0;
   let batDauLuc=null, maCo={}, dangNoi=false, onStat=null;   // số lần nối lại nằm trong từng luồng
   const soat={};   // theo mã: KL tick cộng dồn + số luỹ kế đầu/cuối, để tự đối soát
-  const key=()=>'radar_dnsews_'+vnDate(Math.floor(Date.now()/1000));
-  function save(){try{localStorage.setItem(key(),JSON.stringify(rows));}catch(e){}}   // cat() đã chặn trần rồi
+  const homNay=()=>vnDate(Math.floor(Date.now()/1000));
+  let ngayPhien=homNay();   // ngày mà số liệu đang nằm trong bộ nhớ thuộc về
+  // nhận ngày để còn chốt được số liệu ngày cũ TRƯỚC khi dọn sang ngày mới
+  const key=d=>'radar_dnsews_'+(d||homNay());
+  function save(d){try{localStorage.setItem(key(d),JSON.stringify(rows));}catch(e){}}   // cat() đã chặn trần rồi
   function restore(){try{rows=JSON.parse(localStorage.getItem(key()))||[];}catch(e){rows=[];}}
 
   /* Các ĐOẠN đã nghe được. Nguồn tick không có lịch sử, nên bảng trống có thể
@@ -686,19 +689,19 @@ const SRC_DNSE=(function(){
      Trên điện thoại chuyển app hay tắt màn hình là trình duyệt ngắt luồng, nên
      khoảng hụt rất dễ xảy ra mà không có gì báo. */
   let doan=[];
-  const keyD=()=>'radar_dnsedoan_'+vnDate(Math.floor(Date.now()/1000));
-  function luuDoan(){try{localStorage.setItem(keyD(),JSON.stringify(doan));}catch(e){}}
+  const keyD=d=>'radar_dnsedoan_'+(d||homNay());
+  function luuDoan(d){try{localStorage.setItem(keyD(d),JSON.stringify(doan));}catch(e){}}
   function napDoan(){try{doan=JSON.parse(localStorage.getItem(keyD()))||[];}catch(e){doan=[];}}
   function moDoan(){
     const n=Math.floor(Date.now()/1000);
     const c=doan[doan.length-1];
     if(c&&c.den==null)return;                 // đang mở rồi, luồng khác nối thêm thôi
     if(c&&n-c.den<=20){c.den=null;return;}    // hụt dưới 20 giây thì coi như liền mạch
-    doan.push({tu:n,den:null}); luuDoan();
+    doan.push({tu:n,den:null}); luuDoan(ngayPhien);
   }
   function dongDoan(){
     const c=doan[doan.length-1];
-    if(c&&c.den==null){c.den=Math.floor(Date.now()/1000); luuDoan();}
+    if(c&&c.den==null){c.den=Math.floor(Date.now()/1000); luuDoan(ngayPhien);}
   }
   // tổng kết để hiện cho user: nghe từ lúc nào, hụt mấy khoảng, hụt bao lâu
   function tomDoan(){
@@ -880,6 +883,21 @@ const SRC_DNSE=(function(){
   }
 
   setInterval(()=>{if(connected)save();},10000);
+
+  /* Qua nửa đêm mà tab vẫn mở thì phải sang ngày mới cho đúng. Chốt số liệu
+     ngày cũ vào khoá của chính ngày đó (không mất gì), rồi dọn sạch state —
+     nhất là lastPx, vì để lại giá hôm qua thì quy tắc tick suy sai chiều
+     MUA/BÁN của lệnh đầu tiên mỗi mã. */
+  setInterval(()=>{
+    const n=homNay();
+    if(n===ngayPhien)return;
+    save(ngayPhien); dongDoan(); luuDoan(ngayPhien);
+    rows=[]; doan=[]; lastPx={}; maCo={}; nTick=0; batDauLuc=null;
+    ngayPhien=n;
+    restore(); napDoan();                      // ngày mới thì thường rỗng
+    if(connected){ batDauLuc=Math.floor(Date.now()/1000); moDoan(); }
+    baoTrangThai();
+  },30000);
 
   return {
     label:'Tick DNSE · từng lệnh khớp',
