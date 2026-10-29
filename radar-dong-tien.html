@@ -679,6 +679,37 @@ const SRC_DNSE=(function(){
   const key=()=>'radar_dnsews_'+vnDate(Math.floor(Date.now()/1000));
   function save(){try{localStorage.setItem(key(),JSON.stringify(rows));}catch(e){}}   // cat() đã chặn trần rồi
   function restore(){try{rows=JSON.parse(localStorage.getItem(key()))||[];}catch(e){rows=[];}}
+
+  /* Các ĐOẠN đã nghe được. Nguồn tick không có lịch sử, nên bảng trống có thể
+     là "thật không có lệnh nào" mà cũng có thể là "lúc đó mình không nối" —
+     hai việc khác nhau hoàn toàn. Ghi lại mốc nối/mất để nói đúng cái nào.
+     Trên điện thoại chuyển app hay tắt màn hình là trình duyệt ngắt luồng, nên
+     khoảng hụt rất dễ xảy ra mà không có gì báo. */
+  let doan=[];
+  const keyD=()=>'radar_dnsedoan_'+vnDate(Math.floor(Date.now()/1000));
+  function luuDoan(){try{localStorage.setItem(keyD(),JSON.stringify(doan));}catch(e){}}
+  function napDoan(){try{doan=JSON.parse(localStorage.getItem(keyD()))||[];}catch(e){doan=[];}}
+  function moDoan(){
+    const n=Math.floor(Date.now()/1000);
+    const c=doan[doan.length-1];
+    if(c&&c.den==null)return;                 // đang mở rồi, luồng khác nối thêm thôi
+    if(c&&n-c.den<=20){c.den=null;return;}    // hụt dưới 20 giây thì coi như liền mạch
+    doan.push({tu:n,den:null}); luuDoan();
+  }
+  function dongDoan(){
+    const c=doan[doan.length-1];
+    if(c&&c.den==null){c.den=Math.floor(Date.now()/1000); luuDoan();}
+  }
+  // tổng kết để hiện cho user: nghe từ lúc nào, hụt mấy khoảng, hụt bao lâu
+  function tomDoan(){
+    if(!doan.length)return null;
+    const n=Math.floor(Date.now()/1000);
+    let hut=0;
+    for(let i=1;i<doan.length;i++) hut+=Math.max(0,doan[i].tu-doan[i-1].den);
+    return {tu:doan[0].tu, soHut:doan.length-1, giayHut:hut,
+            dangNghe:doan[doan.length-1].den==null,
+            den:doan[doan.length-1].den==null?n:doan[doan.length-1].den};
+  }
   const bao=s=>{if(onStat)onStat(s);};
 
   function khoaTay(){
@@ -762,9 +793,12 @@ const SRC_DNSE=(function(){
   function baoTrangThai(){
     const nOk=luong.filter(l=>l.ok).length;
     if(!nOk){ bao('○ chưa nối được luồng nào'); return; }
+    const d=tomDoan();
     bao('● đang quét · '+maDangTheo()+' mã'
       +(nOk<luong.length?' ('+nOk+'/'+luong.length+' luồng)':'')
-      +(coLichSu?' · đã nạp '+nLichSu.toLocaleString('vi-VN')+' lệnh của phiên':' · từ lúc kết nối'));
+      +(d?' · nghe từ '+vnHM(d.tu):'')
+      +(d&&d.soHut?' · hụt '+d.soHut+' khoảng ('+Math.round(d.giayHut/60)+' phút)':'')
+      +(coLichSu?' · đã nạp '+nLichSu.toLocaleString('vi-VN')+' lệnh của phiên':''));
   }
 
   async function xinChuKy(){
@@ -791,6 +825,7 @@ const SRC_DNSE=(function(){
           clearTimeout(het);
           l.ok=true; l.lanThu=0; connected=true;
           batDauLuc=batDauLuc||Math.floor(Date.now()/1000);
+          moDoan();
           baoTrangThai(); xong(true); return;
         }
         if(m.action==='ping'){ws.send(JSON.stringify({action:'pong'}));return;}
@@ -808,6 +843,7 @@ const SRC_DNSE=(function(){
         clearTimeout(het);
         const daChay=l.ok; l.ok=false;
         connected=luong.some(x=>x.ok); save();
+        if(!connected) dongDoan();   // mất hết luồng mới coi là hụt
         // chỉ luồng ĐÃ từng chạy mới tự nối lại; luồng chưa bao giờ nối được thì
         // để moKetNoi() báo lỗi, tránh vòng lặp vô tận khi khoá sai
         if(daChay){
@@ -852,7 +888,8 @@ const SRC_DNSE=(function(){
     days(){const d=vnDate(Math.floor(Date.now()/1000));return rows.length?[...new Set(rows.map(r=>vnDate(r.t)))].sort():[d];},
     stats(){return {nTick,connected,kept:rows.length,nLoi,batDau:batDauLuc,
       soMa:Object.keys(maCo).length,coKhoaTay:!!khoaTay(),coLichSu,nLichSu,
-      soLuong:luong.length,luongOk:luong.filter(l=>l.ok).length,maTheo:maDangTheo()};},
+      soLuong:luong.length,luongOk:luong.filter(l=>l.ok).length,maTheo:maDangTheo(),
+      doan:tomDoan()};},
     napLichSu,
     // Đối soát NGAY TRONG LUỒNG: mỗi tick mang sẵn totalVolumeTraded (khối lượng
     // luỹ kế chính thức của mã đó). Cộng dồn KL tick nhận được từ lúc nối rồi so
@@ -871,10 +908,10 @@ const SRC_DNSE=(function(){
       return {rows:d,tong:{tick:klT,ct:klC,tyLe:klC?klT/klC*100:0,ma:d.length,
         nTick,lenhLon:rows.length,thieu:0,heSo:1}};
     },
-    async connect(onS){ onStat=onS; if(!rows.length)restore(); return moKetNoi(); },
-    async fetch(){ if(!rows.length)restore(); return rows.length||1; },
+    async connect(onS){ onStat=onS; if(!rows.length)restore(); if(!doan.length)napDoan(); return moKetNoi(); },
+    async fetch(){ if(!rows.length)restore(); if(!doan.length)napDoan(); return rows.length||1; },
     load(day,th){return rows.filter(r=>vnDate(r.t)===day&&r.val>=th);},
-    dung(){ for(const l of luong){ l.ok=false; try{ if(l.ws)l.ws.close(); }catch(e){} } connected=false; }
+    dung(){ for(const l of luong){ l.ok=false; try{ if(l.ws)l.ws.close(); }catch(e){} } connected=false; dongDoan(); }
   };
 })();
 
@@ -928,7 +965,10 @@ function lyDoTrong(){
     +' lệnh khớp</b> từ <b>'+s.soMa+' mã</b>'+(phut?' trong '+phut+' phút':'')
     +', nhưng chưa lệnh nào đạt <b>'+soTy(th)+' tỷ</b>.'
     +(to?' Lớn nhất bắt được: <b>'+to.tk+' '+ty(to.val)+'</b> lúc '+vnTime(to.t)+'.':'')+goi
-    +(s.coLichSu?'':' Đang quét từ lúc kết nối, cứ để trang mở là lệnh lớn hiện dần.');
+    +(s.doan&&s.doan.soHut
+      ? ' ⚠ Nhưng có <b>'+s.doan.soHut+' khoảng mất kết nối</b> (tổng <b>'
+        +Math.round(s.doan.giayHut/60)+' phút</b>) — lệnh khớp trong mấy khoảng đó thì không bắt được.'
+      : (s.doan?' Nghe liền mạch từ <b>'+vnHM(s.doan.tu)+'</b>, nên đây là không có lệnh nào thật.':''));
 }
 function render(){
   const day=$('selDay').value, th=+$('selTh').value*1e9;
@@ -1249,9 +1289,6 @@ $('segSrc').querySelectorAll('button').forEach(b=>b.onclick=async()=>{
   b.classList.add('on');
   const x=b.dataset.x, dnse=x==='dnse';
   try{localStorage.setItem('radar_nguon',x);}catch(e){}   // nhớ để lần sau vào là đúng nguồn
-  // 3 tỷ là ngưỡng hợp cho CỤM lệnh gộp của 24hMoney, nhưng lệnh ĐƠN LẺ ≥3 tỷ
-  // cả phiên 27/10 chỉ có 63 cái — để nguyên thì bảng tick rỗng gần như suốt.
-  if(!thTuChon) $('selTh').value = dnse ? '0.3' : '3';
   $('dnseBox').className='hrow'+(dnse?'':' hide');
   if(SOURCE&&SOURCE.dung)SOURCE.dung();                 // tắt vòng quét của nguồn đang chạy
   SOURCE = dnse?SRC_DNSE:(x==='rt'?SRC_24H:SRC_MINUTE);
@@ -1325,8 +1362,9 @@ $('btnFilt').onclick=e=>{e.stopPropagation();$('filtMenu').classList.toggle('ope
 document.addEventListener('click',e=>{if(!$('filtMenu').contains(e.target)&&e.target!==$('btnFilt'))$('filtMenu').classList.remove('open');});
 $('btnPause').onclick=()=>{paused=!paused;$('btnPause').classList.toggle('on',!paused);$('btnPause').textContent=paused?'▶':'❚❚';};
 $('selDay').onchange=()=>{prevKeys=new Set();render();};
-let thTuChon=false;   // user đã tự chọn ngưỡng thì không tự đổi nữa
-$('selTh').onchange=()=>{thTuChon=true;render();}; $('selSec').onchange=render; $('selGrp').onchange=render; $('chkAuc').onchange=render;
+// Ngưỡng là lựa chọn của user, trang KHÔNG tự đổi — mặc định 3 tỷ (xem thẻ
+// <option selected>), và chọn mức nào thì lần sau mở trang vẫn là mức đó.
+$('selTh').onchange=()=>{try{localStorage.setItem('radar_nguong',$('selTh').value);}catch(e){} render();}; $('selSec').onchange=render; $('selGrp').onchange=render; $('chkAuc').onchange=render;
 $('qFlow').oninput=paintFlow;
 $('btnRf').onclick=()=>load(false);
 $('chkAuto').onchange=setAuto;
@@ -1336,13 +1374,14 @@ $('chkNen').onchange=()=>{prevKeys=new Set();render();};
 $('selSec').innerHTML='<option value="">Tất cả ngành</option>'+Object.keys(SECTORS).map(s=>'<option>'+s+'</option>').join('');
 
 radarInit();
+try{ const nl=localStorage.getItem('radar_nguong');
+  if(nl&&[...$('selTh').options].some(o=>o.value===nl)) $('selTh').value=nl; }catch(e){}
 // Mở trang là vào luôn nguồn đã chọn lần trước — kể cả trên điện thoại. Chọn Tick
 // DNSE một lần thì từ đó cứ mở trang là tự nối luồng và quét lệnh lớn, không phải
 // bấm lại gì. Tick nhận được ghi vào máy theo ngày nên F5 hay đóng mở không mất.
 let nguonLuu=''; try{nguonLuu=localStorage.getItem('radar_nguon')||'';}catch(e){}
 if(nguonLuu==='dnse'){
   SOURCE=SRC_DNSE;
-  if(!thTuChon) $('selTh').value='0.3';   // xem ghi chú ở chỗ đổi nguồn
   $('segSrc').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.x==='dnse'));
   $('dnseBox').className='hrow';
   setAuto(); load(true);
