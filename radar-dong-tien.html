@@ -785,7 +785,7 @@ const SRC_DNSE=(function(){
             // nạp lịch sử phiên ở nền, không chặn luồng realtime
             napLichSu().then(n=>{
               bao(n===false
-                ? '● đang nhận tick · '+soMa+' mã · chưa có lịch sử phiên'
+                ? '● đang quét · '+soMa+' mã · từ lúc kết nối'
                 : '● đang nhận tick · '+soMa+' mã · đã nạp '+n.toLocaleString('vi-VN')+' lệnh của phiên');
             });
             return;
@@ -826,7 +826,7 @@ const SRC_DNSE=(function(){
   return {
     label:'Tick DNSE · từng lệnh khớp',
     tick:true,
-    note:'✅ <b>Nguồn tick thật — mỗi dòng là MỘT LỆNH KHỚP đơn lẻ</b>, nhận trực tiếp từ luồng WebSocket của DNSE Open API. Không gộp, không suy từ nến. <b>Đối soát 27/10/2026:</b> khối lượng tick khớp <b>100,0%</b> số luỹ kế của sàn, và lệnh lớn nhất của MWG trong phiên — <b>40.000 CP ở giá 76.500 lúc 10:23:00, tức 3,06 tỷ</b> — trùng khớp với bảng khớp lệnh của VNDirect, TradingView và bảng giá công ty chứng khoán. Cả rổ 218 mã phiên đó có <b>447 lệnh ≥1 tỷ, 35 lệnh ≥3 tỷ</b>, lớn nhất 11,63 tỷ (PET). <b>Đơn vị:</b> DNSE trả giá theo nghìn đồng và khối lượng theo <b>lô 10 cổ phiếu</b> — trang đã quy đổi; quên nhân 10 là mọi giá trị nhỏ đi đúng 10 lần. <b>Chiều MUA/BÁN</b> suy bằng quy tắc tick ở cấp từng lệnh vì luồng WS không kèm sẵn chiều; đối chiếu với chiều thật từ REST trên 9.488 lệnh thì đúng <b>93,2%</b>. <b>Lịch sử cả phiên:</b> luồng WS chỉ đẩy từ lúc kết nối, nhưng nếu anh chạy <b>LAY-LICH-SU-DNSE.bat</b> trên máy thì trang tự nạp về <b>toàn bộ lệnh khớp từ 9h15</b> rồi ghép vào realtime — mở trang lúc nào cũng đủ cả phiên. Phải chạy ở máy anh vì DNSE chỉ cho IP Việt Nam (máy chủ Vercel bị timeout, trình duyệt bị CORS chặn). Tick nhận được lưu trong máy anh theo ngày nên F5 không mất. Trần '+TRAN_MA+' mã mỗi kết nối.',
+    note:'✅ <b>Nguồn tick thật — mỗi dòng là MỘT LỆNH KHỚP đơn lẻ</b>, nhận trực tiếp từ luồng WebSocket của DNSE Open API. Không gộp, không suy từ nến. <b>Đối soát 27/10/2026:</b> khối lượng tick khớp <b>100,0%</b> số luỹ kế của sàn, và lệnh lớn nhất của MWG trong phiên — <b>40.000 CP ở giá 76.500 lúc 10:23:00, tức 3,06 tỷ</b> — trùng khớp với bảng khớp lệnh của VNDirect, TradingView và bảng giá công ty chứng khoán. Cả rổ 218 mã phiên đó có <b>447 lệnh ≥1 tỷ, 35 lệnh ≥3 tỷ</b>, lớn nhất 11,63 tỷ (PET). <b>Đơn vị:</b> DNSE trả giá theo nghìn đồng và khối lượng theo <b>lô 10 cổ phiếu</b> — trang đã quy đổi; quên nhân 10 là mọi giá trị nhỏ đi đúng 10 lần. <b>Chiều MUA/BÁN</b> suy bằng quy tắc tick ở cấp từng lệnh vì luồng WS không kèm sẵn chiều; đối chiếu với chiều thật từ REST trên 9.488 lệnh thì đúng <b>93,2%</b>. <b>Cách dùng:</b> trong phiên cứ mở trang, chọn nguồn này là nó tự nối và quét liên tục — mỗi lệnh lớn khớp là hiện ngay. Luồng WS chỉ đẩy từ lúc kết nối nên mở càng sớm càng thấy đủ; tick nhận được lưu trong máy anh theo ngày nên F5 hay đóng mở lại không mất phần đã quét. <b>Ngưỡng lọc:</b> để 3 tỷ là bảng rỗng gần như suốt vì lệnh ĐƠN LẺ ≥3 tỷ cả phiên 27/10 chỉ có 63 cái — chọn nguồn này thì trang tự đặt 0,3 tỷ, hợp với thanh khoản hiện nay. Trần '+TRAN_MA+' mã mỗi kết nối.',
     days(){const d=vnDate(Math.floor(Date.now()/1000));return rows.length?[...new Set(rows.map(r=>vnDate(r.t)))].sort():[d];},
     stats(){return {nTick,connected,kept:rows.length,nLoi,batDau:batDauLuc,
       soMa:Object.keys(maCo).length,coKhoaTay:!!khoaTay(),coLichSu,nLichSu};},
@@ -901,7 +901,7 @@ function lyDoTrong(){
   return '<b>Luồng vẫn đang chạy</b> — đã nhận <b>'+s.nTick.toLocaleString('vi-VN')
     +' lệnh khớp</b> từ <b>'+s.soMa+' mã</b>'+(phut?' trong '+phut+' phút':'')
     +', nhưng chưa lệnh nào đạt <b>'+soTy(th)+' tỷ</b>.'+goi
-    +(s.coLichSu?'':' Chỉ có từ lúc bấm kết nối — muốn đủ cả phiên thì chạy <b>LAY-LICH-SU-DNSE.bat</b>.');
+    +(s.coLichSu?'':' Đang quét từ lúc kết nối, cứ để trang mở là lệnh lớn hiện dần.');
 }
 function render(){
   const day=$('selDay').value, th=+$('selTh').value*1e9;
@@ -980,8 +980,8 @@ function render(){
       ? 'Chưa nối được luồng tick. Bấm <b>Kết nối tick</b>, hoặc bấm <b>🔎 Đối soát dữ liệu</b> để xem vướng ở đâu.'
       : (!s.nTick
         ? (ngoaiPhien
-          ? '<b>Phiên đã đóng.</b> Muốn xem lại <b>toàn bộ lệnh khớp hôm nay</b> thì chạy '
-            + '<b>LAY-LICH-SU-DNSE.bat</b> trên máy rồi bấm <b>Kết nối tick</b> — trang sẽ nạp đủ từ 9h15.' + doiNguon
+          ? '<b>Ngoài giờ khớp lệnh</b> nên luồng không đẩy gì — HOSE khớp 9h15–14h45. '
+            + 'Trong phiên thì cứ mở trang và chọn <b>🔴 Tick DNSE</b> là nó quét liên tục.' + doiNguon
           : 'Đã nối <b>200 mã</b> nhưng chưa có lệnh nào khớp'+(phut?' trong '+phut+' phút qua':'')+'.')
         : 'Đã nhận <b>'+s.nTick.toLocaleString('vi-VN')+' lệnh khớp</b> từ <b>'+s.soMa+' mã</b>'
           +(phut?' trong '+phut+' phút':'')+', nhưng chưa lệnh nào đạt ngưỡng <b>'+nguong+' tỷ</b>. '
