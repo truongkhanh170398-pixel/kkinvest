@@ -123,7 +123,11 @@
   .tag.b{background:rgba(38,194,129,.17);color:#7fe3a5}.tag.s{background:rgba(240,85,107,.17);color:#f5a3ac}
   .flash{animation:fl 1.8s ease-out}
   @keyframes fl{0%{background:rgba(38,194,129,.20)}100%{background:transparent}}
-  .empty{padding:34px 16px;text-align:center;color:var(--muted);font-size:12.5px}
+  /* th,td đặt white-space:nowrap cho số liệu khỏi gãy dòng — nhưng ô báo rỗng là
+     câu văn dài, để nowrap thì nó kéo cả bảng rộng ra và chữ bị cắt mất. */
+  .empty{padding:28px 16px;text-align:center;color:var(--muted);font-size:12.5px;
+    white-space:normal;line-height:1.55}
+  td.empty{max-width:0}   /* ép ô co theo bảng thay vì theo chữ bên trong */
   .chartbox{position:relative;height:214px;padding:9px 12px}
 
   /* ── bản đồ ── */
