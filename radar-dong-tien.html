@@ -673,8 +673,8 @@ const SRC_DNSE=(function(){
     rows.sort((a,b)=>a.t-b.t);
   }
   const TRAN_MA=200;                 // trần channel của tier normalUser
-  let rows=[], lastPx={}, ws=null, nTick=0, connected=false, nLoi=0;
-  let batDauLuc=null, maCo={}, lanThu=0, dangNoi=false, onStat=null;
+  let rows=[], lastPx={}, nTick=0, connected=false, nLoi=0;
+  let batDauLuc=null, maCo={}, dangNoi=false, onStat=null;   // số lần nối lại nằm trong từng luồng
   const soat={};   // theo mã: KL tick cộng dồn + số luỹ kế đầu/cuối, để tự đối soát
   const key=()=>'radar_dnsews_'+vnDate(Math.floor(Date.now()/1000));
   function save(){try{localStorage.setItem(key(),JSON.stringify(rows));}catch(e){}}   // cat() đã chặn trần rồi
@@ -751,69 +751,91 @@ const SRC_DNSE=(function(){
     }catch(e){ return false; }
   }
 
+  // Trần 200 mã mỗi kết nối, mà rổ có 218 mã — nên 18 mã cuối trước đây KHÔNG
+  // được theo chút nào. Đo 29/10/2026: VEA nằm ngoài 200 mã đầu, hôm đó có lệnh
+  // 3,87 tỷ lúc 10:12:05 mà trang không hề thấy. Đã thử và DNSE CHO mở nhiều
+  // WebSocket cùng một khoá, nên chia rổ thành từng lô ≤200 mã, mỗi lô một luồng.
+  // Mỗi luồng phải xin CHỮ KÝ RIÊNG: dùng lại nonce là bị coi như phát lại.
+  const luong=[];   // {ws, ma:[...], ok, lanThu}
+
+  function maDangTheo(){ return luong.filter(l=>l.ok).reduce((s,l)=>s+l.ma.length,0); }
+  function baoTrangThai(){
+    const nOk=luong.filter(l=>l.ok).length;
+    if(!nOk){ bao('○ chưa nối được luồng nào'); return; }
+    bao('● đang quét · '+maDangTheo()+' mã'
+      +(nOk<luong.length?' ('+nOk+'/'+luong.length+' luồng)':'')
+      +(coLichSu?' · đã nạp '+nLichSu.toLocaleString('vi-VN')+' lệnh của phiên':' · từ lúc kết nối'));
+  }
+
+  async function xinChuKy(){
+    const hd={}; const kt=khoaTay();
+    if(kt){hd['X-Dnse-Key']=kt.k;hd['X-Dnse-Secret']=kt.s;}
+    const r=await fetch('/api/dnse?viec=auth',{headers:hd,cache:'no-store'});
+    const j=await r.json();
+    if(!r.ok||!j.auth) throw new Error((j&&j.loi)||('lỗi '+r.status));
+    return j;
+  }
+
+  function moMotLuong(l){
+    return xinChuKy().then(j=>new Promise((xong,hong)=>{
+      const ws=new WebSocket(j.ws); l.ws=ws;
+      const het=setTimeout(()=>{try{ws.close();}catch(e){} hong(new Error('quá thời gian chờ'));},15000);
+      ws.onmessage=ev=>{
+        let m; try{m=JSON.parse(ev.data);}catch(e){return;}
+        if(m.action==='welcome'){ws.send(JSON.stringify(j.auth));return;}
+        if(m.action==='auth_success'){
+          ws.send(JSON.stringify({action:'subscribe',channels:[{name:'tick.G1.json',symbols:l.ma}]}));
+          return;
+        }
+        if(m.action==='subscribed'){
+          clearTimeout(het);
+          l.ok=true; l.lanThu=0; connected=true;
+          batDauLuc=batDauLuc||Math.floor(Date.now()/1000);
+          baoTrangThai(); xong(true); return;
+        }
+        if(m.action==='ping'){ws.send(JSON.stringify({action:'pong'}));return;}
+        if(m.action==='error'){
+          clearTimeout(het);
+          bao('⚠ DNSE: '+String(m.message||m.code).slice(0,90));
+          try{ws.close();}catch(e){}
+          hong(new Error(m.code||'error')); return;
+        }
+        if(m.action)return;
+        if((m.T||m.t)==='t'||(m.T||m.t)==='te') nhan(m);
+      };
+      ws.onerror=()=>{};
+      ws.onclose=()=>{
+        clearTimeout(het);
+        const daChay=l.ok; l.ok=false;
+        connected=luong.some(x=>x.ok); save();
+        // chỉ luồng ĐÃ từng chạy mới tự nối lại; luồng chưa bao giờ nối được thì
+        // để moKetNoi() báo lỗi, tránh vòng lặp vô tận khi khoá sai
+        if(daChay){
+          const cho=Math.min(30000,2000*Math.pow(2,Math.min(4,l.lanThu++)));
+          bao('○ mất 1 luồng · nối lại sau '+Math.round(cho/1000)+'s');
+          setTimeout(()=>{moMotLuong(l).catch(()=>{});},cho);
+        }
+      };
+    }));
+  }
+
   async function moKetNoi(){
     if(dangNoi)return false;
     dangNoi=true;
     try{
-      const hd={}; const kt=khoaTay();
-      if(kt){hd['X-Dnse-Key']=kt.k;hd['X-Dnse-Secret']=kt.s;}
       bao('⏳ đang xin chữ ký…');
-      const r=await fetch('/api/dnse?viec=auth',{headers:hd,cache:'no-store'});
-      const j=await r.json();
-      if(!r.ok||!j.auth){
-        bao('⚠ '+(j.loi||('lỗi '+r.status))+(j.huongDan?' — '+j.huongDan:''));
-        dangNoi=false; return false;
-      }
-      const dsMa=UNI.slice(0,Math.min(TRAN_MA,j.tranMa||TRAN_MA));
-      bao('⏳ đang mở luồng…');
-      await new Promise((xong,hong)=>{
-        ws=new WebSocket(j.ws);
-        const het=setTimeout(()=>{try{ws.close();}catch(e){} hong(new Error('quá thời gian chờ'));},15000);
-        ws.onmessage=ev=>{
-          let m; try{m=JSON.parse(ev.data);}catch(e){return;}
-          if(m.action==='welcome'){ws.send(JSON.stringify(j.auth));return;}
-          if(m.action==='auth_success'){
-            ws.send(JSON.stringify({action:'subscribe',channels:[{name:'tick.G1.json',symbols:dsMa}]}));
-            return;
-          }
-          if(m.action==='subscribed'){
-            clearTimeout(het); connected=true; lanThu=0;
-            batDauLuc=batDauLuc||Math.floor(Date.now()/1000);
-            const soMa=(m.symbols||dsMa).length;
-            bao('● đang nhận tick · '+soMa+' mã');
-            xong(true);
-            // nạp lịch sử phiên ở nền, không chặn luồng realtime
-            napLichSu().then(n=>{
-              bao(n===false
-                ? '● đang quét · '+soMa+' mã · từ lúc kết nối'
-                : '● đang nhận tick · '+soMa+' mã · đã nạp '+n.toLocaleString('vi-VN')+' lệnh của phiên');
-            });
-            return;
-          }
-          if(m.action==='ping'){ws.send(JSON.stringify({action:'pong'}));return;}
-          if(m.action==='error'){
-            clearTimeout(het);
-            bao('⚠ DNSE: '+String(m.message||m.code).slice(0,90));
-            try{ws.close();}catch(e){}
-            hong(new Error(m.code||'error')); return;
-          }
-          if(m.action)return;
-          if((m.T||m.t)==='t'||(m.T||m.t)==='te') nhan(m);
-        };
-        ws.onerror=()=>{};
-        ws.onclose=()=>{
-          clearTimeout(het);
-          const daNoi=connected;
-          connected=false; save();
-          if(daNoi){
-            // tự nối lại, giãn dần, tối đa 30 giây
-            const cho=Math.min(30000,2000*Math.pow(2,Math.min(4,lanThu++)));
-            bao('○ mất kết nối · nối lại sau '+Math.round(cho/1000)+'s');
-            setTimeout(()=>{dangNoi=false;moKetNoi();},cho);
-          }
-        };
-      });
-      dangNoi=false; return true;
+      const j0=await xinChuKy();          // xin một lần để biết trần mã của tier
+      const tran=Math.max(1,Math.min(TRAN_MA,j0.tranMa||TRAN_MA));
+      if(!luong.length)
+        for(let k=0;k<UNI.length;k+=tran) luong.push({ws:null,ma:UNI.slice(k,k+tran),ok:false,lanThu:0});
+      bao('⏳ đang mở '+luong.length+' luồng cho '+UNI.length+' mã…');
+      const kq=await Promise.all(luong.map(l=>moMotLuong(l).then(()=>true).catch(()=>false)));
+      dangNoi=false;
+      if(!kq.some(Boolean)){ bao('⚠ không mở được luồng nào'); return false; }
+      baoTrangThai();
+      // nạp lịch sử phiên ở nền nếu có trình trợ giúp chạy, không chặn realtime
+      napLichSu().then(()=>baoTrangThai());
+      return true;
     }catch(e){
       nLoi++; dangNoi=false;
       bao('⚠ '+String(e&&e.message||e).slice(0,90));
@@ -826,10 +848,11 @@ const SRC_DNSE=(function(){
   return {
     label:'Tick DNSE · từng lệnh khớp',
     tick:true,
-    note:'✅ <b>Nguồn tick thật — mỗi dòng là MỘT LỆNH KHỚP đơn lẻ</b>, nhận trực tiếp từ luồng WebSocket của DNSE Open API. Không gộp, không suy từ nến. <b>Đối soát 27/10/2026:</b> khối lượng tick khớp <b>100,0%</b> số luỹ kế của sàn, và lệnh lớn nhất của MWG trong phiên — <b>40.000 CP ở giá 76.500 lúc 10:23:00, tức 3,06 tỷ</b> — trùng khớp với bảng khớp lệnh của VNDirect, TradingView và bảng giá công ty chứng khoán. Cả rổ 218 mã phiên đó có <b>447 lệnh ≥1 tỷ, 35 lệnh ≥3 tỷ</b>, lớn nhất 11,63 tỷ (PET). <b>Đơn vị:</b> DNSE trả giá theo nghìn đồng và khối lượng theo <b>lô 10 cổ phiếu</b> — trang đã quy đổi; quên nhân 10 là mọi giá trị nhỏ đi đúng 10 lần. <b>Chiều MUA/BÁN</b> suy bằng quy tắc tick ở cấp từng lệnh vì luồng WS không kèm sẵn chiều; đối chiếu với chiều thật từ REST trên 9.488 lệnh thì đúng <b>93,2%</b>. <b>Cách dùng:</b> trong phiên cứ mở trang, chọn nguồn này là nó tự nối và quét liên tục — mỗi lệnh lớn khớp là hiện ngay. Luồng WS chỉ đẩy từ lúc kết nối nên mở càng sớm càng thấy đủ; tick nhận được lưu trong máy anh theo ngày nên F5 hay đóng mở lại không mất phần đã quét. <b>Ngưỡng lọc:</b> để 3 tỷ là bảng rỗng gần như suốt vì lệnh ĐƠN LẺ ≥3 tỷ cả phiên 27/10 chỉ có 63 cái — chọn nguồn này thì trang tự đặt 0,3 tỷ, hợp với thanh khoản hiện nay. Trần '+TRAN_MA+' mã mỗi kết nối.',
+    note:'✅ <b>Nguồn tick thật — mỗi dòng là MỘT LỆNH KHỚP đơn lẻ</b>, nhận trực tiếp từ luồng WebSocket của DNSE Open API. Không gộp, không suy từ nến. <b>Đối soát 27/10/2026:</b> khối lượng tick khớp <b>100,0%</b> số luỹ kế của sàn, và lệnh lớn nhất của MWG trong phiên — <b>40.000 CP ở giá 76.500 lúc 10:23:00, tức 3,06 tỷ</b> — trùng khớp với bảng khớp lệnh của VNDirect, TradingView và bảng giá công ty chứng khoán. Cả rổ 218 mã phiên đó có <b>447 lệnh ≥1 tỷ, 35 lệnh ≥3 tỷ</b>, lớn nhất 11,63 tỷ (PET). <b>Đơn vị:</b> DNSE trả giá theo nghìn đồng và khối lượng theo <b>lô 10 cổ phiếu</b> — trang đã quy đổi; quên nhân 10 là mọi giá trị nhỏ đi đúng 10 lần. <b>Chiều MUA/BÁN</b> suy bằng quy tắc tick ở cấp từng lệnh vì luồng WS không kèm sẵn chiều; đối chiếu với chiều thật từ REST trên 9.488 lệnh thì đúng <b>93,2%</b>. <b>Cách dùng:</b> trong phiên cứ mở trang, chọn nguồn này là nó tự nối và quét liên tục — mỗi lệnh lớn khớp là hiện ngay. Luồng WS chỉ đẩy từ lúc kết nối nên mở càng sớm càng thấy đủ; tick nhận được lưu trong máy anh theo ngày nên F5 hay đóng mở lại không mất phần đã quét. <b>Ngưỡng lọc:</b> để 3 tỷ là bảng rỗng gần như suốt vì lệnh ĐƠN LẺ ≥3 tỷ cả phiên 27/10 chỉ có 63 cái — chọn nguồn này thì trang tự đặt 0,3 tỷ, hợp với thanh khoản hiện nay. <b>Phủ hết rổ:</b> trần là '+TRAN_MA+' mã mỗi kết nối, mà rổ có '+UNI.length+' mã — trang mở nhiều luồng song song để không bỏ mã nào. Trước đây 18 mã cuối không được theo chút nào: ngày 29/10 VEA có lệnh 3,87 tỷ lúc 10:12 mà trang không thấy.',
     days(){const d=vnDate(Math.floor(Date.now()/1000));return rows.length?[...new Set(rows.map(r=>vnDate(r.t)))].sort():[d];},
     stats(){return {nTick,connected,kept:rows.length,nLoi,batDau:batDauLuc,
-      soMa:Object.keys(maCo).length,coKhoaTay:!!khoaTay(),coLichSu,nLichSu};},
+      soMa:Object.keys(maCo).length,coKhoaTay:!!khoaTay(),coLichSu,nLichSu,
+      soLuong:luong.length,luongOk:luong.filter(l=>l.ok).length,maTheo:maDangTheo()};},
     napLichSu,
     // Đối soát NGAY TRONG LUỒNG: mỗi tick mang sẵn totalVolumeTraded (khối lượng
     // luỹ kế chính thức của mã đó). Cộng dồn KL tick nhận được từ lúc nối rồi so
@@ -851,7 +874,7 @@ const SRC_DNSE=(function(){
     async connect(onS){ onStat=onS; if(!rows.length)restore(); return moKetNoi(); },
     async fetch(){ if(!rows.length)restore(); return rows.length||1; },
     load(day,th){return rows.filter(r=>vnDate(r.t)===day&&r.val>=th);},
-    dung(){ try{ if(ws)ws.close(); }catch(e){} connected=false; }
+    dung(){ for(const l of luong){ l.ok=false; try{ if(l.ws)l.ws.close(); }catch(e){} } connected=false; }
   };
 })();
 
@@ -898,9 +921,13 @@ function lyDoTrong(){
     const c=SRC_DNSE.load(day,m*1e9).length;
     if(c>0){ goi=' Hạ xuống <b>'+soTy(m)+' tỷ</b> là có ngay <b>'+c+' lệnh</b>.'; break; }
   }
+  // lệnh lớn nhất đã bắt được: cho thấy máy quét còn sống, chứ không phải đứt
+  const het=SRC_DNSE.load(day,0);
+  let to=null; for(const x of het) if(!to||x.val>to.val) to=x;
   return '<b>Luồng vẫn đang chạy</b> — đã nhận <b>'+s.nTick.toLocaleString('vi-VN')
     +' lệnh khớp</b> từ <b>'+s.soMa+' mã</b>'+(phut?' trong '+phut+' phút':'')
-    +', nhưng chưa lệnh nào đạt <b>'+soTy(th)+' tỷ</b>.'+goi
+    +', nhưng chưa lệnh nào đạt <b>'+soTy(th)+' tỷ</b>.'
+    +(to?' Lớn nhất bắt được: <b>'+to.tk+' '+ty(to.val)+'</b> lúc '+vnTime(to.t)+'.':'')+goi
     +(s.coLichSu?'':' Đang quét từ lúc kết nối, cứ để trang mở là lệnh lớn hiện dần.');
 }
 function render(){
