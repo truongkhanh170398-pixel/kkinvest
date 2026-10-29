@@ -876,6 +876,33 @@ function applyFilters(list){
 }
 
 /* ═══════════════════════════ VẼ GIAO DIỆN ════════════════════════════════ */
+/* Vì sao bảng trống — phải nói NGAY TRONG BẢNG.
+   Dòng giải thích ở #subTxt nằm trong .sub nên bị trình ẩn ghi chú ẩn đi; user
+   chỉ thấy bảng rỗng rồi tưởng luồng dữ liệu đứt. Đo 29/10 lúc 13:57: luồng
+   nhận 605 lệnh khớp từ 94 mã trong 30 giây mà bảng vẫn rỗng, chỉ vì ngưỡng
+   lọc để 3 tỷ — hạ xuống 0,3 tỷ là có 7 lệnh ngay. */
+function lyDoTrong(){
+  const day=$('selDay').value, th=+$('selTh').value;
+  const soTy=x=>String(x).replace('.',',');
+  if(SOURCE!==SRC_DNSE)
+    return 'Không có gì vượt ngưỡng <b>'+soTy(th)+' tỷ</b> — thử hạ ngưỡng trong Bộ lọc.';
+  const s=SRC_DNSE.stats();
+  if(!s.connected) return 'Chưa nối được luồng tick — bấm <b>Kết nối tick</b>, hoặc <b>🔎 Đối soát dữ liệu</b> để xem vướng ở đâu.';
+  const phut=s.batDau?Math.round((Math.floor(Date.now()/1000)-s.batDau)/60):0;
+  if(!s.nTick) return 'Đã nối <b>'+(s.soMa||200)+' mã</b> nhưng chưa có lệnh nào khớp'
+    +(phut?' trong '+phut+' phút qua':'')+'. Ngoài giờ khớp lệnh thì đây là bình thường.';
+  // chỉ đúng mức ngưỡng nên hạ xuống, kèm số lệnh có thật ở mức đó
+  let goi='';
+  for(const m of [2,1,0.5,0.3,0.1]){
+    if(m>=th) continue;
+    const c=SRC_DNSE.load(day,m*1e9).length;
+    if(c>0){ goi=' Hạ xuống <b>'+soTy(m)+' tỷ</b> là có ngay <b>'+c+' lệnh</b>.'; break; }
+  }
+  return '<b>Luồng vẫn đang chạy</b> — đã nhận <b>'+s.nTick.toLocaleString('vi-VN')
+    +' lệnh khớp</b> từ <b>'+s.soMa+' mã</b>'+(phut?' trong '+phut+' phút':'')
+    +', nhưng chưa lệnh nào đạt <b>'+soTy(th)+' tỷ</b>.'+goi
+    +(s.coLichSu?'':' Chỉ có từ lúc bấm kết nối — muốn đủ cả phiên thì chạy <b>LAY-LICH-SU-DNSE.bat</b>.');
+}
 function render(){
   const day=$('selDay').value, th=+$('selTh').value*1e9;
   if(!day){$('stat').textContent='⚠ chưa có dữ liệu';return;}
@@ -1030,13 +1057,13 @@ function paintFlow(){
   const top=l.slice(0,200);
   $('flowSum').textContent=l.length+' '+(SOURCE.tick?'lệnh':'phút')+' vừa phát hiện';
   const nk=new Set(top.map(e=>e.tk+e.t));
-  $('flowBody').innerHTML=top.map(e=>rowHTML(e,prevKeys.size&&!prevKeys.has(e.tk+e.t))).join('')||'<tr><td colspan="6" class="empty">Không có gì vượt ngưỡng — thử hạ ngưỡng lọc.</td></tr>';
+  $('flowBody').innerHTML=top.map(e=>rowHTML(e,prevKeys.size&&!prevKeys.has(e.tk+e.t))).join('')||'<tr><td colspan="6" class="empty">'+lyDoTrong()+'</td></tr>';
   prevKeys=nk;
 }
 function paintBig(){
   let l=EVT.filter(e=>bigMode==='all'||(bigMode==='buy'?e.dir==='B':e.dir==='S'));
   l=[...l].sort((a,b)=>b.val-a.val).slice(0,20);
-  $('bigBody').innerHTML=l.map(e=>rowHTML(e)).join('')||'<tr><td colspan="6" class="empty">Không có dữ liệu.</td></tr>';
+  $('bigBody').innerHTML=l.map(e=>rowHTML(e)).join('')||'<tr><td colspan="6" class="empty">'+lyDoTrong()+'</td></tr>';
 }
 function drawSymTable(symArr){
   $('symBody').innerHTML=[...symArr].sort((a,b)=>b.tot-a.tot).slice(0,40).map(x=>
@@ -1195,6 +1222,9 @@ $('segSrc').querySelectorAll('button').forEach(b=>b.onclick=async()=>{
   b.classList.add('on');
   const x=b.dataset.x, dnse=x==='dnse';
   try{localStorage.setItem('radar_nguon',x);}catch(e){}   // nhớ để lần sau vào là đúng nguồn
+  // 3 tỷ là ngưỡng hợp cho CỤM lệnh gộp của 24hMoney, nhưng lệnh ĐƠN LẺ ≥3 tỷ
+  // cả phiên 27/10 chỉ có 63 cái — để nguyên thì bảng tick rỗng gần như suốt.
+  if(!thTuChon) $('selTh').value = dnse ? '0.3' : '3';
   $('dnseBox').className='hrow'+(dnse?'':' hide');
   if(SOURCE&&SOURCE.dung)SOURCE.dung();                 // tắt vòng quét của nguồn đang chạy
   SOURCE = dnse?SRC_DNSE:(x==='rt'?SRC_24H:SRC_MINUTE);
@@ -1268,7 +1298,8 @@ $('btnFilt').onclick=e=>{e.stopPropagation();$('filtMenu').classList.toggle('ope
 document.addEventListener('click',e=>{if(!$('filtMenu').contains(e.target)&&e.target!==$('btnFilt'))$('filtMenu').classList.remove('open');});
 $('btnPause').onclick=()=>{paused=!paused;$('btnPause').classList.toggle('on',!paused);$('btnPause').textContent=paused?'▶':'❚❚';};
 $('selDay').onchange=()=>{prevKeys=new Set();render();};
-$('selTh').onchange=render; $('selSec').onchange=render; $('selGrp').onchange=render; $('chkAuc').onchange=render;
+let thTuChon=false;   // user đã tự chọn ngưỡng thì không tự đổi nữa
+$('selTh').onchange=()=>{thTuChon=true;render();}; $('selSec').onchange=render; $('selGrp').onchange=render; $('chkAuc').onchange=render;
 $('qFlow').oninput=paintFlow;
 $('btnRf').onclick=()=>load(false);
 $('chkAuto').onchange=setAuto;
@@ -1284,6 +1315,7 @@ radarInit();
 let nguonLuu=''; try{nguonLuu=localStorage.getItem('radar_nguon')||'';}catch(e){}
 if(nguonLuu==='dnse'){
   SOURCE=SRC_DNSE;
+  if(!thTuChon) $('selTh').value='0.3';   // xem ghi chú ở chỗ đổi nguồn
   $('segSrc').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.x==='dnse'));
   $('dnseBox').className='hrow';
   setAuto(); load(true);
