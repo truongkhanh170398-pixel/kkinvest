@@ -158,6 +158,96 @@
     }
   ];
 
+  /* ── Catalyst: sự kiện THẬT, không phải độ nhạy ───────────────────────
+     Bảng "đổi giả định thì giá đổi bao nhiêu" là ĐỘ NHẠY, không phải catalyst.
+     Catalyst là việc có thể xảy ra ngoài đời rồi kéo định giá đi. Lấy từ công
+     bố thông tin của chính doanh nghiệp (24hMoney) rồi LỌC: chỉ giữ tin rơi vào
+     một nhóm có khả năng đổi dòng tiền hoặc cấu trúc vốn; thủ tục hành chính
+     (thay đổi đăng ký niêm yết, giấy chứng nhận ĐKDN…) không khớp nhóm nào nên
+     tự rụng. Lọc bằng cách giữ-khi-khớp chứ không liệt kê danh sách rác, vì
+     danh sách rác thì không bao giờ kể hết được. */
+  const NHOM = [
+    { ten: 'Kết quả kinh doanh', uu: 1, tu: /báo cáo tài chính|kết quả kinh doanh|giải trình.*lợi nhuận|doanh thu/i },
+    { ten: 'Dự án · pháp lý',    uu: 1, tu: /dự án|khởi công|bàn giao|chấp thuận|giấy phép|quy hoạch|chủ trương đầu tư|giao đất|đấu giá/i },
+    { ten: 'Huy động vốn',       uu: 2, tu: /phát hành|chào bán|tăng vốn|trái phiếu|đợt phát hành|vay hợp vốn/i },
+    { ten: 'Cổ tức',             uu: 2, tu: /cổ tức|tạm ứng|chi trả.*tiền|ngày đăng ký cuối cùng/i },
+    { ten: 'Giao dịch vốn',      uu: 2, tu: /thoái vốn|chuyển nhượng|mua lại|sáp nhập|góp vốn|công ty con|công ty liên kết/i },
+    { ten: 'Cổ đông',            uu: 3, tu: /cổ đông lớn|người nội bộ|đăng ký (mua|bán)|giao dịch cổ phiếu/i },
+    { ten: 'Quản trị',           uu: 4, tu: /nghị quyết|đại hội|đhđcđ|bổ nhiệm|miễn nhiệm|điều lệ/i }
+  ];
+
+  function phanNhom(tieu) {
+    for (const n of NHOM) if (n.tu.test(tieu)) return n;
+    return null;
+  }
+
+  async function layTin(ma) {
+    const u = 'https://api-finance-t19.24hmoney.vn/v1/web/announcement?symbol=' + encodeURIComponent(ma) + '&per_page=50';
+    // thử gọi thẳng trước, không được thì qua proxy của trang — y như các module
+    for (const p of [u, '/api/proxy?url=' + encodeURIComponent(u)]) {
+      try {
+        const r = await fetch(p, { cache: 'no-store', signal: AbortSignal.timeout(9000) });
+        if (!r.ok) continue;
+        const j = await r.json();
+        const ds = j && j.data && (j.data.data || j.data);
+        if (Array.isArray(ds) && ds.length) return ds;
+      } catch (e) {}
+    }
+    return [];
+  }
+
+  function locTin(ds, ma) {
+    const ra = [], daCo = new Set();
+    for (const x of ds) {
+      const tieu = String(x.title || '').replace(new RegExp('^' + ma + '\\s*[:：-]\\s*', 'i'), '').trim();
+      if (!tieu) continue;
+      const n = phanNhom(tieu);
+      if (!n) continue;                               // không khớp nhóm nào → thủ tục, bỏ
+      const t = +x.published_date || 0;
+      const ngay = t ? new Date(t * 1000) : null;
+      // cùng nhóm trong cùng một ngày thì chỉ giữ một (BCTC riêng lẻ + hợp nhất…)
+      const khoa = n.ten + '|' + (ngay ? ngay.toISOString().slice(0, 10) : '');
+      if (daCo.has(khoa)) continue;
+      daCo.add(khoa);
+      ra.push({ nhom: n.ten, uu: n.uu, t: t, tieu: tieu,
+        ngay: ngay ? ngay.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) : '' });
+    }
+    ra.sort((a, b) => a.uu - b.uu || b.t - a.t);
+
+    /* Lấy thẳng 5 cái đầu thì doanh nghiệp nào cũng ra 5 dòng "Báo cáo tài
+       chính" — đúng nhóm nhưng vô dụng, vì BCTC quý nào cũng có. Vòng một chỉ
+       lấy MỖI NHÓM MỘT tin để thấy được các loại sự kiện khác nhau, còn chỗ
+       trống thì vòng hai mới lấp bằng tin mới tiếp theo. */
+    const chon = [], daNhom = new Set();
+    for (const x of ra) if (!daNhom.has(x.nhom)) { daNhom.add(x.nhom); chon.push(x); }
+    for (const x of ra) { if (chon.length >= 5) break; if (!chon.includes(x)) chon.push(x); }
+    const out = chon.slice(0, 5);
+
+    /* Một mốc NHÌN VỀ PHÍA TRƯỚC: công bố thông tin chỉ kể chuyện đã xảy ra,
+       trong khi thứ đáng canh là kỳ báo cáo tới. Suy từ lần ra BCTC gần nhất
+       cộng một quý — không phải lịch chính thức, nên ghi rõ là "dự kiến". */
+    const bctc = ra.filter(x => x.nhom === 'Kết quả kinh doanh' && x.t).sort((a, b) => b.t - a.t)[0];
+    if (bctc) {
+      const d = new Date(bctc.t * 1000); d.setMonth(d.getMonth() + 3);
+      if (d.getTime() > Date.now())
+        out.unshift({ nhom: 'Sắp tới', tieu: 'Kỳ báo cáo tài chính tiếp theo (dự kiến, suy từ lần gần nhất)',
+          ngay: d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }), toi: true });
+    }
+    return out.slice(0, 5);
+  }
+
+  async function napCatalyst(ma, el) {
+    const o = el.querySelector('#bcCat');
+    if (!o || !ma) return;
+    const ds = locTin(await layTin(ma), ma);
+    if (!ds.length) {
+      o.innerHTML = '<tr><td>Không có công bố nào thuộc nhóm có thể đổi định giá trong kỳ gần đây</td><td>—</td></tr>';
+      return;
+    }
+    o.innerHTML = ds.map(x => '<tr' + (x.toi ? ' class="bcToi"' : '') + '><td><b>' + esc(x.nhom)
+      + '</b> · ' + esc(x.tieu.slice(0, 92)) + '</td><td>' + esc(x.ngay) + '</td></tr>').join('');
+  }
+
   /* ── Luận điểm đầu tư ─────────────────────────────────────────────────
      Một câu, ghép từ ba phần: mặt mạnh nhất · mặt yếu nhất · giá đang ở đâu so
      với vùng định giá. Nhắc lại tên một chỉ số thì KHÔNG phải luận điểm — luận
@@ -272,6 +362,7 @@
   .bcBang{width:100%;border-collapse:collapse;font-size:11px}
   .bcBang td{padding:3px 0;border-bottom:1px dotted #1e2a44;vertical-align:top}
   .bcBang td:last-child{text-align:right;font-weight:700;white-space:nowrap;padding-left:8px}
+  .bcBang tr.bcToi td{color:var(--bcV)}   /* mốc nhìn về phía trước */
   .bcChan{color:var(--bcM);font-size:9.5px;line-height:1.5;border-top:1px solid var(--bcL);margin-top:11px;padding-top:8px}
 
   @media print{
@@ -360,8 +451,10 @@
       + veDai(d.phuongPhap || [], d.gia, d.mucTieu)
       + '<div class="bcPhu" id="bcViTri" style="margin-top:4px"></div>'
 
-      + '<div class="bcHai" style="margin-top:4px">'
-        + '<div><div class="bcMuc2">Điều gì làm đổi định giá</div><table class="bcBang"><tbody>'
+      + '<div class="bcMuc2">Catalyst — sự kiện doanh nghiệp đã công bố</div>'
+      + '<table class="bcBang"><tbody id="bcCat"><tr><td>đang lấy công bố thông tin…</td><td>—</td></tr></tbody></table>'
+      + '<div class="bcHai" style="margin-top:8px">'
+        + '<div><div class="bcMuc2">Độ nhạy định giá</div><table class="bcBang"><tbody>'
           + ((d.nhay || []).length
               ? d.nhay.map(n => '<tr><td>' + esc(n.ten) + '</td><td>' + esc(n.anhHuong) + '</td></tr>').join('')
               : '<tr><td>Chưa đủ dữ liệu để đo độ nhạy</td><td>—</td></tr>')
@@ -379,6 +472,8 @@
     /* Hai chiều của cùng một khoảng cách KHÔNG bằng nhau — đây là chỗ hay bị
        nói sai. Mức tổng hợp cao hơn giá 64% thì giá chỉ thấp hơn mức đó 39%,
        vì hai tỷ lệ chia cho hai mẫu số khác nhau. Ghi cả hai cho khỏi hiểu lầm. */
+    napCatalyst(d.ma, el);   // chạy ở nền, không chặn phần còn lại
+
     const p = el.querySelector('#bcViTri');
     if (p && isFinite(viTri) && isFinite(d.mucTieu) && d.mucTieu > 0) {
       const nguoc = (d.mucTieu - d.gia) / d.mucTieu * 100;
