@@ -158,6 +158,52 @@
     }
   ];
 
+  /* ── Luận điểm đầu tư ─────────────────────────────────────────────────
+     Một câu, ghép từ ba phần: mặt mạnh nhất · mặt yếu nhất · giá đang ở đâu so
+     với vùng định giá. Nhắc lại tên một chỉ số thì KHÔNG phải luận điểm — luận
+     điểm là nói giá trị của doanh nghiệp nằm ở đâu và điều gì đang cản nó.
+     Vẫn không có chữ nên mua hay nên bán. */
+  function luanDiem(t, d) {
+    const manh = [
+      [isFinite(t.roic) && isFinite(t.wacc) && t.roic - t.wacc >= 3, 'sinh lời trên vốn vượt chi phí vốn'],
+      [isFinite(t.roe) && isFinite(t.ke) && t.roe - t.ke >= 3, 'ROE vượt chi phí vốn chủ'],
+      [isFinite(t.bienFcf) && t.bienFcf >= 12, 'dòng tiền tự do dày'],
+      [isFinite(t.noEbitda) && t.noEbitda <= 0, 'không vay ròng'],
+      [isFinite(t.tonKhoNgay) && t.tonKhoNgay > 0 && t.tonKhoNgay <= 45, 'tồn kho quay nhanh'],
+      [isFinite(t.phanTan) && t.phanTan <= 25, 'các phương pháp định giá hội tụ']
+    ].filter(x => x[0]).map(x => x[1]);
+
+    const yeu = [
+      [isFinite(t.roic) && isFinite(t.wacc) && t.roic - t.wacc <= -1, 'sinh lời trên vốn chưa bù nổi chi phí vốn'],
+      [isFinite(t.roe) && isFinite(t.ke) && t.roe - t.ke <= -1, 'ROE chưa bù nổi chi phí vốn chủ'],
+      [isFinite(t.bienFcf) && t.bienFcf < 0, 'dòng tiền tự do đang âm'],
+      [isFinite(t.noEbitda) && t.noEbitda >= 3, 'đòn bẩy cao'],
+      [isFinite(t.donBay) && t.donBay >= 5, 'đòn bẩy tài sản cao'],
+      [isFinite(t.tvPct) && t.tvPct >= 75, 'phần lớn giá trị nằm ở giả định dài hạn'],
+      [isFinite(t.tonKhoNgay) && t.tonKhoNgay >= 120, 'vốn kẹt ở tồn kho'],
+      [isFinite(t.phanTan) && t.phanTan >= 60, 'các phương pháp định giá chưa hội tụ']
+    ].filter(x => x[0]).map(x => x[1]);
+
+    let viTri = '';
+    if (isFinite(t.viTriGia)) {
+      viTri = t.viTriGia < 0 ? 'giá đang nằm dưới mọi phương pháp định giá'
+        : t.viTriGia > 100 ? 'giá đang cao hơn mọi phương pháp định giá'
+        : t.viTriGia <= 35 ? 'giá nằm ở phần thấp của vùng định giá'
+        : t.viTriGia >= 65 ? 'giá nằm ở phần cao của vùng định giá'
+        : 'giá nằm quanh giữa vùng định giá';
+    }
+
+    // Hai mặt cùng có thì phải nói cả hai — bỏ một bên là làm người đọc lệch.
+    const hai = m => m.slice(0, 2).join(' và ');
+    let cau;
+    if (manh.length && yeu.length) cau = hoa(hai(manh)) + ', nhưng ' + hai(yeu);
+    else if (manh.length) cau = hoa(hai(manh));
+    else if (yeu.length) cau = hoa(hai(yeu));
+    else cau = 'Chưa có tín hiệu nào vượt ngưỡng ở cả hai phía';
+    return cau + (viTri ? ' — ' + viTri : '') + '.';
+  }
+  const hoa = s => s.charAt(0).toUpperCase() + s.slice(1);
+
   /* ── Thanh vùng định giá ──────────────────────────────────────────────
      Thay cho football field: một dải duy nhất, có vạch từng phương pháp, mức
      tổng hợp và vị trí giá hiện tại. Mục đích là thấy giá đang nằm đâu trong
@@ -268,7 +314,16 @@
       t.ppThap = Math.min(...mids); t.ppCao = Math.max(...mids);
       if (isFinite(d.gia) && d.gia > 0 && t.ppCao > t.ppThap)
         t.viTriGia = (d.gia - t.ppThap) / (t.ppCao - t.ppThap) * 100;
-    }
+      /* Độ phân tán PHẢI tính trên đúng những phương pháp được VẼ, không phải
+         trên tập dùng để lấy trung bình. Trước đây module tài chính truyền vào
+         độ phân tán của 2 phương pháp vào blend (P/B, P/E) trong khi dải lại vẽ
+         thêm Justified P/B — trang in ra câu "các phương pháp chỉ lệch 6%" ngay
+         trên một cái dải chạy từ 7.449 đến 24.767 đ. Tính ở đây thì hai bên
+         không thể nói ngược nhau được nữa. */
+      const sx = mids.slice().sort((x, y) => x - y);
+      const med = sx.length % 2 ? sx[(sx.length - 1) / 2] : (sx[sx.length / 2 - 1] + sx[sx.length / 2]) / 2;
+      t.phanTan = (sx.length > 1 && med) ? (sx[sx.length - 1] - sx[0]) / med * 100 : NaN;
+    } else t.phanTan = NaN;
 
     const y = LUAT.map(f => { try { return f(t); } catch (e) { return null; } }).filter(Boolean);
     const nhan = y.filter(x => x.loai !== 'xau').slice(0, 3);
@@ -279,9 +334,7 @@
           + esc(x.y) + '.</b> <span>' + esc(x.vi) + '</span></div></div>').join('')
       : '<div class="bcY"><span class="bcCham"></span><div><span>Không có tín hiệu nào vượt ngưỡng ở nhóm này.</span></div></div>';
 
-    // Luận điểm đầu trang: lấy tín hiệu mạnh nhất, ưu tiên cảnh báo vì đó là thứ
-    // dễ bị bỏ qua khi nhìn một giá mục tiêu đẹp.
-    const manh = soi[0] || nhan[0];
+    const cauLuan = luanDiem(t, d);
     const viTri = (isFinite(d.gia) && isFinite(d.mucTieu) && d.gia > 0)
       ? (d.mucTieu - d.gia) / d.gia * 100 : NaN;
 
@@ -294,7 +347,7 @@
           + '<div class="bcPhu">' + esc(d.ngay || '') + '</div></div>'
       + '</div>'
 
-      + (manh ? '<div class="bcLuan">' + esc(manh.y) + '</div>' : '')
+      + '<div class="bcLuan">' + esc(cauLuan) + '</div>'
 
       + '<div class="bcChiSo">' + (d.chiSo || []).map(c =>
           '<div class="bcO' + (c.tot ? ' hl' : '') + (c.trang ? ' ' + c.trang : '') + '"><div class="l">' + esc(c.l)
