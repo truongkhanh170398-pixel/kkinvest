@@ -20,3 +20,7 @@ _test_run/
 
 # Khoa DNSE chay o may - TUYET DOI khong commit
 dnse-key.txt
+
+# Bao cao AAS: noi dung co ban quyen cua ben thu ba, repo nay deploy cong khai
+# len Vercel nen KHONG day len. Chay "node quet-aas.js" la co lai.
+du-lieu-aas/
