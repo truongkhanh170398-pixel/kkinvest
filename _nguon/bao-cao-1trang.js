@@ -1,0 +1,339 @@
+/* Báo cáo 1 trang A4 — điểm nhấn đầu tư.
+ *
+ * Thay cho cả cụm biểu đồ nến + football field + bảng DCF + bảng độ nhạy: thay
+ * vì đổ 60 con số ra màn hình rồi để người đọc tự lọc, trang này CHỈ giữ những
+ * con số đổi được quyết định, và nói thẳng vì sao chúng đáng chú ý.
+ *
+ * KHÔNG có khuyến nghị mua/bán. Trang này mô tả doanh nghiệp đang ở đâu so với
+ * vùng định giá và điều gì làm vùng đó dịch chuyển — quyết định là của người đọc.
+ *
+ * Dùng chung cho cả 3 module định giá (sản xuất · tài chính · bất động sản).
+ * Mỗi module gọi veBaoCao({...}) với tín hiệu của riêng nó; luật nào thiếu dữ
+ * liệu thì tự bỏ qua, nên không cần sửa file này khi thêm module mới.
+ */
+(function (G) {
+  'use strict';
+
+  const so = n => (isFinite(n) ? Math.round(n).toLocaleString('vi-VN') : '—');
+  const so1 = n => (isFinite(n) ? n.toLocaleString('vi-VN', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '—');
+  const pc = n => (isFinite(n) ? (n >= 0 ? '+' : '') + n.toFixed(1) + '%' : '—');
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  /* ── Suy luận: từ tín hiệu số ra điểm nhấn ────────────────────────────
+     Mỗi luật là một câu hỏi mà người đọc báo cáo sẽ hỏi, kèm NGƯỠNG và LÝ DO
+     chọn ngưỡng đó. Luật nào không đủ dữ liệu thì trả về null và bị bỏ qua. */
+  const LUAT = [
+
+    // Câu hỏi gốc của mọi định giá: doanh nghiệp kiếm trên vốn có hơn chi phí vốn
+    // không. Hơn thì tăng trưởng tạo giá trị, kém thì mở rộng càng làm mất giá trị.
+    t => {
+      if (!isFinite(t.roic) || !isFinite(t.wacc)) return null;
+      const d = t.roic - t.wacc;
+      if (d >= 3) return { loai: 'tot', y: 'Sinh lời trên vốn vượt chi phí vốn',
+        vi: 'ROIC ' + so1(t.roic) + '% so với WACC ' + so1(t.wacc) + '% — chênh ' + so1(d)
+          + ' điểm. Mỗi đồng tái đầu tư tạo thêm giá trị, nên tăng trưởng là thứ đáng trả tiền.' };
+      if (d <= -1) return { loai: 'xau', y: 'Sinh lời trên vốn THẤP HƠN chi phí vốn',
+        vi: 'ROIC ' + so1(t.roic) + '% so với WACC ' + so1(t.wacc) + '% — thiếu ' + so1(-d)
+          + ' điểm. Mở rộng quy mô ở mức này làm giảm giá trị chứ không tăng; chỉ nên trả theo tài sản, đừng trả theo tăng trưởng.' };
+      return { loai: 'trung', y: 'Sinh lời trên vốn chỉ ngang chi phí vốn',
+        vi: 'ROIC ' + so1(t.roic) + '% so với WACC ' + so1(t.wacc)
+          + '% — tăng trưởng gần như không tạo thêm giá trị, giá trị nằm ở tài sản sẵn có.' };
+    },
+
+    // DCF mà phần lớn giá trị rơi vào giá trị cuối kỳ thì thực chất là đặt cược
+    // vào giả định vĩnh viễn, không phải vào 5 năm dự phóng. Phải nói ra.
+    t => {
+      if (!isFinite(t.tvPct)) return null;
+      if (t.tvPct >= 75) return { loai: 'xau', y: 'Định giá DCF dựa gần như hoàn toàn vào giả định dài hạn',
+        vi: so(t.tvPct) + '% giá trị doanh nghiệp nằm ở giá trị cuối kỳ. Dòng tiền 5 năm dự phóng chỉ chiếm '
+          + so(100 - t.tvPct) + '%, nên con số DCF nhạy với g và WACC hơn là với kết quả kinh doanh sắp tới.' };
+      if (t.tvPct <= 55) return { loai: 'tot', y: 'Giá trị tựa nhiều vào dòng tiền nhìn thấy được',
+        vi: 'Chỉ ' + so(t.tvPct) + '% giá trị đến từ giá trị cuối kỳ — phần lớn nằm trong 5 năm dự phóng, nên DCF ở đây bớt phải tin vào giả định vĩnh viễn.' };
+      return null;
+    },
+
+    // Các phương pháp lệch nhau xa nghĩa là chưa có câu trả lời, không phải có
+    // nhiều câu trả lời. Người đọc cần biết điều đó trước khi nhìn giá mục tiêu.
+    t => {
+      if (!isFinite(t.phanTan)) return null;
+      if (t.phanTan >= 60) return { loai: 'xau', y: 'Các phương pháp chưa hội tụ',
+        vi: 'Khoảng cách giữa phương pháp cao nhất và thấp nhất bằng ' + so(t.phanTan)
+          + '% mức giữa. Vùng định giá rộng thế này nên đọc như một dải khả năng, không phải một mức giá.' };
+      if (t.phanTan <= 25) return { loai: 'tot', y: 'Các phương pháp cho kết quả gần nhau',
+        vi: 'Chênh lệch giữa các phương pháp chỉ ' + so(t.phanTan) + '% — dòng tiền, bội số lợi nhuận và giá trị sổ sách cùng chỉ về một vùng.' };
+      return null;
+    },
+
+    // FCF âm không xấu tuyệt đối (có thể đang đầu tư), nhưng đổi bản chất khoản
+    // đầu tư: người mua đang tài trợ cho tăng trưởng chứ không nhận tiền về.
+    t => {
+      if (!isFinite(t.bienFcf)) return null;
+      if (t.bienFcf < 0) return { loai: 'xau', y: 'Dòng tiền tự do đang âm',
+        vi: 'Biên FCF năm đầu ' + so1(t.bienFcf) + '%. Doanh nghiệp tiêu tiền nhiều hơn tạo ra, nên định giá phụ thuộc vào việc vòng đầu tư này có kết quả hay không.' };
+      if (t.bienFcf >= 12) return { loai: 'tot', y: 'Dòng tiền tự do dày',
+        vi: 'Biên FCF năm đầu ' + so1(t.bienFcf) + '% doanh thu — đủ để tự tài trợ tăng trưởng mà không cần vay thêm hay phát hành.' };
+      return null;
+    },
+
+    // Nợ ròng trên EBITDA là ngưỡng ngân hàng hay dùng; quá 3 lần thì cấu trúc
+    // vốn bắt đầu chi phối kết quả nhiều hơn hoạt động kinh doanh.
+    t => {
+      if (!isFinite(t.noEbitda)) return null;
+      if (t.noEbitda >= 3) return { loai: 'xau', y: 'Đòn bẩy cao',
+        vi: 'Nợ ròng bằng ' + so1(t.noEbitda) + ' lần EBITDA. Ở mức này lãi suất và kỳ hạn nợ tác động tới vốn chủ mạnh hơn cả biên lợi nhuận.' };
+      if (t.noEbitda <= 0) return { loai: 'tot', y: 'Tiền ròng, không vay ròng',
+        vi: 'Doanh nghiệp còn tiền ròng sau khi trừ hết nợ vay — lãi suất tăng không làm hỏng luận điểm.' };
+      return null;
+    },
+
+    // Vốn kẹt trong tồn kho là tiền không sinh lời; với doanh nghiệp sản xuất
+    // đây thường là chỗ rò rỉ lớn nhất.
+    t => {
+      if (!isFinite(t.tonKhoNgay) || t.tonKhoNgay <= 0) return null;
+      if (t.tonKhoNgay >= 120) return { loai: 'xau', y: 'Vốn kẹt ở tồn kho',
+        vi: 'Hàng nằm kho trung bình ' + so(t.tonKhoNgay) + ' ngày. Mỗi vòng quay chậm là một lần vốn lưu động bị giữ lại thay vì sinh lời.' };
+      if (t.tonKhoNgay <= 45) return { loai: 'tot', y: 'Tồn kho quay nhanh',
+        vi: 'Hàng nằm kho ' + so(t.tonKhoNgay) + ' ngày — vốn lưu động quay nhanh, ít rủi ro giảm giá hàng tồn.' };
+      return null;
+    },
+
+    // Ngân hàng / chứng khoán: ROE so với chi phí vốn chủ quyết định P/B hợp lý.
+    t => {
+      if (!isFinite(t.roe) || !isFinite(t.ke)) return null;
+      const d = t.roe - t.ke;
+      if (d >= 3) return { loai: 'tot', y: 'ROE vượt chi phí vốn chủ',
+        vi: 'ROE ' + so1(t.roe) + '% so với chi phí vốn chủ ' + so1(t.ke)
+          + '% — chênh ' + so1(d) + ' điểm, đây là lý do giao dịch trên giá trị sổ sách là hợp lý.' };
+      if (d <= -1) return { loai: 'xau', y: 'ROE chưa bù nổi chi phí vốn chủ',
+        vi: 'ROE ' + so1(t.roe) + '% so với chi phí vốn chủ ' + so1(t.ke)
+          + '% — khi chưa bù được, giá trị sổ sách là trần chứ không phải sàn.' };
+      return null;
+    },
+
+    // Đòn bẩy của định chế tài chính: khuếch đại cả hai chiều.
+    t => {
+      if (!isFinite(t.donBay)) return null;
+      if (t.donBay >= 5) return { loai: 'xau', y: 'Đòn bẩy tài sản cao',
+        vi: 'Tổng tài sản gấp ' + so1(t.donBay) + ' lần vốn chủ. Một biến động nhỏ ở chất lượng tài sản cũng ăn thẳng vào vốn chủ.' };
+      return null;
+    },
+
+    /* Ba luật dưới đây LUÔN có dữ liệu, để mục Điểm nhấn không bao giờ trống.
+       Chúng không phán xét tốt/xấu, chỉ đặt con số vào đúng ngữ cảnh — thứ mà
+       một bảng số thô không tự nói ra được. */
+
+    // Giá đang nằm đâu trong dải các phương pháp. Đây là dữ kiện, không phải lời
+    // khuyên: nói vị trí, không nói nên làm gì.
+    t => {
+      if (!isFinite(t.viTriGia) || !isFinite(t.ppThap) || !isFinite(t.ppCao)) return null;
+      const v = t.viTriGia;
+      if (v < 0) return { loai: 'trung', y: 'Giá đang nằm dưới mọi phương pháp định giá',
+        vi: 'Dải các phương pháp chạy từ ' + so(t.ppThap) + ' đến ' + so(t.ppCao)
+          + ' đ, giá hiện tại nằm dưới cả mức thấp nhất. Hoặc thị trường thấy rủi ro mà mô hình chưa tính, hoặc giả định đầu vào đang lạc quan.' };
+      if (v > 100) return { loai: 'trung', y: 'Giá đang cao hơn mọi phương pháp định giá',
+        vi: 'Dải các phương pháp chạy từ ' + so(t.ppThap) + ' đến ' + so(t.ppCao)
+          + ' đ, giá hiện tại vượt cả mức cao nhất — phần vượt là kỳ vọng chưa nằm trong giả định nào.' };
+      return { loai: 'trung', y: 'Giá nằm trong dải định giá, ở mức ' + so(v) + '% từ đáy dải',
+        vi: 'Dải chạy từ ' + so(t.ppThap) + ' đến ' + so(t.ppCao) + ' đ. '
+          + (v <= 35 ? 'Giá nghiêng về phía thấp của dải.'
+            : v >= 65 ? 'Giá nghiêng về phía cao của dải.'
+            : 'Giá nằm gần giữa dải, các phương pháp chưa chỉ về một phía rõ rệt.') };
+    },
+
+    // Giá trị đến từ đâu: dòng tiền nhìn thấy được hay giả định vĩnh viễn.
+    t => {
+      if (!isFinite(t.tvPct) || t.tvPct > 75 || t.tvPct < 55) return null;   // hai đầu đã có luật riêng
+      return { loai: 'trung', y: 'Giá trị chia đôi giữa dự phóng và giả định dài hạn',
+        vi: so(100 - t.tvPct) + '% giá trị doanh nghiệp đến từ dòng tiền 5 năm dự phóng, '
+          + so(t.tvPct) + '% từ giá trị cuối kỳ — tỷ lệ thường gặp, nhưng vẫn có nghĩa là một nửa luận điểm nằm ngoài tầm nhìn dự phóng.' };
+    },
+
+    // Quy mô sinh lời, gắn với đòn bẩy vận hành: 1 điểm biên đổi bao nhiêu tiền.
+    t => {
+      if (!isFinite(t.doanhThu) || !isFinite(t.bienEbit) || t.doanhThu <= 0) return null;
+      return { loai: 'trung', y: 'Mỗi điểm biên EBIT đáng ' + so(t.doanhThu / 100) + ' tỷ lợi nhuận',
+        vi: 'Doanh thu ' + so(t.doanhThu) + ' tỷ, biên EBIT ' + so1(t.bienEbit) + '% cho ra '
+          + so(t.doanhThu * t.bienEbit / 100) + ' tỷ EBIT. Nền doanh thu lớn nên định giá nhạy với biên hơn là với tăng trưởng doanh thu.' };
+    }
+  ];
+
+  /* ── Thanh vùng định giá ──────────────────────────────────────────────
+     Thay cho football field: một dải duy nhất, có vạch từng phương pháp, mức
+     tổng hợp và vị trí giá hiện tại. Mục đích là thấy giá đang nằm đâu trong
+     dải, không phải đọc chính xác từng con số. */
+  function veDai(pp, gia, mucTieu) {
+    const mid = pp.map(p => p.mid).filter(v => isFinite(v) && v > 0);
+    if (!mid.length) return '';
+    const lo = Math.min(...mid, gia || Infinity), hi = Math.max(...mid, gia || 0);
+    if (!(hi > lo)) return '';
+    const dem = 0.08 * (hi - lo), t0 = lo - dem, t1 = hi + dem;
+    const vt = v => ((v - t0) / (t1 - t0) * 100).toFixed(2);
+    const vach = pp.filter(p => isFinite(p.mid) && p.mid > 0).map(p =>
+      '<div class="bcV" style="left:' + vt(p.mid) + '%"><i></i><u>' + esc(p.n) + '</u></div>').join('');
+    const dMin = Math.min(...mid), dMax = Math.max(...mid);
+    return '<div class="bcDai">'
+      + '<div class="bcNen"></div>'
+      + '<div class="bcVung" style="left:' + vt(dMin) + '%;width:' + (vt(dMax) - vt(dMin)) + '%"></div>'
+      + vach
+      + (isFinite(mucTieu) && mucTieu > 0 ? '<div class="bcMuc" style="left:' + vt(mucTieu) + '%"><i></i><u>Tổng hợp ' + so(mucTieu) + '</u></div>' : '')
+      + (isFinite(gia) && gia > 0 ? '<div class="bcGia" style="left:' + vt(gia) + '%"><i></i><u>Giá nay ' + so(gia) + '</u></div>' : '')
+      + '</div>'
+      + '<div class="bcTruc"><span>' + so(t0) + '</span><span>' + so(t1) + ' đ</span></div>';
+  }
+
+  const CSS = `
+  .bcWrap{--bcN:#0d1424;--bcC:#121b2e;--bcL:#223050;--bcT:#e8edf7;--bcM:#8094b8;
+    --bcV:#e2b33b;--bcX:#4f8cff;--bcU:#26c281;--bcD:#f0556b;
+    background:var(--bcN);color:var(--bcT);border:1px solid var(--bcL);border-radius:12px;
+    width:100%;max-width:820px;margin:0 auto;padding:16px 18px 14px;
+    font:400 12px/1.45 "Segoe UI",system-ui,Roboto,Arial,sans-serif}
+  .bcWrap *{box-sizing:border-box}
+  .bcDau{display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid var(--bcL);padding-bottom:9px}
+  .bcMa{font-size:27px;font-weight:800;letter-spacing:-.5px;line-height:1}
+  .bcTen{font-size:12.5px;font-weight:700}
+  .bcPhu{color:var(--bcM);font-size:10.5px;margin-top:2px}
+  .bcGiaN{margin-left:auto;text-align:right;flex:none}
+  .bcGiaN b{font-size:20px;font-weight:800;display:block;line-height:1.1}
+  .bcLuan{font-size:13.5px;font-weight:700;line-height:1.4;margin:10px 0 2px}
+  .bcChiSo{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:6px;margin:9px 0}
+  .bcO{background:var(--bcC);border:1px solid var(--bcL);border-radius:8px;padding:6px 9px}
+  .bcO.hl{border-color:rgba(226,179,59,.55);background:rgba(226,179,59,.07)}
+  .bcO.tot .v{color:var(--bcU)}.bcO.xau .v{color:var(--bcD)}
+  .bcO .l{color:var(--bcM);font-size:9.5px;text-transform:uppercase;letter-spacing:.4px}
+  .bcO .v{font-size:15px;font-weight:800;margin-top:1px}
+  .bcMuc2{color:var(--bcV);font-weight:800;font-size:10.5px;letter-spacing:1.1px;
+    text-transform:uppercase;margin:11px 0 5px;display:flex;align-items:center;gap:7px}
+  .bcMuc2:after{content:"";flex:1;height:1px;background:var(--bcL)}
+  .bcY{display:flex;gap:8px;margin-bottom:6px;align-items:flex-start}
+  .bcCham{width:6px;height:6px;border-radius:50%;margin-top:5px;flex:none;background:var(--bcM)}
+  .bcY.tot .bcCham{background:var(--bcU)}.bcY.xau .bcCham{background:var(--bcD)}
+  .bcY b{font-weight:700}
+  .bcY span{color:#c3cfe4}
+  .bcDai{position:relative;height:30px;margin:17px 0 2px}
+  .bcNen{position:absolute;top:13px;left:0;right:0;height:4px;border-radius:2px;background:#1b2740}
+  .bcVung{position:absolute;top:11px;height:8px;border-radius:4px;
+    background:linear-gradient(90deg,rgba(226,179,59,.35),rgba(226,179,59,.75))}
+  .bcV,.bcMuc,.bcGia{position:absolute;top:0;transform:translateX(-50%);text-align:center;white-space:nowrap}
+  .bcV i{display:block;width:1px;height:11px;margin:7px auto 0;background:#66789c}
+  .bcV u{display:block;text-decoration:none;color:var(--bcM);font-size:8.5px;margin-top:1px}
+  .bcMuc i{display:block;width:2px;height:20px;margin:5px auto 0;background:var(--bcV)}
+  .bcMuc u{display:block;text-decoration:none;color:var(--bcV);font-size:9px;font-weight:800}
+  .bcGia i{display:block;width:2px;height:20px;margin:5px auto 0;background:var(--bcX)}
+  .bcGia u{display:block;text-decoration:none;color:var(--bcX);font-size:9px;font-weight:800}
+  .bcTruc{display:flex;justify-content:space-between;color:var(--bcM);font-size:9px;margin-top:13px}
+  .bcHai{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .bcBang{width:100%;border-collapse:collapse;font-size:11px}
+  .bcBang td{padding:3px 0;border-bottom:1px dotted #1e2a44;vertical-align:top}
+  .bcBang td:last-child{text-align:right;font-weight:700;white-space:nowrap;padding-left:8px}
+  .bcChan{color:var(--bcM);font-size:9.5px;line-height:1.5;border-top:1px solid var(--bcL);margin-top:11px;padding-top:8px}
+
+  @media print{
+    @page{size:A4 portrait;margin:9mm}
+    html,body{background:#fff!important}
+    /* In CHỈ tờ báo cáo. Ẩn theo display:none sẽ ẩn luôn cả tổ tiên của nó nên
+       trang in ra trắng — dùng visibility rồi bật lại đúng nhánh báo cáo. */
+    body *{visibility:hidden!important}
+    /* Khối chi tiết cũ của module BĐS nằm ngoài màn hình bằng position:absolute —
+       visibility:hidden vẫn để nó CHIẾM CHỖ nên trang in phình ra 4 tờ. Phải
+       display:none hẳn thì mới gọn lại đúng một tờ. */
+    [aria-hidden="true"]{display:none!important}
+    #baoCao1T,#baoCao1T *{visibility:visible!important}
+    #baoCao1T{position:absolute!important;left:0;top:0;width:100%;margin:0}
+    .bcWrap{max-width:none;width:100%;border:none;border-radius:0;padding:0;
+      background:#fff;color:#111;font-size:10.5px}
+    .bcWrap{--bcN:#fff;--bcC:#f6f8fc;--bcL:#ccd6e6;--bcT:#111;--bcM:#5a6b88}
+    .bcNen{background:#e3e9f3}.bcY span{color:#333}
+    .bcWrap,.bcWrap *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }`;
+
+  function napCSS() {
+    if (document.getElementById('bcCSS')) return;
+    const s = document.createElement('style');
+    s.id = 'bcCSS'; s.textContent = CSS;
+    document.head.appendChild(s);
+  }
+
+  /* ── Vẽ ──────────────────────────────────────────────────────────── */
+  G.veBaoCao = function (d) {
+    napCSS();
+    const el = typeof d.hop === 'string' ? document.getElementById(d.hop) : d.hop;
+    if (!el) return;
+    const t = Object.assign({}, d.tin || {});
+
+    // Tín hiệu suy ra được từ chính dữ liệu đã truyền vào — tính ở đây để mọi
+    // module đều có, khỏi phải lặp lại ở từng nơi gọi.
+    const mids = (d.phuongPhap || []).map(p => p.mid).filter(v => isFinite(v) && v > 0);
+    if (mids.length) {
+      t.ppThap = Math.min(...mids); t.ppCao = Math.max(...mids);
+      if (isFinite(d.gia) && d.gia > 0 && t.ppCao > t.ppThap)
+        t.viTriGia = (d.gia - t.ppThap) / (t.ppCao - t.ppThap) * 100;
+    }
+
+    const y = LUAT.map(f => { try { return f(t); } catch (e) { return null; } }).filter(Boolean);
+    const nhan = y.filter(x => x.loai !== 'xau').slice(0, 3);
+    const soi = y.filter(x => x.loai === 'xau').slice(0, 3);
+    // không có gì đáng cảnh báo thì vẫn phải có mục, nói rõ là không có
+    const bay = a => a.length
+      ? a.map(x => '<div class="bcY ' + x.loai + '"><span class="bcCham"></span><div><b>'
+          + esc(x.y) + '.</b> <span>' + esc(x.vi) + '</span></div></div>').join('')
+      : '<div class="bcY"><span class="bcCham"></span><div><span>Không có tín hiệu nào vượt ngưỡng ở nhóm này.</span></div></div>';
+
+    // Luận điểm đầu trang: lấy tín hiệu mạnh nhất, ưu tiên cảnh báo vì đó là thứ
+    // dễ bị bỏ qua khi nhìn một giá mục tiêu đẹp.
+    const manh = soi[0] || nhan[0];
+    const viTri = (isFinite(d.gia) && isFinite(d.mucTieu) && d.gia > 0)
+      ? (d.mucTieu - d.gia) / d.gia * 100 : NaN;
+
+    el.innerHTML = '<div class="bcWrap">'
+      + '<div class="bcDau">'
+        + '<div><div class="bcMa">' + esc(d.ma || '—') + '</div></div>'
+        + '<div style="padding-top:2px"><div class="bcTen">' + esc(d.congTy || '') + '</div>'
+          + '<div class="bcPhu">' + [d.san, d.nganh].filter(Boolean).map(esc).join(' · ') + '</div></div>'
+        + '<div class="bcGiaN"><b>' + so(d.gia) + ' đ</b>'
+          + '<div class="bcPhu">' + esc(d.ngay || '') + '</div></div>'
+      + '</div>'
+
+      + (manh ? '<div class="bcLuan">' + esc(manh.y) + '</div>' : '')
+
+      + '<div class="bcChiSo">' + (d.chiSo || []).map(c =>
+          '<div class="bcO' + (c.tot ? ' hl' : '') + (c.trang ? ' ' + c.trang : '') + '"><div class="l">' + esc(c.l)
+          + '</div><div class="v">' + esc(c.v) + '</div></div>').join('') + '</div>'
+
+      + '<div class="bcMuc2">Điểm nhấn</div>' + bay(nhan)
+      + '<div class="bcMuc2">Điểm cần soi</div>' + bay(soi)
+
+      + '<div class="bcMuc2">Vùng định giá theo các phương pháp</div>'
+      + veDai(d.phuongPhap || [], d.gia, d.mucTieu)
+      + '<div class="bcPhu" id="bcViTri" style="margin-top:4px"></div>'
+
+      + '<div class="bcHai" style="margin-top:4px">'
+        + '<div><div class="bcMuc2">Điều gì làm đổi định giá</div><table class="bcBang"><tbody>'
+          + ((d.nhay || []).length
+              ? d.nhay.map(n => '<tr><td>' + esc(n.ten) + '</td><td>' + esc(n.anhHuong) + '</td></tr>').join('')
+              : '<tr><td>Chưa đủ dữ liệu để đo độ nhạy</td><td>—</td></tr>')
+          + '</tbody></table></div>'
+        + '<div><div class="bcMuc2">Số liệu nền</div><table class="bcBang"><tbody>'
+          + (d.nen || []).map(n => '<tr><td>' + esc(n.l) + '</td><td>' + esc(n.v) + '</td></tr>').join('')
+          + '</tbody></table></div>'
+      + '</div>'
+
+      + '<div class="bcChan">' + esc(d.ghiChu || '')
+        + ' <b>Trang này không đưa ra khuyến nghị mua, bán hay nắm giữ.</b> '
+        + 'Các con số là kết quả tính từ giả định nêu trên, không phải cam kết về kết quả tương lai.'
+      + '</div></div>';
+
+    /* Hai chiều của cùng một khoảng cách KHÔNG bằng nhau — đây là chỗ hay bị
+       nói sai. Mức tổng hợp cao hơn giá 64% thì giá chỉ thấp hơn mức đó 39%,
+       vì hai tỷ lệ chia cho hai mẫu số khác nhau. Ghi cả hai cho khỏi hiểu lầm. */
+    const p = el.querySelector('#bcViTri');
+    if (p && isFinite(viTri) && isFinite(d.mucTieu) && d.mucTieu > 0) {
+      const nguoc = (d.mucTieu - d.gia) / d.mucTieu * 100;
+      p.textContent = viTri >= 0
+        ? 'Mức tổng hợp cao hơn giá hiện tại ' + viTri.toFixed(1)
+          + '% — tức giá hiện tại thấp hơn mức đó ' + nguoc.toFixed(1) + '%.'
+        : 'Mức tổng hợp thấp hơn giá hiện tại ' + Math.abs(viTri).toFixed(1)
+          + '% — tức giá hiện tại cao hơn mức đó ' + Math.abs(nguoc).toFixed(1) + '%.';
+    }
+  };
+})(window);

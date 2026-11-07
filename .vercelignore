@@ -1,8 +1,6 @@
-# Không publish các file nội bộ — chỉ deploy site HTML
-*.skill
-*.md
-*.bat
-*.afl
-node_modules
-.vercel
-.claude
+# Ban doc duoc cua ma da nen: giu trong git de khong mat nguon,
+# nhung KHONG day len Vercel — xem nen-ma.js
+_nguon/
+
+# Du lieu quet ve, khong thuoc trang web
+du-lieu-aas/
