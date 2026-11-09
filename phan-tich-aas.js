@@ -22,7 +22,9 @@ const API_CHAT = process.env.KK_API || 'https://kkinvest.vercel.app/api/chat';
 const RA = path.join(__dirname, 'aas-bantin.json');
 const TAM = path.join(__dirname, 'du-lieu-aas', 'pdf-text');
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0.0.0 Safari/537.36';
-const NGHI = 4000;        // giãn giữa hai lần gọi AI, tránh chạm trần miễn phí
+const NGHI = +process.env.KK_NGHI || 4000;   // giãn giữa hai lần gọi AI, tránh chạm trần
+                                             // miễn phí. Chạy liền 50 mã thì hay nghẽn —
+                                             // đặt KK_NGHI=12000 khi chạy lại phần lỗi.
 
 const args = process.argv.slice(2);
 const LAM_LAI = args.includes('--lam-lai');
