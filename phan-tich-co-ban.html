@@ -1145,38 +1145,16 @@ function noteHTML(tk,sectKey,ta,F,gs,br,CS){
   // ================= TAKEAWAY =================
   h+=`<div class="takeaway"><div class="tk-badge">💡 TAKEAWAY</div><ul>${takeaway(tk,ta,CS,faTxt,tier,hanhDong,qh,F).map(x=>`<li>${x}</li>`).join('')}</ul></div>`;
   h+=`<div class="ncard-ft"><b>Nguồn:</b> BCTC ${qh} &amp; chỉ số TTM từ 24hMoney · giá/khối lượng/VNINDEX từ VNDirect (${Math.min(252,ta.n)} phiên đến ${dd(ta.ngay)}).
-     <b>Phương pháp:</b> Stage/Classic/Ranking theo sheet Weinstein · DuckMan 9 tiêu chí RS · điểm hội tụ theo tài liệu VSLRT + Pristine RS Line + VARS + TL's KMAs.
-     <i>Chỉ phục vụ mục đích thông tin, không phải khuyến nghị đầu tư.</i></div>`;
+     <b>Phương pháp:</b> CANSLIM · số liệu BCTC từ 24hMoney. Phần chấm điểm kỹ thuật (Weinstein · DuckMan · VSLRT) đã chuyển khỏi trang này. <i>Chỉ phục vụ mục đích thông tin, không phải khuyến nghị đầu tư.</i></div>`;
   h+=`</div>`; // /ncard
   // ================= CHI TIẾT =================
-  h+=`<details class="ndet"><summary>Xem số liệu chi tiết — đồ thị, thang MA, bảng chấm điểm đầy đủ</summary><div class="ndet-in">`;
-  h+=`<div class="nsec"><h3><span class="n">A</span>Đồ thị giá · MA · RS Line</h3>${noteChart(ta)}
-    <div class="ncap">252 phiên gần nhất, benchmark VNINDEX. RS Line = giá ÷ VNINDEX, chuẩn hóa về 100 tại đầu kỳ.</div>
-    <h4>Vị trí giá so với các đường trung bình</h4>${maLadder(ta)}
-    <h4>Đặc điểm khối lượng</h4>${ul(volBullets(ta))}</div>`;
+  h+=`<details class="ndet"><summary>Xem số liệu chi tiết — luận điểm và bảng CANSLIM đầy đủ</summary><div class="ndet-in">`;
   h+=`<div class="nsec"><h3><span class="n">B</span>Investment thesis</h3>${ul((q?q.thesis:[]).concat(autoThesis(tk,ta,F,revT,lnT,cons,meth)))}</div>`;
   h+=`<div class="nsec"><h3><span class="n">C</span>CANSLIM — số liệu từng tiêu chí</h3>
     <div class="ntw"><table class="ntbl"><thead><tr><th style="width:168px">Tiêu chí</th><th>Số liệu thực tế</th><th style="width:92px">Đánh giá</th></tr></thead><tbody>
     ${CS.S.map(x=>`<tr><td class="k"><i>${x.k}</i>${x.t}</td><td>${x.d}</td><td>${pill(x.v)}</td></tr>`).join('')}
     </tbody><tfoot><tr><td class="k">Tổng</td><td>${CS.S.filter(x=>x.v===2).length} đạt · ${CS.S.filter(x=>x.v===1).length} một nửa · ${CS.S.filter(x=>x.v===0).length} không đạt</td>
     <td><span class="pill ${CS.diem>=5?'ok':(CS.diem>=3.5?'mid':'no')}">${CS.diem.toFixed(1)}/7</span></td></tr></tfoot></table></div></div>`;
-  h+=`<div class="nsec"><h3><span class="n">D</span>Điểm hội tụ VSLRT + RS Line + VARS</h3>${buoc0(ta)}
-    <div class="ntw"><table class="ntbl"><thead><tr><th style="width:34px" class="num">#</th><th>Điều kiện</th><th>Đo được</th><th style="width:70px" class="num">Điểm</th></tr></thead><tbody>
-    ${ta.VS.map((x,k)=>`<tr><td class="num">${k+1}</td><td>${x.t}</td><td>${x.d}</td><td class="num">${x.ok?1:0}</td></tr>`).join('')}
-    </tbody><tfoot><tr><td colspan="3">Điểm hội tụ</td><td class="num">${ta.vsDiem} / 6</td></tr></tfoot></table></div>
-    <div class="ncap">VARS là bản triển khai proxy: z-score chuỗi lợi suất vượt trội so với VNINDEX trên cửa sổ 21 phiên, so với MA10 của chính nó.</div></div>`;
-  h+=`<div class="nsec"><h3><span class="n">E</span>Weinstein Classic — 8 tiêu chí, 3 tier</h3>
-    <div class="ntw"><table class="ntbl"><thead><tr><th style="width:30px" class="num">#</th><th>Tiêu chí</th><th class="num" style="width:74px">Điểm</th><th style="width:86px">Đạt</th></tr></thead><tbody>
-    ${classicRows(ta)}</tbody><tfoot><tr><td colspan="2">Classic Score${ta.classic.mod?` (đã ${ta.classic.mod>0?'+':''}${ta.classic.mod} điều chỉnh)`:''}</td>
-      <td class="num">${ta.classic.tong} / 100</td><td><span class="pill ${ta.classic.tier==='T1'?'ok':(ta.classic.tier==='T2'?'mid':'no')}">Tier ${ta.classic.tier}</span></td></tr></tfoot></table></div>
-    <h4>Đối chiếu chéo các hệ thống</h4>
-    <div class="ntw"><table class="ntbl"><thead><tr><th>Hệ thống</th><th class="num" style="width:88px">Điểm</th><th class="num" style="width:84px">Ngưỡng</th><th>Kết luận</th></tr></thead><tbody>
-      ${xrow('Weinstein Classic (8 tiêu chí)',ta.classic.tong+' / 100','≥ 70',ta.classic.tong>=70,'Tier '+ta.classic.tier)}
-      ${xrow('Weinstein Ranking',ta.rank+' / 100','≥ 75',ta.rank>=75,'Group '+ta.group)}
-      ${xrow('DuckMan Score (9 tiêu chí RS)',ta.duckDiem+' / 9','≥ 4',ta.duckDiem>=4,ta.duck.filter(x=>x[1]).map(x=>x[0]).join(', ')||'không đạt tiêu chí nào')}
-      ${xrow('VSLRT + RS + VARS',ta.vsDiem+' / 6','≥ 4',ta.vsDiem>=4,ta.vsDiem>=4?'đủ điều kiện vào lệnh':'chưa đủ điểm hội tụ')}
-      ${xrow('CANSLIM',CS.diem.toFixed(1)+' / 7','≥ 5',CS.diem>=5,CS.S.filter(x=>x.v===2).map(x=>x.k).join('')||'không tiêu chí nào đạt trọn')}
-    </tbody></table></div></div>`;
   h+=`</div></details>`;
   return h;
 }
