@@ -334,8 +334,6 @@
       /* Bản tin đã nói kỹ hơn hai mục này nên giữ lại chỉ làm dài trang và
          lặp ý — bỏ đi để cả tờ vẫn gọn trong một trang A4. */
       const bo = el.querySelector('#bcSoi'); if (bo) bo.remove();
-      const bn = el.querySelector('#bcNen'); if (bn) bn.remove();
-      const hai = el.querySelector('.bcHai'); if (hai) hai.style.gridTemplateColumns = '1fr 1fr';
       h += '<div class="bcPhu" style="margin-top:4px">Dựng lại từ toàn văn báo cáo <b>'
         + esc(bt.nguon) + '</b> · ' + esc(ngayVN(bt.ngay))
         + ' · <a href="' + esc(bt.link) + '" target="_blank" rel="noopener">bài gốc</a></div>';
@@ -625,17 +623,10 @@
 
       + '<div class="bcMuc2">Catalyst — sự kiện doanh nghiệp đã công bố</div>'
       + '<table class="bcBang"><tbody id="bcCat"><tr><td>đang lấy công bố thông tin…</td><td>—</td></tr></tbody></table>'
-      + '<div class="bcHai" style="margin-top:8px">'
-        + '<div><div class="bcMuc2">Độ nhạy định giá</div><table class="bcBang"><tbody>'
-          + ((d.nhay || []).length
-              ? d.nhay.map(n => '<tr><td>' + esc(n.ten) + '</td><td>' + esc(n.anhHuong) + '</td></tr>').join('')
-              : '<tr><td>Chưa đủ dữ liệu để đo độ nhạy</td><td>—</td></tr>')
-          + '</tbody></table></div>'
-        + '<div id="bcNen"><div class="bcMuc2">Số liệu nền</div><table class="bcBang"><tbody>'
-          + (d.nen || []).map(n => '<tr><td>' + esc(n.l) + '</td><td>' + esc(n.v) + '</td></tr>').join('')
-          + '</tbody></table></div>'
-      + '</div>'
-
+      /* Bỏ hai bảng "Độ nhạy định giá" và "Số liệu nền": độ nhạy chỉ là phép
+         thử giả định của mô hình, còn số liệu nền thì đã nằm trong dải chỉ số
+         ở đầu trang và trong bản tin. Giữ lại chỉ làm dài tờ giấy. Phần tính
+         vẫn còn trong các module (d.nhay / d.nen) nếu sau này cần dùng lại. */
       + '<div class="bcChan">' + esc(d.ghiChu || '')
         + ' <b>Trang này không đưa ra khuyến nghị mua, bán hay nắm giữ.</b> '
         + 'Các con số là kết quả tính từ giả định nêu trên, không phải cam kết về kết quả tương lai.'
