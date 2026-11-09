@@ -256,7 +256,7 @@
      "đang lấy…" của lần vẽ MỚI thì nằm lại vĩnh viễn — đúng cái thấy ở IDC.
      Đánh số mỗi lần vẽ, tải xong thì đối chiếu, lệch số là bỏ. */
   let luotVe = 0;
-  let nhoAAS = null;
+  let nhoAAS = null, nhoBanTin = null;
   async function layAAS(ma) {
     if (!ma) return null;
     if (!nhoAAS) {
@@ -265,6 +265,29 @@
     }
     const j = await nhoAAS;
     return (j && j.ma && j.ma[ma]) || null;
+  }
+
+  /* Bản tin dựng từ TOÀN VĂN báo cáo PDF (xem phan-tich-aas.js). Khác với
+     aas-luandiem.json vốn chỉ lấy phần tóm tắt in sẵn trên trang AAS — thứ mà
+     24hMoney hay bản tin nào cũng có — bản này moi từ 12 trang PDF ra cơ cấu
+     lợi nhuận, lợi nhuận cốt lõi sau khi loại khoản một lần, chất lượng dòng
+     tiền. Mã nào chưa chạy qua bước đó thì rơi về aas-luandiem.json. */
+  async function layBanTin(ma) {
+    if (!ma) return null;
+    if (!nhoBanTin) {
+      nhoBanTin = fetch('aas-bantin.json', { cache: 'force-cache' })
+        .then(r => r.ok ? r.json() : null).catch(() => null);
+    }
+    const j = await nhoBanTin;
+    return (j && j.ma && j.ma[ma]) || null;
+  }
+
+  // Một mục của bản tin: tiêu đề nhỏ + các gạch đầu dòng
+  function khoiTin(ten, ds) {
+    const a = (ds || []).filter(s => String(s || '').trim());
+    if (!a.length) return '';
+    return '<div class="bcTieu">' + esc(ten) + '</div>'
+      + a.map(s => '<div class="bcDong">' + esc(s) + '</div>').join('');
   }
 
   // Báo cáo của các công ty chứng khoán khác, lấy tiêu đề để thấy bên ngoài
@@ -288,13 +311,35 @@
     : d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }); };
 
   async function napLuanDiem(ma, el, luot) {
-    const [a, ck] = await Promise.all([layAAS(ma), ma ? layCTCK(ma) : []]);
+    const [bt, a, ck] = await Promise.all([layBanTin(ma), layAAS(ma), ma ? layCTCK(ma) : []]);
     if (luot !== luotVe) return;              // đã có lần vẽ mới hơn
     const o = el.querySelector('#bcLD');    // phải lấy SAU await
     if (!o) return;
     let h = '';
 
-    if (a) {
+    if (bt) {
+      // Bản tin đầy đủ: ưu tiên tuyệt đối vì nó đọc từ toàn văn báo cáo
+      // Câu của bản tin hay hơn câu tự tính ở đầu trang — thay thẳng vào đó, đừng
+      // để hai câu cùng nói một việc ở hai chỗ.
+      if (bt.mot_cau) {
+        const dl = el.querySelector('.bcLuan');
+        if (dl) dl.textContent = bt.mot_cau;
+      }
+      h += khoiTin('Kết quả kinh doanh', bt.ket_qua)
+        + khoiTin('Lợi nhuận cốt lõi', bt.cot_loi)
+        + khoiTin('Tài chính & rủi ro', bt.tai_chinh)
+        + khoiTin('Điểm hỗ trợ', bt.ho_tro)
+        + (bt.dinh_gia ? khoiTin('Cơ sở định giá của báo cáo', [bt.dinh_gia]) : '')
+        + khoiTin('Lưu ý dữ liệu', bt.luu_y);
+      /* Bản tin đã nói kỹ hơn hai mục này nên giữ lại chỉ làm dài trang và
+         lặp ý — bỏ đi để cả tờ vẫn gọn trong một trang A4. */
+      const bo = el.querySelector('#bcSoi'); if (bo) bo.remove();
+      const bn = el.querySelector('#bcNen'); if (bn) bn.remove();
+      const hai = el.querySelector('.bcHai'); if (hai) hai.style.gridTemplateColumns = '1fr 1fr';
+      h += '<div class="bcPhu" style="margin-top:4px">Dựng lại từ toàn văn báo cáo <b>'
+        + esc(bt.nguon) + '</b> · ' + esc(ngayVN(bt.ngay))
+        + ' · <a href="' + esc(bt.link) + '" target="_blank" rel="noopener">bài gốc</a></div>';
+    } else if (a) {
       h += '<div class="bcY"><span class="bcCham"></span><div><b>' + esc(a.tieuDe) + '</b>'
         + (a.phu ? ' <i>(báo cáo ngành, không viết riêng cho ' + esc(ma) + ')</i>' : '')
         + '</div></div>';
@@ -468,6 +513,10 @@
   .bcBang{width:100%;border-collapse:collapse;font-size:11px}
   .bcBang td{padding:3px 0;border-bottom:1px dotted #1e2a44;vertical-align:top}
   .bcBang td:last-child{text-align:right;font-weight:700;white-space:nowrap;padding-left:8px}
+  .bcTieu{color:#9fb0d0;font-weight:800;font-size:9.5px;text-transform:uppercase;
+    letter-spacing:.5px;margin:7px 0 3px}
+  .bcDong{color:#c3cfe4;margin:0 0 3px 10px;position:relative;line-height:1.42}
+  .bcDong:before{content:"–";position:absolute;left:-10px;color:var(--bcM)}
   .bcFact td{padding:2px 0}
   .bcFact td:first-child{width:38%;color:var(--bcM)}
   .bcFv{text-align:left!important;font-weight:400!important;white-space:normal!important;color:#c3cfe4}
@@ -487,8 +536,21 @@
     [aria-hidden="true"]{display:none!important}
     #baoCao1T,#baoCao1T *{visibility:visible!important}
     #baoCao1T{position:absolute!important;left:0;top:0;width:100%;margin:0}
+    /* Bản tin dựng từ toàn văn báo cáo dài hơn hẳn bản cũ, nên khi in phải
+       siết lại khoảng cách mới gói gọn trong một tờ. Đã đo bằng số trang PDF
+       chứ không ước lượng bằng mắt. */
     .bcWrap{max-width:none;width:100%;border:none;border-radius:0;padding:0;
-      background:#fff;color:#111;font-size:10.5px}
+      background:#fff;color:#111;font-size:9.6px;line-height:1.34}
+    .bcMuc2{margin:6px 0 3px}
+    .bcTieu{margin:4px 0 2px}
+    .bcDong{margin-bottom:1.5px}
+    .bcY{margin-bottom:3px}
+    .bcChiSo{margin:6px 0}
+    .bcO{padding:4px 7px}.bcO .v{font-size:13px}
+    .bcLuan{font-size:11.5px;margin:6px 0 2px}
+    .bcDai{margin:12px 0 2px;height:26px}
+    .bcBang td{padding:2px 0}
+    .bcChan{margin-top:7px;padding-top:6px}
     .bcWrap{--bcN:#fff;--bcC:#f6f8fc;--bcL:#ccd6e6;--bcT:#111;--bcM:#5a6b88}
     .bcNen{background:#e3e9f3}.bcY span{color:#333}
     .bcWrap,.bcWrap *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -555,7 +617,7 @@
           + '</div><div class="v">' + esc(c.v) + '</div></div>').join('') + '</div>'
 
       + '<div class="bcMuc2">Điểm nhấn</div><div id="bcLD">' + bay(nhan) + '</div>'
-      + '<div class="bcMuc2">Điểm cần soi</div>' + bay(soi)
+      + '<div id="bcSoi"><div class="bcMuc2">Điểm cần soi</div>' + bay(soi) + '</div>'
 
       + '<div class="bcMuc2">Vùng định giá theo các phương pháp</div>'
       + veDai(d.phuongPhap || [], d.gia, d.mucTieu)
@@ -569,7 +631,7 @@
               ? d.nhay.map(n => '<tr><td>' + esc(n.ten) + '</td><td>' + esc(n.anhHuong) + '</td></tr>').join('')
               : '<tr><td>Chưa đủ dữ liệu để đo độ nhạy</td><td>—</td></tr>')
           + '</tbody></table></div>'
-        + '<div><div class="bcMuc2">Số liệu nền</div><table class="bcBang"><tbody>'
+        + '<div id="bcNen"><div class="bcMuc2">Số liệu nền</div><table class="bcBang"><tbody>'
           + (d.nen || []).map(n => '<tr><td>' + esc(n.l) + '</td><td>' + esc(n.v) + '</td></tr>').join('')
           + '</tbody></table></div>'
       + '</div>'
