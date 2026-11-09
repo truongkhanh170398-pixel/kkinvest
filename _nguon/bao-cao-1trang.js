@@ -236,6 +236,85 @@
     return out.slice(0, 5);
   }
 
+  /* ── Luận điểm từ báo cáo phân tích ───────────────────────────────────
+     Chỉ số nói doanh nghiệp LÃI bao nhiêu, không nói lãi TỪ ĐÂU. "Hàng tồn kho
+     8.164 tỷ, gần như toàn bộ là chi phí dở dang KCN (Hựu Thạnh 2.973, Tân
+     Phước 1 1.405)" — loại câu đó phải lấy từ người đã đọc thuyết minh báo cáo
+     tài chính, mô hình định giá không tự sinh ra được.
+     Nguồn: AAS Research (phantich.aas.com.vn/equity-compass), quét bằng
+     quet-aas.js ra aas-luandiem.json. Luôn dẫn nguồn và ngày báo cáo kèm theo
+     vì đây là nhận định của bên thứ ba, không phải của trang này. */
+  let nhoAAS = null;
+  async function layAAS(ma) {
+    if (!ma) return null;
+    if (!nhoAAS) {
+      nhoAAS = fetch('aas-luandiem.json', { cache: 'force-cache' })
+        .then(r => r.ok ? r.json() : null).catch(() => null);
+    }
+    const j = await nhoAAS;
+    return (j && j.ma && j.ma[ma]) || null;
+  }
+
+  // Báo cáo của các công ty chứng khoán khác, lấy tiêu đề để thấy bên ngoài
+  // đang nhìn mã này theo hướng nào.
+  async function layCTCK(ma) {
+    const u = 'https://api-finance-t19.24hmoney.vn/v1/web/announcement/report-analytics?symbol='
+      + encodeURIComponent(ma) + '&per_page=6';
+    for (const p of [u, '/api/proxy?url=' + encodeURIComponent(u)]) {
+      try {
+        const r = await fetch(p, { cache: 'no-store', signal: AbortSignal.timeout(9000) });
+        if (!r.ok) continue;
+        const j = await r.json();
+        const ds = j && j.data && (j.data.data || j.data);
+        if (Array.isArray(ds) && ds.length) return ds;
+      } catch (e) {}
+    }
+    return [];
+  }
+
+  const ngayVN = s => { const d = new Date(s); return isNaN(d) ? String(s || '')
+    : d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }); };
+
+  async function napLuanDiem(ma, el) {
+    const o = el.querySelector('#bcLD');
+    if (!o) return;
+    const [a, ck] = await Promise.all([layAAS(ma), ma ? layCTCK(ma) : []]);
+    let h = '';
+
+    if (a) {
+      h += '<div class="bcY"><span class="bcCham"></span><div><b>' + esc(a.tieuDe) + '</b>'
+        + (a.phu ? ' <i>(báo cáo ngành, không viết riêng cho ' + esc(ma) + ')</i>' : '')
+        + '</div></div>';
+      if (a.facts && a.facts.length)
+        h += '<table class="bcBang bcFact"><tbody>' + a.facts.slice(0, 5).map(f =>
+          '<tr><td><b>' + esc(f.l) + '</b></td><td class="bcFv">' + esc(f.v) + '</td></tr>').join('')
+          + '</tbody></table>';
+      h += '<div class="bcPhu" style="margin-top:3px">Nguồn: <b>' + esc(a.nguon) + '</b> · '
+        + esc(ngayVN(a.ngay)) + ' · <a href="' + esc(a.link) + '" target="_blank" rel="noopener">bài gốc</a></div>';
+    }
+
+    /* Bỏ các tiêu đề chỉ là lời gọi mua/bán. Trang này đã bỏ khuyến nghị của
+       chính nó thì không thể mượn lời khuyến nghị của bên khác để nói hộ —
+       dẫn ba dòng "Khuyến nghị MUA giá mục tiêu 26.500" thì khác gì tự khuyến
+       nghị. Chỉ giữ tiêu đề mang nội dung phân tích. */
+    const ckSach = ck.filter(x => !/khuyến\s*nghị|mục\s*tiêu|khả\s*quan|trung\s*lập|tích\s*cực|kém\s*khả\s*quan/i
+      .test(String(x.title || '')));
+    if (ckSach.length) {
+      const d = ckSach.slice(0, 3).map(x => {
+        const t = String(x.title || '').replace(/\s+/g, ' ').slice(0, 88);
+        const n = x.published_date ? new Date(x.published_date * 1000)
+          .toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) : '';
+        return '<tr><td>' + esc(t) + '</td><td>' + esc(n) + '</td></tr>';
+      }).join('');
+      h += '<div class="bcPhu" style="margin-top:6px;font-weight:700">Báo cáo công ty chứng khoán gần đây</div>'
+        + '<table class="bcBang"><tbody>' + d + '</tbody></table>';
+    }
+
+    if (!h) return;            // không có gì thì giữ nguyên phần luận điểm tự tính
+    o.innerHTML = h;
+    o.previousElementSibling.textContent = 'Luận điểm đầu tư';
+  }
+
   async function napCatalyst(ma, el) {
     const o = el.querySelector('#bcCat');
     if (!o || !ma) return;
@@ -362,6 +441,10 @@
   .bcBang{width:100%;border-collapse:collapse;font-size:11px}
   .bcBang td{padding:3px 0;border-bottom:1px dotted #1e2a44;vertical-align:top}
   .bcBang td:last-child{text-align:right;font-weight:700;white-space:nowrap;padding-left:8px}
+  .bcFact td{padding:2px 0}
+  .bcFact td:first-child{width:38%;color:var(--bcM)}
+  .bcFv{text-align:left!important;font-weight:400!important;white-space:normal!important;color:#c3cfe4}
+  .bcWrap a{color:var(--bcX);text-decoration:none}
   .bcBang tr.bcToi td{color:var(--bcV)}   /* mốc nhìn về phía trước */
   .bcChan{color:var(--bcM);font-size:9.5px;line-height:1.5;border-top:1px solid var(--bcL);margin-top:11px;padding-top:8px}
 
@@ -444,7 +527,7 @@
           '<div class="bcO' + (c.tot ? ' hl' : '') + (c.trang ? ' ' + c.trang : '') + '"><div class="l">' + esc(c.l)
           + '</div><div class="v">' + esc(c.v) + '</div></div>').join('') + '</div>'
 
-      + '<div class="bcMuc2">Điểm nhấn</div>' + bay(nhan)
+      + '<div class="bcMuc2">Điểm nhấn</div><div id="bcLD">' + bay(nhan) + '</div>'
       + '<div class="bcMuc2">Điểm cần soi</div>' + bay(soi)
 
       + '<div class="bcMuc2">Vùng định giá theo các phương pháp</div>'
@@ -472,7 +555,8 @@
     /* Hai chiều của cùng một khoảng cách KHÔNG bằng nhau — đây là chỗ hay bị
        nói sai. Mức tổng hợp cao hơn giá 64% thì giá chỉ thấp hơn mức đó 39%,
        vì hai tỷ lệ chia cho hai mẫu số khác nhau. Ghi cả hai cho khỏi hiểu lầm. */
-    napCatalyst(d.ma, el);   // chạy ở nền, không chặn phần còn lại
+    napCatalyst(d.ma, el);   // cả hai chạy ở nền, không chặn phần còn lại
+    napLuanDiem(d.ma, el);
 
     const p = el.querySelector('#bcViTri');
     if (p && isFinite(viTri) && isFinite(d.mucTieu) && d.mucTieu > 0) {

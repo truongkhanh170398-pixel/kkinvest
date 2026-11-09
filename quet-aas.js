@@ -133,6 +133,11 @@ const lamCSV = (dau, hang) => 'sep=;\r\n'
   fs.writeFileSync(path.join(RA, 'theo-ma.csv'),
     '﻿' + lamCSV(TIEU_DE_MA, theoMa), 'utf8');
 
+  const web = xuatChoWeb(ds);
+  fs.writeFileSync(path.join(__dirname, 'aas-luandiem.json'),
+    JSON.stringify({ quetLuc: new Date().toISOString(), nguon: 'AAS Research — phantich.aas.com.vn/equity-compass', ma: web }));
+  console.log('  ✓ aas-luandiem.json — ' + Object.keys(web).length + ' mã (bản cho web)');
+
   const ngay = ds.map(x => x.report_date).sort();
   console.log('  ✓ ' + ds.length + ' báo cáo · ' + ngay[0] + ' → ' + ngay[ngay.length - 1]);
 
@@ -170,3 +175,34 @@ const lamCSV = (dau, hang) => 'sep=;\r\n'
     + theoMa.length + ' dòng)');
   if (!TAI_PDF) console.log('\n  Muốn tải cả bản PDF thì chạy: node quet-aas.js --pdf\n');
 })().catch(e => { console.error('\n  LỖI: ' + (e && e.message || e) + '\n'); process.exit(1); });
+
+/* ── Bản rút gọn cho trang web dùng ────────────────────────────────────
+   bao-cao.json giữ nguyên mọi trường (dùng để tra cứu), còn tệp này chỉ giữ
+   phần một trang A4 cần: luận điểm, dữ kiện, chỉ số — khoá theo mã. Nằm ở thư
+   mục gốc nên Vercel phục vụ được; bao-cao.json thì không (xem .vercelignore).
+   Dẫn nguồn đầy đủ (AAS Research + ngày + link bài gốc) ngay trong dữ liệu. */
+function xuatChoWeb(ds) {
+  const ra = {};
+  // Báo cáo viết RIÊNG về một doanh nghiệp mới có luận điểm theo mã; báo cáo
+  // ngành thì luận điểm là của ngành, chỉ dùng khi mã đó không có bài riêng.
+  const ghi = (ma, x, phu) => {
+    const c = x.card || {};
+    const cu = ra[ma];
+    if (cu && (!cu.phu || phu) && cu.ngay >= x.report_date) return;   // giữ bài mới hơn
+    if (cu && cu.phu === false && phu) return;                        // bài riêng thắng bài ngành
+    ra[ma] = {
+      ngay: x.report_date, phu: !!phu,
+      tieuDe: c.title || '', tomTat: c.summary || '',
+      facts: (c.facts || []).slice(0, 6).map(f => ({ l: f.label, v: f.value })),
+      chiSo: (c.metrics || []).slice(0, 4).map(m => ({ l: m.label, v: m.value, d: m.delta || '' })),
+      nguon: 'AAS Research', link: 'https://phantich.aas.com.vn/equity-compass/' + x.slug
+    };
+  };
+  for (const x of ds) {
+    const c = x.card || {};
+    const ma = String(c.display || '').toUpperCase();
+    if (/^[A-Z]{3}$/.test(ma)) ghi(ma, x, false);              // bài riêng của mã
+    else for (const t of (x.tickers || [])) ghi(String(t).toUpperCase(), x, true);   // bài ngành
+  }
+  return ra;
+}
