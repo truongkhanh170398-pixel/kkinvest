@@ -697,6 +697,7 @@ function taScan(bar,ibar){
   const R=bar.t.map((t,i)=>({d:_ds(t),o:bar.o[i],h:bar.h[i],l:bar.l[i],c:bar.c[i],v:bar.v[i]}));
   const n=R.length,i=n-1; if(n<210)return null;
   const C=R.map(r=>r.c),H=R.map(r=>r.h),L=R.map(r=>r.l),V=R.map(r=>r.v),D=R.map(r=>r.d);
+  const O=R.map(r=>r.o);   // giá mở cửa — cần để vẽ nến, trước đây không dùng tới
   const IR=ibar.t.map((t,k)=>({d:_ds(t),o:ibar.o[k],h:ibar.h[k],l:ibar.l[k],c:ibar.c[k],v:ibar.v[k]}));
   const imap={};IR.forEach(r=>imap[r.d]=r.c);const idt=IR.map(r=>r.d);
   const iAt=d=>{if(imap[d]!=null)return imap[d];let lo=0,hi=idt.length-1,res=null;
@@ -802,7 +803,7 @@ function taScan(bar,ibar){
   let cross=null;for(let k=i;k>=1;k--){if(S50[k]!=null&&S150[k]!=null&&S50[k]>=S150[k]){cross=D[Math.min(k+1,i)];break;}}
   const wS10=_sma(wC,10)[wi],wS30=_sma(wC,30)[wi];
   let pk=-1e18,pkD=null;for(let k=Math.max(0,i-251);k<=i;k++)if(C[k]>pk){pk=C[k];pkD=D[k];}
-  return {D,C,H,L,V,S50,S150,S200,E8,S10,S21,S65,rs,rsMA,n,i,
+  return {D,O,C,H,L,V,S50,S150,S200,E8,S10,S21,S65,rs,rsMA,n,i,
     ngay:D[i],gia:C[i],pctPhien:(C[i]/C[i-1]-1)*100,
     h52:_hh(H,252,i),l52:_ll(L,252,i),dinhDongCua:pk,ngayDinh:pkD,
     stage,code,dist150,relVol,volDry,rsNH,rsNH252,rsDivBear,kmaBull,kmaEarly,varsPos,
@@ -939,7 +940,9 @@ function canslim(tk,ta,F,gs,br){
 function noteChart(ta){
   const N=Math.min(252,ta.n),s=ta.n-N,W=1000,PT=10,PB=0,HH=210,VB=250,RT=266,RH=76;
   const seg=[ta.C,ta.S50,ta.S150,ta.S200].map(a=>a.slice(s));
-  let mn=1e9,mx=-1e9;seg.forEach(a=>a.forEach(v=>{if(v!=null){mn=Math.min(mn,v);mx=Math.max(mx,v);}}));
+  // Thang giá phải trùm cả RÂU NẾN, không thì đỉnh/đáy trong phiên bị cắt cụt
+  const hiSeg=(ta.H||ta.C).slice(s), loSeg=(ta.L||ta.C).slice(s), opSeg=(ta.O||ta.C).slice(s);
+  let mn=1e9,mx=-1e9;seg.concat([hiSeg,loSeg]).forEach(a=>a.forEach(v=>{if(v!=null){mn=Math.min(mn,v);mx=Math.max(mx,v);}}));
   const pd=(mx-mn)*0.08;mn-=pd;mx+=pd;
   const X=k=>+(k/(N-1)*W).toFixed(1), Y=v=>+(PT+(1-(v-mn)/(mx-mn))*(HH-PT)).toFixed(1);
   const path=a=>{let d='',up=false;a.forEach((v,k)=>{if(v==null){up=false;return;}d+=(up?'L':'M')+X(k)+' '+Y(v)+' ';up=true;});return d.trim();};
@@ -948,8 +951,28 @@ function noteChart(ta){
   let rmn=1e9,rmx=-1e9;rn.forEach(v=>{if(v!=null){rmn=Math.min(rmn,v);rmx=Math.max(rmx,v);}});
   const RY=v=>+(RT+8+(1-(v-rmn)/(rmx-rmn))*(RH-16)).toFixed(1);
   let rp='',up=false;rn.forEach((v,k)=>{if(v==null){up=false;return;}rp+=(up?'L':'M')+X(k)+' '+RY(v)+' ';up=true;});
+  /* ── NẾN ──────────────────────────────────────────────────────────────
+     252 phiên trên 1000px nên mỗi nến rộng ~4px: thân 2,6px, râu 1px. Nến nào
+     mở bằng đóng thì thân mỏng dính, phải cho chiều cao tối thiểu 1px mới thấy.
+     Màu theo đóng so với MỞ cửa (chuẩn nến), không phải so phiên trước. */
+  const bw = Math.max(1.6, Math.min(5, W / N * 0.62));
+  const XANH = '#3ba776', DO = '#e25c5c';
+  const nen = [];
+  for (let k = 0; k < N; k++) {
+    const o = opSeg[k], h = hiSeg[k], l = loSeg[k], c = seg[0][k];
+    if (o == null || h == null || l == null || c == null) continue;
+    const x = X(k), mau = c >= o ? XANH : DO;
+    const yo = Y(o), yc = Y(c);
+    const top = Math.min(yo, yc), cao = Math.max(1, Math.abs(yc - yo));
+    nen.push('<line x1="' + x + '" y1="' + Y(h) + '" x2="' + x + '" y2="' + Y(l)
+      + '" stroke="' + mau + '" stroke-width="1"/>'
+      + '<rect x="' + (x - bw / 2).toFixed(2) + '" y="' + top.toFixed(1)
+      + '" width="' + bw.toFixed(2) + '" height="' + cao.toFixed(1) + '" fill="' + mau + '"/>');
+  }
+  const nenHtml = nen.join('');
+
   const vseg=ta.V.slice(s),vmx=Math.max.apply(null,vseg);
-  const bars=vseg.map((v,k)=>`<rect x="${(X(k)-1.5).toFixed(1)}" y="${(VB-v/vmx*28).toFixed(1)}" width="3" height="${(v/vmx*28).toFixed(1)}" fill="${k&&ta.C[s+k]>=ta.C[s+k-1]?'#3ba776':'#e25c5c'}" opacity=".35"/>`).join('');
+  const bars=vseg.map((v,k)=>`<rect x="${(X(k)-bw/2).toFixed(2)}" y="${(VB-v/vmx*28).toFixed(1)}" width="${bw.toFixed(2)}" height="${(v/vmx*28).toFixed(1)}" fill="${(opSeg[k]!=null&&seg[0][k]>=opSeg[k])?XANH:DO}" opacity=".35"/>`).join('');
   const D=ta.D;let lm='',tk='';
   for(let k=0;k<N;k++){const m=D[s+k].slice(0,7);if(m!==lm){lm=m;if(+m.slice(5)%3===1)
     tk+=`<text x="${X(k)}" y="${VB+15}" text-anchor="middle">T${+m.slice(5)}/${m.slice(2,4)}</text>`;}}
@@ -964,10 +987,10 @@ function noteChart(ta){
    <g fill="#7e8db0" font-size="11" font-family="ui-monospace,Consolas,monospace">
      <text x="4" y="${Y(mx-pd)-4}">${(mx-pd).toFixed(1)}</text><text x="4" y="${Y(mn+pd)-4}">${(mn+pd).toFixed(1)}</text></g>
    ${bars}
+   ${nenHtml}
    <path d="${path(seg[3])}" fill="none" stroke="#7e8db0" stroke-width="1.3" stroke-dasharray="4 3" opacity=".8"/>
    <path d="${path(seg[2])}" fill="none" stroke="#4f8cff" stroke-width="1.7"/>
    <path d="${path(seg[1])}" fill="none" stroke="#e2a33b" stroke-width="1.4" opacity=".9"/>
-   <path d="${path(seg[0])}" fill="none" stroke="#e8edf7" stroke-width="2"/>
    ${ta.ngayDinh?mark(ta.ngayDinh,'Đỉnh '+fmt0(ta.dinhDongCua*1000)+'đ · '+dd(ta.ngayDinh),'#e2b33b'):''}
    ${ta.lastA150?mark(ta.lastA150,'Mất MA150 · '+dd(ta.lastA150),'#e25c5c'):''}
    <g fill="#7e8db0" font-size="11" font-family="ui-monospace,Consolas,monospace">${tk}</g>
@@ -975,7 +998,7 @@ function noteChart(ta){
    <path d="${rp}" fill="none" stroke="#e2b33b" stroke-width="1.8"/>
    <text x="9" y="${RT+14}" fill="#7e8db0" font-size="10" letter-spacing="1.2" font-weight="700">RS LINE VS VNINDEX</text>
   </svg></div>
-  <div class="nlegend"><span><i style="background:#e8edf7"></i>Giá</span><span><i style="background:#e2a33b"></i>MA50</span>
+  <div class="nlegend"><span><i style="background:#3ba776"></i>Nến tăng</span><span><i style="background:#e25c5c"></i>Nến giảm</span><span><i style="background:#e2a33b"></i>MA50</span>
    <span><i style="background:#4f8cff"></i>MA150 ≈ MA30 tuần</span><span><i style="background:#7e8db0"></i>MA200</span>
    <span><i style="background:#e2b33b"></i>RS Line</span></div>`;
 }
