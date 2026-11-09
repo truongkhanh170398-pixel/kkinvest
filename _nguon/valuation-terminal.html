@@ -417,8 +417,10 @@ function recalc(){
     nhay.push({ten:'Thặng dư quỹ đất +10%',anhHuong:pct(dRn(them/N('shares')*1000))});
   }
 
-  const M=window.__meta24h||{};
   const maB=(($('ticker')||{}).value||'').trim().toUpperCase();
+  // Chỉ nhận meta ĐÚNG MÃ đang xem. Trước đây lấy bừa nên đổi sang mã khác mà
+  // 24hMoney chưa trả kịp là hiện tên công ty của mã CŨ — IDC mà ghi Khang Điền.
+  const M=(window.__meta24h&&window.__meta24h.__ma===maB)?window.__meta24h:{};
   veBaoCao({
     hop:'baoCao1T', ma:maB, congTy:M.company_name||'', san:M.floor||'',
     nganh:M.group_name||'Bất động sản · Xây dựng',
@@ -866,7 +868,7 @@ function renderSize(tk){
   }
   async function applyFund(tk){
     const d=await fetchFund(tk); if(!d)return;
-  window.__meta24h=d;   // tên công ty / sàn / ngành cho đầu trang báo cáo
+  window.__meta24h=Object.assign({__ma:tk},d);   // gắn mã vào, xem chỗ đọc M   // tên công ty / sàn / ngành cho đầu trang báo cáo
     const eps=d.eps4Q,bvps=(d.book_value4Q||d.book_value); let msg='';
     if(eps>0){setV('eps',Math.round(eps));msg+=' · EPS(TTM) <b>'+fmt(eps)+'</b>';}
     if(bvps>0){setV('bvps',Math.round(bvps));msg+=' · BVPS <b>'+fmt(bvps)+'</b>';}

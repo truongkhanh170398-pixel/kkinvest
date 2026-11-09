@@ -169,8 +169,10 @@ function recalc(){
     {ten:'BVPS tăng 5%',           anhHuong:pct(dP(isFinite(jpb)?jpb*bvps*1.05:NaN))}
   ]:[];
 
-  const M=window.__meta24h||{};
   const ma=(($('ticker')||{}).value||'').trim().toUpperCase();
+  // Chỉ nhận meta ĐÚNG MÃ đang xem. Trước đây lấy bừa nên đổi sang mã khác mà
+  // 24hMoney chưa trả kịp là hiện tên công ty của mã CŨ — IDC mà ghi Khang Điền.
+  const M=(window.__meta24h&&window.__meta24h.__ma===ma)?window.__meta24h:{};
   veBaoCao({
     hop:'baoCao1T', ma:ma, congTy:M.company_name||'', san:M.floor||'',
     nganh:M.group_name||'Tài chính (Ngân hàng · Chứng khoán)',
@@ -255,7 +257,7 @@ async function fetchFund(tk){
 }
 async function applyFund(tk){
   const d=await fetchFund(tk); if(!d)return;
-  window.__meta24h=d;   // tên công ty / sàn / ngành cho đầu trang báo cáo
+  window.__meta24h=Object.assign({__ma:tk},d);   // gắn mã vào, xem chỗ đọc M   // tên công ty / sàn / ngành cho đầu trang báo cáo
   const eps=d.eps4Q,bvps=(d.book_value4Q||d.book_value),roe=d.roe4Q;
   if(eps>0)setV('eps',Math.round(eps));
   if(bvps>0)setV('bvps',Math.round(bvps));

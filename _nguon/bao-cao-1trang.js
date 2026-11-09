@@ -176,7 +176,13 @@
     { ten: 'Quản trị',           uu: 4, tu: /nghị quyết|đại hội|đhđcđ|bổ nhiệm|miễn nhiệm|điều lệ/i }
   ];
 
+  /* Vài tin thủ tục có chữ trùng với nhóm thật — "Quyết định về việc CHẤP THUẬN
+     thay đổi đăng ký niêm yết cổ phiếu" lọt vào nhóm Dự án · pháp lý chỉ vì hai
+     chữ "chấp thuận". Chặn nhóm thủ tục trước khi phân loại. */
+  const THU_TUC = /niêm yết|đăng ký (doanh nghiệp|chứng khoán|giao dịch)|lưu ký|mã số thuế|giấy chứng nhận đăng ký/i;
+
   function phanNhom(tieu) {
+    if (THU_TUC.test(tieu)) return null;
     for (const n of NHOM) if (n.tu.test(tieu)) return n;
     return null;
   }
@@ -244,6 +250,12 @@
      Nguồn: AAS Research (phantich.aas.com.vn/equity-compass), quét bằng
      quet-aas.js ra aas-luandiem.json. Luôn dẫn nguồn và ngày báo cáo kèm theo
      vì đây là nhận định của bên thứ ba, không phải của trang này. */
+  /* recalc() chạy nhiều lần cho một mã (một lần khi nạp, một lần nữa sau khi
+     24hMoney trả số liệu), mỗi lần vẽ đè cả khối nên #bcLD / #bcCat bị thay
+     mới. Phần tải về của lần vẽ CŨ sẽ rơi vào node đã gỡ khỏi trang, còn chữ
+     "đang lấy…" của lần vẽ MỚI thì nằm lại vĩnh viễn — đúng cái thấy ở IDC.
+     Đánh số mỗi lần vẽ, tải xong thì đối chiếu, lệch số là bỏ. */
+  let luotVe = 0;
   let nhoAAS = null;
   async function layAAS(ma) {
     if (!ma) return null;
@@ -275,10 +287,11 @@
   const ngayVN = s => { const d = new Date(s); return isNaN(d) ? String(s || '')
     : d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }); };
 
-  async function napLuanDiem(ma, el) {
-    const o = el.querySelector('#bcLD');
-    if (!o) return;
+  async function napLuanDiem(ma, el, luot) {
     const [a, ck] = await Promise.all([layAAS(ma), ma ? layCTCK(ma) : []]);
+    if (luot !== luotVe) return;              // đã có lần vẽ mới hơn
+    const o = el.querySelector('#bcLD');    // phải lấy SAU await
+    if (!o) return;
     let h = '';
 
     if (a) {
@@ -297,8 +310,14 @@
        chính nó thì không thể mượn lời khuyến nghị của bên khác để nói hộ —
        dẫn ba dòng "Khuyến nghị MUA giá mục tiêu 26.500" thì khác gì tự khuyến
        nghị. Chỉ giữ tiêu đề mang nội dung phân tích. */
-    const ckSach = ck.filter(x => !/khuyến\s*nghị|mục\s*tiêu|khả\s*quan|trung\s*lập|tích\s*cực|kém\s*khả\s*quan/i
-      .test(String(x.title || '')));
+    const daThay = new Set();
+    const ckSach = ck.filter(x => {
+      const s = String(x.title || '');
+      if (/khuyến\s*nghị|mục\s*tiêu|khả\s*quan|trung\s*lập|tích\s*cực|kém\s*khả\s*quan/i.test(s)) return false;
+      const k = s.replace(/\s+/g, ' ').trim().toLowerCase();   // cùng một tiêu đề thì chỉ giữ một
+      if (daThay.has(k)) return false;
+      daThay.add(k); return true;
+    });
     if (ckSach.length) {
       const d = ckSach.slice(0, 3).map(x => {
         const t = String(x.title || '').replace(/\s+/g, ' ').slice(0, 88);
@@ -315,10 +334,12 @@
     o.previousElementSibling.textContent = 'Luận điểm đầu tư';
   }
 
-  async function napCatalyst(ma, el) {
-    const o = el.querySelector('#bcCat');
-    if (!o || !ma) return;
+  async function napCatalyst(ma, el, luot) {
+    if (!ma) return;
     const ds = locTin(await layTin(ma), ma);
+    if (luot !== luotVe) return;
+    const o = el.querySelector('#bcCat');
+    if (!o) return;
     if (!ds.length) {
       o.innerHTML = '<tr><td>Không có công bố nào thuộc nhóm có thể đổi định giá trong kỳ gần đây</td><td>—</td></tr>';
       return;
@@ -387,12 +408,17 @@
     const vach = pp.filter(p => isFinite(p.mid) && p.mid > 0).map(p =>
       '<div class="bcV" style="left:' + vt(p.mid) + '%"><i></i><u>' + esc(p.n) + '</u></div>').join('');
     const dMin = Math.min(...mid), dMax = Math.max(...mid);
+    // Hai mốc sát nhau thì hai nhãn đè lên nhau, không đọc được chữ nào — thấy ở
+    // IDC: "Giá nay 34.600" chồng lên "Tổng hợp 37.003". Hạ nhãn giá xuống dòng dưới.
+    const gan = isFinite(gia) && isFinite(mucTieu) && mucTieu > 0
+      && Math.abs(vt(gia) - vt(mucTieu)) < 14;
     return '<div class="bcDai">'
       + '<div class="bcNen"></div>'
       + '<div class="bcVung" style="left:' + vt(dMin) + '%;width:' + (vt(dMax) - vt(dMin)) + '%"></div>'
       + vach
       + (isFinite(mucTieu) && mucTieu > 0 ? '<div class="bcMuc" style="left:' + vt(mucTieu) + '%"><i></i><u>Tổng hợp ' + so(mucTieu) + '</u></div>' : '')
-      + (isFinite(gia) && gia > 0 ? '<div class="bcGia" style="left:' + vt(gia) + '%"><i></i><u>Giá nay ' + so(gia) + '</u></div>' : '')
+      + (isFinite(gia) && gia > 0 ? '<div class="bcGia' + (gan ? ' bcXa' : '')
+          + '" style="left:' + vt(gia) + '%"><i></i><u>Giá nay ' + so(gia) + '</u></div>' : '')
       + '</div>'
       + '<div class="bcTruc"><span>' + so(t0) + '</span><span>' + so(t1) + ' đ</span></div>';
   }
@@ -436,6 +462,7 @@
   .bcMuc u{display:block;text-decoration:none;color:var(--bcV);font-size:9px;font-weight:800}
   .bcGia i{display:block;width:2px;height:20px;margin:5px auto 0;background:var(--bcX)}
   .bcGia u{display:block;text-decoration:none;color:var(--bcX);font-size:9px;font-weight:800}
+  .bcGia.bcXa i{height:31px}.bcGia.bcXa u{margin-top:0}   /* tránh đè nhãn Tổng hợp */
   .bcTruc{display:flex;justify-content:space-between;color:var(--bcM);font-size:9px;margin-top:13px}
   .bcHai{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   .bcBang{width:100%;border-collapse:collapse;font-size:11px}
@@ -555,8 +582,9 @@
     /* Hai chiều của cùng một khoảng cách KHÔNG bằng nhau — đây là chỗ hay bị
        nói sai. Mức tổng hợp cao hơn giá 64% thì giá chỉ thấp hơn mức đó 39%,
        vì hai tỷ lệ chia cho hai mẫu số khác nhau. Ghi cả hai cho khỏi hiểu lầm. */
-    napCatalyst(d.ma, el);   // cả hai chạy ở nền, không chặn phần còn lại
-    napLuanDiem(d.ma, el);
+    const luot = ++luotVe;   // cả hai chạy ở nền, không chặn phần còn lại
+    napCatalyst(d.ma, el, luot);
+    napLuanDiem(d.ma, el, luot);
 
     const p = el.querySelector('#bcViTri');
     if (p && isFinite(viTri) && isFinite(d.mucTieu) && d.mucTieu > 0) {
