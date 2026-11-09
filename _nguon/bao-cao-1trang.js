@@ -461,7 +461,7 @@
   .bcWrap{--bcN:#0d1424;--bcC:#121b2e;--bcL:#223050;--bcT:#e8edf7;--bcM:#8094b8;
     --bcV:#e2b33b;--bcX:#4f8cff;--bcU:#26c281;--bcD:#f0556b;
     background:var(--bcN);color:var(--bcT);border:1px solid var(--bcL);border-radius:12px;
-    width:100%;max-width:820px;margin:0 auto;padding:16px 18px 14px;
+    width:100%;margin:0;padding:18px 22px 16px;   /* trải hết bề ngang trang */
     font:400 12px/1.45 "Segoe UI",system-ui,Roboto,Arial,sans-serif}
   .bcWrap *{box-sizing:border-box}
   .bcDau{display:flex;align-items:flex-start;gap:12px;padding-bottom:10px;
@@ -509,7 +509,9 @@
   /* Bản tin chia HAI CỘT: tờ A4 vốn thừa bề ngang mà thiếu bề dọc, chia cột thì
      dòng ngắn lại nên mắt đỡ phải quét ngang cả trang. break-inside giữ cho một
      mục không bị cắt làm đôi giữa hai cột. */
-  .bcTin{column-count:2;column-gap:20px;margin-top:2px}
+  /* Tự chia cột theo bề ngang thật: hẹp thì 1 cột, rộng thì 2–3 cột. Để
+     column-count:2 cố định thì màn hình rộng cho ra dòng dài lê thê. */
+  .bcTin{columns:3 330px;column-gap:22px;margin-top:2px}
   .bcNhom{break-inside:avoid;page-break-inside:avoid;margin-bottom:7px}
   .bcTieu{color:var(--bcV);font-weight:800;font-size:9px;text-transform:uppercase;
     letter-spacing:.7px;margin:0 0 3px;padding-left:9px;position:relative}
@@ -559,7 +561,7 @@
     .bcTieu{color:#8a6a12}            /* vàng trên giấy trắng phải tối lại mới đọc được */
     .bcLuan{border-left-color:#c9972a}
     .bcDau{border-bottom-color:#c9972a}
-    .bcTin{column-gap:16px}
+    .bcTin{columns:2 auto;column-gap:16px}   /* khổ A4 thì hai cột là vừa */
     .bcWrap,.bcWrap *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   }`;
 
