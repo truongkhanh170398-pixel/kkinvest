@@ -349,9 +349,8 @@
       /* Bản tin đã nói kỹ hơn hai mục này nên giữ lại chỉ làm dài trang và
          lặp ý — bỏ đi để cả tờ vẫn gọn trong một trang A4. */
       const bo = el.querySelector('#bcSoi'); if (bo) bo.remove();
-      h += '<div class="bcPhu" style="margin-top:4px">Dựng lại từ toàn văn báo cáo <b>'
-        + esc(bt.nguon) + '</b> · ' + esc(ngayVN(bt.ngay))
-        + ' · <a href="' + esc(bt.link) + '" target="_blank" rel="noopener">bài gốc</a></div>';
+      // Dòng dẫn nguồn đã bỏ khỏi trang theo yêu cầu. Nguồn và link bài gốc vẫn
+      // được lưu trong aas-bantin.json (trường nguon / link) để còn truy lại được.
     } else if (a) {
       h += '<div class="bcY"><span class="bcCham"></span><div><b>' + esc(a.tieuDe) + '</b>'
         + (a.phu ? ' <i>(báo cáo ngành, không viết riêng cho ' + esc(ma) + ')</i>' : '')
