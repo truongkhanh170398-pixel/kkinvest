@@ -260,7 +260,7 @@
   async function layAAS(ma) {
     if (!ma) return null;
     if (!nhoAAS) {
-      nhoAAS = fetch('aas-luandiem.json', { cache: 'force-cache' })
+      nhoAAS = fetch('aas-luandiem.json')
         .then(r => r.ok ? r.json() : null).catch(() => null);
     }
     const j = await nhoAAS;
@@ -275,7 +275,7 @@
   async function layBanTin(ma) {
     if (!ma) return null;
     if (!nhoBanTin) {
-      nhoBanTin = fetch('aas-bantin.json', { cache: 'force-cache' })
+      nhoBanTin = fetch('aas-bantin.json')
         .then(r => r.ok ? r.json() : null).catch(() => null);
     }
     const j = await nhoBanTin;
@@ -311,7 +311,7 @@
     : d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }); };
 
   async function napLuanDiem(ma, el, luot) {
-    const [bt, a, ck] = await Promise.all([layBanTin(ma), layAAS(ma), ma ? layCTCK(ma) : []]);
+    const [bt, a] = await Promise.all([layBanTin(ma), layAAS(ma)]);
     if (luot !== luotVe) return;              // đã có lần vẽ mới hơn
     const o = el.querySelector('#bcLD');    // phải lấy SAU await
     if (!o) return;
@@ -347,29 +347,6 @@
           + '</tbody></table>';
       h += '<div class="bcPhu" style="margin-top:3px">Nguồn: <b>' + esc(a.nguon) + '</b> · '
         + esc(ngayVN(a.ngay)) + ' · <a href="' + esc(a.link) + '" target="_blank" rel="noopener">bài gốc</a></div>';
-    }
-
-    /* Bỏ các tiêu đề chỉ là lời gọi mua/bán. Trang này đã bỏ khuyến nghị của
-       chính nó thì không thể mượn lời khuyến nghị của bên khác để nói hộ —
-       dẫn ba dòng "Khuyến nghị MUA giá mục tiêu 26.500" thì khác gì tự khuyến
-       nghị. Chỉ giữ tiêu đề mang nội dung phân tích. */
-    const daThay = new Set();
-    const ckSach = ck.filter(x => {
-      const s = String(x.title || '');
-      if (/khuyến\s*nghị|mục\s*tiêu|khả\s*quan|trung\s*lập|tích\s*cực|kém\s*khả\s*quan/i.test(s)) return false;
-      const k = s.replace(/\s+/g, ' ').trim().toLowerCase();   // cùng một tiêu đề thì chỉ giữ một
-      if (daThay.has(k)) return false;
-      daThay.add(k); return true;
-    });
-    if (ckSach.length) {
-      const d = ckSach.slice(0, 3).map(x => {
-        const t = String(x.title || '').replace(/\s+/g, ' ').slice(0, 88);
-        const n = x.published_date ? new Date(x.published_date * 1000)
-          .toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) : '';
-        return '<tr><td>' + esc(t) + '</td><td>' + esc(n) + '</td></tr>';
-      }).join('');
-      h += '<div class="bcPhu" style="margin-top:6px;font-weight:700">Báo cáo công ty chứng khoán gần đây</div>'
-        + '<table class="bcBang"><tbody>' + d + '</tbody></table>';
     }
 
     if (!h) return;            // không có gì thì giữ nguyên phần luận điểm tự tính
@@ -617,18 +594,12 @@
       + '<div class="bcMuc2">Điểm nhấn</div><div id="bcLD">' + bay(nhan) + '</div>'
       + '<div id="bcSoi"><div class="bcMuc2">Điểm cần soi</div>' + bay(soi) + '</div>'
 
-      + '<div class="bcMuc2">Vùng định giá theo các phương pháp</div>'
-      + veDai(d.phuongPhap || [], d.gia, d.mucTieu)
-      + '<div class="bcPhu" id="bcViTri" style="margin-top:4px"></div>'
-
-      + '<div class="bcMuc2">Catalyst — sự kiện doanh nghiệp đã công bố</div>'
-      + '<table class="bcBang"><tbody id="bcCat"><tr><td>đang lấy công bố thông tin…</td><td>—</td></tr></tbody></table>'
-      /* Bỏ hai bảng "Độ nhạy định giá" và "Số liệu nền": độ nhạy chỉ là phép
-         thử giả định của mô hình, còn số liệu nền thì đã nằm trong dải chỉ số
-         ở đầu trang và trong bản tin. Giữ lại chỉ làm dài tờ giấy. Phần tính
-         vẫn còn trong các module (d.nhay / d.nen) nếu sau này cần dùng lại. */
-      + '<div class="bcChan">' + esc(d.ghiChu || '')
-        + ' <b>Trang này không đưa ra khuyến nghị mua, bán hay nắm giữ.</b> '
+      /* Đã bỏ khỏi trang: thanh vùng định giá, danh sách báo cáo công ty chứng
+         khoán, mục Catalyst, bảng Độ nhạy và bảng Số liệu nền. Tờ giấy giờ chỉ
+         còn phần đọc để hiểu doanh nghiệp. Mã dựng chúng vẫn nằm trong file
+         (veDai, napCatalyst, d.nhay, d.nen) nếu sau này muốn bật lại. */
+      + '<div class="bcChan">'
+        + '<b>Trang này không đưa ra khuyến nghị mua, bán hay nắm giữ.</b> '
         + 'Các con số là kết quả tính từ giả định nêu trên, không phải cam kết về kết quả tương lai.'
       + '</div></div>';
 
@@ -636,7 +607,6 @@
        nói sai. Mức tổng hợp cao hơn giá 64% thì giá chỉ thấp hơn mức đó 39%,
        vì hai tỷ lệ chia cho hai mẫu số khác nhau. Ghi cả hai cho khỏi hiểu lầm. */
     const luot = ++luotVe;   // cả hai chạy ở nền, không chặn phần còn lại
-    napCatalyst(d.ma, el, luot);
     napLuanDiem(d.ma, el, luot);
 
     const p = el.querySelector('#bcViTri');
