@@ -282,12 +282,25 @@
     return (j && j.ma && j.ma[ma]) || null;
   }
 
+  /* Làm nổi CON SỐ trong câu. Đọc một bản tin dày đặc chữ thì mắt tìm số trước,
+     nên in đậm chúng là cách rẻ nhất để quét nhanh. Chỉ tô số CÓ ĐƠN VỊ (tỷ, %,
+     ha, lần…) — số trần như "9T/2026" hay "Quý 3" tô vào chỉ thành rối.
+     Chạy trên chuỗi ĐÃ escape nên thẻ <b> chèn vào là an toàn. */
+  const DON_VI = '%|tỷ|nghìn|triệu|ha|lần|điểm|tấn|đ\\/cp|đ\\/kg|USD|x(?![a-zà-ỹ])';
+  // Nhận cả KHOẢNG "35,7-45,4 nghìn" — nếu không thì chỉ nửa sau được tô đậm,
+  // nhìn như hai con số rời nhau.
+  const soDam = s => s.replace(
+    new RegExp('([+\\-−~≈]?\\d[\\d.,]*(?:\\s?[-–—]\\s?\\d[\\d.,]*)?\\s?(?:' + DON_VI + '))', 'gi'),
+    '<b class="bcSo">$1</b>');
+
   // Một mục của bản tin: tiêu đề nhỏ + các gạch đầu dòng
   function khoiTin(ten, ds) {
     const a = (ds || []).filter(s => String(s || '').trim());
     if (!a.length) return '';
-    return '<div class="bcTieu">' + esc(ten) + '</div>'
-      + a.map(s => '<div class="bcDong">' + esc(s) + '</div>').join('');
+    // bọc cả mục lại để khi chia hai cột thì tiêu đề không bị tách khỏi nội dung
+    return '<div class="bcNhom"><div class="bcTieu">' + esc(ten) + '</div>'
+      + a.map(s => '<div class="bcDong">' + soDam(esc(s)) + '</div>').join('')
+      + '</div>';
   }
 
   // Báo cáo của các công ty chứng khoán khác, lấy tiêu đề để thấy bên ngoài
@@ -325,12 +338,14 @@
         const dl = el.querySelector('.bcLuan');
         if (dl) dl.textContent = bt.mot_cau;
       }
-      h += khoiTin('Kết quả kinh doanh', bt.ket_qua)
+      h += '<div class="bcTin">'
+        + khoiTin('Kết quả kinh doanh', bt.ket_qua)
         + khoiTin('Lợi nhuận cốt lõi', bt.cot_loi)
         + khoiTin('Tài chính & rủi ro', bt.tai_chinh)
         + khoiTin('Điểm hỗ trợ', bt.ho_tro)
         + (bt.dinh_gia ? khoiTin('Cơ sở định giá của báo cáo', [bt.dinh_gia]) : '')
-        + khoiTin('Lưu ý dữ liệu', bt.luu_y);
+        + khoiTin('Lưu ý dữ liệu', bt.luu_y)
+        + '</div>';
       /* Bản tin đã nói kỹ hơn hai mục này nên giữ lại chỉ làm dài trang và
          lặp ý — bỏ đi để cả tờ vẫn gọn trong một trang A4. */
       const bo = el.querySelector('#bcSoi'); if (bo) bo.remove();
@@ -450,14 +465,18 @@
     width:100%;max-width:820px;margin:0 auto;padding:16px 18px 14px;
     font:400 12px/1.45 "Segoe UI",system-ui,Roboto,Arial,sans-serif}
   .bcWrap *{box-sizing:border-box}
-  .bcDau{display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid var(--bcL);padding-bottom:9px}
-  .bcMa{font-size:27px;font-weight:800;letter-spacing:-.5px;line-height:1}
-  .bcTen{font-size:12.5px;font-weight:700}
+  .bcDau{display:flex;align-items:flex-start;gap:12px;padding-bottom:10px;
+    border-bottom:2px solid var(--bcV)}   /* vạch vàng đậm hơn để chia đầu trang */
+  .bcMa{font-size:30px;font-weight:800;letter-spacing:-.6px;line-height:.95}
+  .bcTen{font-size:13px;font-weight:700}
   .bcPhu{color:var(--bcM);font-size:10.5px;margin-top:2px}
   .bcGiaN{margin-left:auto;text-align:right;flex:none}
-  .bcGiaN b{font-size:20px;font-weight:800;display:block;line-height:1.1}
-  .bcLuan{font-size:13.5px;font-weight:700;line-height:1.4;margin:10px 0 2px}
-  .bcChiSo{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:6px;margin:9px 0}
+  .bcGiaN b{font-size:22px;font-weight:800;display:block;line-height:1.05}
+  /* Luận điểm là câu đáng đọc nhất — tách hẳn ra bằng một vạch dọc, đừng để nó
+     trôi lẫn vào phần còn lại. */
+  .bcLuan{font-size:14px;font-weight:700;line-height:1.42;margin:11px 0 0;
+    padding:2px 0 2px 11px;border-left:3px solid var(--bcV)}
+  .bcChiSo{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:6px;margin:11px 0 2px}
   .bcO{background:var(--bcC);border:1px solid var(--bcL);border-radius:8px;padding:6px 9px}
   .bcO.hl{border-color:rgba(226,179,59,.55);background:rgba(226,179,59,.07)}
   .bcO.tot .v{color:var(--bcU)}.bcO.xau .v{color:var(--bcD)}
@@ -488,10 +507,19 @@
   .bcBang{width:100%;border-collapse:collapse;font-size:11px}
   .bcBang td{padding:3px 0;border-bottom:1px dotted #1e2a44;vertical-align:top}
   .bcBang td:last-child{text-align:right;font-weight:700;white-space:nowrap;padding-left:8px}
-  .bcTieu{color:#9fb0d0;font-weight:800;font-size:9.5px;text-transform:uppercase;
-    letter-spacing:.5px;margin:7px 0 3px}
-  .bcDong{color:#c3cfe4;margin:0 0 3px 10px;position:relative;line-height:1.42}
-  .bcDong:before{content:"–";position:absolute;left:-10px;color:var(--bcM)}
+  /* Bản tin chia HAI CỘT: tờ A4 vốn thừa bề ngang mà thiếu bề dọc, chia cột thì
+     dòng ngắn lại nên mắt đỡ phải quét ngang cả trang. break-inside giữ cho một
+     mục không bị cắt làm đôi giữa hai cột. */
+  .bcTin{column-count:2;column-gap:20px;margin-top:2px}
+  .bcNhom{break-inside:avoid;page-break-inside:avoid;margin-bottom:7px}
+  .bcTieu{color:var(--bcV);font-weight:800;font-size:9px;text-transform:uppercase;
+    letter-spacing:.7px;margin:0 0 3px;padding-left:9px;position:relative}
+  .bcTieu:before{content:"";position:absolute;left:0;top:2px;bottom:2px;
+    width:3px;border-radius:2px;background:var(--bcV);opacity:.75}
+  .bcDong{color:#c6d2e6;margin:0 0 3px 9px;position:relative;line-height:1.44}
+  .bcDong:before{content:"";position:absolute;left:-9px;top:6px;
+    width:3px;height:3px;border-radius:50%;background:#55688c}
+  .bcSo{color:var(--bcT);font-weight:700}   /* con số nổi lên khỏi câu */
   .bcFact td{padding:2px 0}
   .bcFact td:first-child{width:38%;color:var(--bcM)}
   .bcFv{text-align:left!important;font-weight:400!important;white-space:normal!important;color:#c3cfe4}
@@ -528,6 +556,11 @@
     .bcChan{margin-top:7px;padding-top:6px}
     .bcWrap{--bcN:#fff;--bcC:#f6f8fc;--bcL:#ccd6e6;--bcT:#111;--bcM:#5a6b88}
     .bcNen{background:#e3e9f3}.bcY span{color:#333}
+    .bcDong{color:#2a3240}.bcSo{color:#000}
+    .bcTieu{color:#8a6a12}            /* vàng trên giấy trắng phải tối lại mới đọc được */
+    .bcLuan{border-left-color:#c9972a}
+    .bcDau{border-bottom-color:#c9972a}
+    .bcTin{column-gap:16px}
     .bcWrap,.bcWrap *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   }`;
 
