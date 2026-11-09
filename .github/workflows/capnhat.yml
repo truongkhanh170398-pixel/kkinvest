@@ -1,0 +1,66 @@
+# Tự động làm mới dữ liệu phân tích cơ bản, chạy trên GitHub nên không cần bật máy.
+#
+# Mỗi sáng thứ Hai (07:00 giờ Việt Nam) job này:
+#   1. kéo số nền BCTC quý mới nhất từ 24hMoney vào DATA{} của ba module
+#   2. quét danh sách báo cáo mới của AAS
+#   3. đọc toàn văn PDF những báo cáo chưa có rồi dựng bản tin
+#   4. nén mã lại rồi commit — Vercel thấy commit mới là tự deploy
+#
+# Không cần đặt khoá bí mật nào: bước gọi AI đi qua /api/chat đã deploy, nên nó
+# dùng khoá Gemini miễn phí nằm sẵn trong biến môi trường của Vercel.
+name: Cập nhật dữ liệu phân tích cơ bản
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'      # 00:00 UTC thứ Hai = 07:00 giờ Việt Nam
+  workflow_dispatch:          # cho phép bấm chạy tay trên tab Actions
+
+permissions:
+  contents: write             # cần quyền ghi để commit dữ liệu mới
+
+concurrency:
+  group: capnhat
+  cancel-in-progress: false   # đang chạy dở thì để chạy nốt, đừng cắt giữa chừng
+
+jobs:
+  capnhat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90       # đọc PDF + gọi AI cho vài chục mã nên cần rộng giờ
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Cài thư viện đọc PDF
+        run: npm install --no-save pdf-parse@1.1.1
+
+      - name: Làm mới số nền BCTC từ 24hMoney
+        run: node capnhat-bctc.js
+        continue-on-error: true   # nguồn lỗi thì vẫn chạy tiếp các bước sau
+
+      - name: Quét danh sách báo cáo AAS
+        run: node quet-aas.js
+        continue-on-error: true
+
+      - name: Dựng bản tin từ toàn văn PDF
+        # giãn nhịp 12 giây/mã cho khỏi chạm trần miễn phí của Gemini;
+        # script tự bỏ qua mã đã có nên mỗi tuần chỉ chạy phần mới
+        run: KK_NGHI=12000 node phan-tich-aas.js
+        continue-on-error: true
+
+      - name: Nén mã trước khi deploy
+        run: node nen-ma.js
+
+      - name: Commit nếu có gì đổi
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Không có gì thay đổi — bỏ qua commit."
+          else
+            git commit -m "Tu dong cap nhat du lieu phan tich co ban ($(date -u '+%Y-%m-%d'))"
+            git push
+          fi
