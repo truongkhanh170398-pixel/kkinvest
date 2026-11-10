@@ -149,7 +149,9 @@ async function hoiAI(chu, ma, themCTCK) {
     .filter(x => !CHI.length || CHI.includes(x.card.display));
 
   let cu = {};
-  if (fs.existsSync(RA) && !LAM_LAI) { try { cu = JSON.parse(fs.readFileSync(RA, 'utf8')).ma || {}; } catch (e) {} }
+  // Luôn nạp bản cũ, kể cả khi --lam-lai: nếu không thì mã nào lỗi giữa chừng sẽ
+  // BIẾN MẤT khỏi file thay vì giữ bản cũ. Đã mất 10 mã vì chuyện này một lần.
+  if (fs.existsSync(RA)) { try { cu = JSON.parse(fs.readFileSync(RA, 'utf8')).ma || {}; } catch (e) {} }
 
   console.log('\n  ' + can.length + ' báo cáo cần xử lý' + (Object.keys(cu).length ? ' · đã có ' + Object.keys(cu).length + ' mã' : ''));
   let xong = 0, bo = 0, loi = 0;
