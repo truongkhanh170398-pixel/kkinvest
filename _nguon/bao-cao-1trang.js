@@ -363,8 +363,7 @@
         h += '<table class="bcBang bcFact"><tbody>' + a.facts.slice(0, 5).map(f =>
           '<tr><td><b>' + esc(f.l) + '</b></td><td class="bcFv">' + esc(f.v) + '</td></tr>').join('')
           + '</tbody></table>';
-      h += '<div class="bcPhu" style="margin-top:3px">Nguồn: <b>' + esc(a.nguon) + '</b> · '
-        + esc(ngayVN(a.ngay)) + ' · <a href="' + esc(a.link) + '" target="_blank" rel="noopener">bài gốc</a></div>';
+      // không dẫn nguồn trên trang
     }
 
     if (!h) return;            // không có gì thì giữ nguyên phần luận điểm tự tính

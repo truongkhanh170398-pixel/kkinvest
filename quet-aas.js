@@ -195,7 +195,6 @@ function xuatChoWeb(ds) {
       tieuDe: c.title || '', tomTat: c.summary || '',
       facts: (c.facts || []).slice(0, 6).map(f => ({ l: f.label, v: f.value })),
       chiSo: (c.metrics || []).slice(0, 4).map(m => ({ l: m.label, v: m.value, d: m.delta || '' })),
-      nguon: 'AAS Research', link: 'https://phantich.aas.com.vn/equity-compass/' + x.slug
     };
   };
   for (const x of ds) {

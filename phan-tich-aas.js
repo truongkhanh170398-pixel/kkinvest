@@ -64,7 +64,7 @@ NGUYÊN TẮC — quan trọng hơn bố cục:
 3. Mỗi gạch đầu dòng phải có SỐ hoặc một dữ kiện kiểm chứng được. Câu chung chung kiểu "triển vọng tích cực" thì bỏ.
 4. KHÔNG viết khuyến nghị mua/bán/nắm giữ dưới bất kỳ dạng nào. Mô tả hiện trạng và giả định, để người đọc tự quyết.
 5. Viết tiếng Việt gọn, như người trong nghề nói với nhau. Mỗi dòng tối đa 200 ký tự.
-6. Tóm tắt của công ty chứng khoán thường kèm lời gọi mua/bán — KHÔNG chép lại những chữ đó. Được phép nêu họ dự phóng bao nhiêu, điều chỉnh tăng hay giảm, và vì sao; đó là thông tin, không phải lời khuyên.
+6. TUYỆT ĐỐI KHÔNG nêu tên bất kỳ công ty chứng khoán, tổ chức hay nguồn nào. Chỉ ghi NGÀY của dự phóng, ví dụ "07/11 — dự báo LNST 2026 đạt …". Cũng không chép lại lời gọi mua/bán; được nêu con số dự phóng và mức điều chỉnh tăng/giảm.
 7. Khi hai nguồn lệch nhau thì nói rõ cả hai và ngày của mỗi bên, đừng tự chọn một bên.
 
 TRẢ VỀ DUY NHẤT một đối tượng JSON, không kèm lời dẫn, không bọc trong dấu nháy ba:
@@ -162,8 +162,9 @@ async function hoiAI(chu, ma, themCTCK) {
     try {
       const chu = await chuTrongPdf(x.slug);
       const b = await hoiAI(chu, ma, await tomTatCTCK(ma));
-      cu[ma] = Object.assign({ ngay: x.report_date, soChu: chu.length,
-        nguon: 'AAS Research', link: 'https://phantich.aas.com.vn/equity-compass/' + x.slug }, b);
+      // không lưu nguồn/link vào bản phục vụ cho web — user yêu cầu bỏ hết dẫn nguồn.
+      // Truy lại bài gốc thì xem du-lieu-aas/bao-cao.json (chỉ nằm ở máy, không deploy).
+      cu[ma] = Object.assign({ ngay: x.report_date, soChu: chu.length }, b);
       xong++;
       console.log('  ✓ ' + ma.padEnd(5) + x.report_date + ' · ' + chu.length + ' ký tự PDF · '
         + String(b.mot_cau || '').slice(0, 70));
