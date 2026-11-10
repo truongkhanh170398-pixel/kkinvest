@@ -339,6 +339,10 @@
         if (dl) dl.textContent = bt.mot_cau;
       }
       h += '<div class="bcTin">'
+        // Dự án và dự phóng để TRƯỚC: đọc một bản tin doanh nghiệp thì câu hỏi
+        // đầu tiên là "nó làm gì" và "sắp tới ra sao", không phải quý vừa rồi lãi bao nhiêu.
+        + khoiTin('Dự án · mảng kinh doanh', bt.du_an)
+        + khoiTin('Dự phóng', bt.du_phong)
         + khoiTin('Kết quả kinh doanh', bt.ket_qua)
         + khoiTin('Lợi nhuận cốt lõi', bt.cot_loi)
         + khoiTin('Tài chính & rủi ro', bt.tai_chinh)

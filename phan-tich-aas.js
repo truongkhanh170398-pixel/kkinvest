@@ -56,7 +56,7 @@ async function chuTrongPdf(slug) {
 }
 
 /* ── Nhờ AI dựng bản tin ───────────────────────────────────────────── */
-const YEU_CAU = `Bạn đang đọc TOÀN VĂN một báo cáo phân tích cổ phiếu. Hãy viết lại thành BẢN TIN CỔ PHIẾU theo đúng bố cục dưới đây.
+const YEU_CAU = `Bạn đang đọc TOÀN VĂN một báo cáo phân tích cổ phiếu, kèm theo tóm tắt các báo cáo MỚI HƠN của những công ty chứng khoán khác. Hãy viết lại thành BẢN TIN CỔ PHIẾU theo đúng bố cục dưới đây.
 
 NGUYÊN TẮC — quan trọng hơn bố cục:
 1. Chỉ dùng số liệu CÓ TRONG báo cáo. Không có thì ghi null, tuyệt đối không suy đoán.
@@ -64,10 +64,14 @@ NGUYÊN TẮC — quan trọng hơn bố cục:
 3. Mỗi gạch đầu dòng phải có SỐ hoặc một dữ kiện kiểm chứng được. Câu chung chung kiểu "triển vọng tích cực" thì bỏ.
 4. KHÔNG viết khuyến nghị mua/bán/nắm giữ dưới bất kỳ dạng nào. Mô tả hiện trạng và giả định, để người đọc tự quyết.
 5. Viết tiếng Việt gọn, như người trong nghề nói với nhau. Mỗi dòng tối đa 200 ký tự.
+6. Tóm tắt của công ty chứng khoán thường kèm lời gọi mua/bán — KHÔNG chép lại những chữ đó. Được phép nêu họ dự phóng bao nhiêu, điều chỉnh tăng hay giảm, và vì sao; đó là thông tin, không phải lời khuyên.
+7. Khi hai nguồn lệch nhau thì nói rõ cả hai và ngày của mỗi bên, đừng tự chọn một bên.
 
 TRẢ VỀ DUY NHẤT một đối tượng JSON, không kèm lời dẫn, không bọc trong dấu nháy ba:
 {
  "mot_cau": "một câu nêu bản chất khoản đầu tư này, tối đa 170 ký tự",
+ "du_an": ["2-5 dòng: doanh nghiệp này đang có DỰ ÁN hay MẢNG KINH DOANH nào. Gọi ĐÚNG TÊN từng dự án/nhà máy/khu công nghiệp, kèm quy mô (ha, m2, căn, công suất), tỷ lệ sở hữu, tiến độ pháp lý và thời điểm dự kiến ghi nhận. Không có tên dự án cụ thể thì nêu từng mảng doanh thu và tỷ trọng"],
+ "du_phong": ["2-5 dòng: DỰ PHÓNG các năm tới — doanh thu, lợi nhuận từng năm, ai dự phóng và ngày nào, giả định nào đỡ con số đó, và bên nào vừa điều chỉnh tăng/giảm bao nhiêu"],
  "ket_qua": ["2-4 dòng về kết quả kinh doanh kỳ gần nhất, kèm số và % so cùng kỳ"],
  "cot_loi": ["1-3 dòng: lợi nhuận cốt lõi sau khi loại khoản một lần, và chiếm bao nhiêu phần kế hoạch"],
  "tai_chinh": ["2-4 dòng: tiền, nợ vay, dòng tiền, khoản phải thu/cho vay đáng ngờ"],
@@ -76,13 +80,33 @@ TRẢ VỀ DUY NHẤT một đối tượng JSON, không kèm lời dẫn, khôn
  "luu_y": ["0-3 dòng: hạn chế dữ liệu, giả định mạnh, xung đột lợi ích nếu báo cáo có nêu"]
 }`;
 
-async function hoiAI(chu, ma) {
+/* Tóm tắt báo cáo của các công ty chứng khoán khác, lấy từ 24hMoney.
+   Chúng thường MỚI HƠN báo cáo AAS và nhắc thẳng tên dự án cùng con số dự
+   phóng — đúng hai thứ mà bản tin đang thiếu. Ví dụ KDH: bản AAS là 28/09,
+   còn Mirae/VDSC/BSC ra tháng 10–11 và nói rõ tiến độ dự án Gladia. */
+async function tomTatCTCK(ma) {
+  const u = 'https://api-finance-t19.24hmoney.vn/v1/web/announcement/report-analytics?symbol='
+    + encodeURIComponent(ma) + '&per_page=8';
+  try {
+    const r = await fetch(u, { headers: { 'User-Agent': UA }, signal: AbortSignal.timeout(15000) });
+    if (!r.ok) return '';
+    const ds = ((await r.json()) || {}).data;
+    if (!Array.isArray(ds) || !ds.length) return '';
+    const d = ds.filter(x => String(x.summary || '').trim()).slice(0, 6)
+      .map(x => '· ' + (x.publish_date || '') + ' [' + (x.source || '?') + '] '
+        + String(x.summary).replace(/\s+/g, ' ').slice(0, 700));
+    return d.length ? '\n\nTÓM TẮT BÁO CÁO CỦA CÁC CÔNG TY CHỨNG KHOÁN KHÁC (24hMoney, mới → cũ):\n'
+      + d.join('\n') : '';
+  } catch (e) { return ''; }
+}
+
+async function hoiAI(chu, ma, themCTCK) {
   const r = await fetch(API_CHAT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       muc: 'sau', trang: 'Dựng bản tin ' + ma,
-      boiCanh: 'TOÀN VĂN BÁO CÁO PHÂN TÍCH ' + ma + ':\n\n' + chu.slice(0, 110000),
+      boiCanh: 'TOÀN VĂN BÁO CÁO PHÂN TÍCH ' + ma + ':\n\n' + chu.slice(0, 95000) + (themCTCK || ''),
       hoiDap: [{ role: 'user', content: YEU_CAU }]
     }),
     signal: AbortSignal.timeout(180000)
@@ -135,7 +159,7 @@ async function hoiAI(chu, ma) {
     if (cu[ma] && cu[ma].ngay === x.report_date && !LAM_LAI && !CHI.includes(ma)) { bo++; continue; }
     try {
       const chu = await chuTrongPdf(x.slug);
-      const b = await hoiAI(chu, ma);
+      const b = await hoiAI(chu, ma, await tomTatCTCK(ma));
       cu[ma] = Object.assign({ ngay: x.report_date, soChu: chu.length,
         nguon: 'AAS Research', link: 'https://phantich.aas.com.vn/equity-compass/' + x.slug }, b);
       xong++;
